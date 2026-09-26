@@ -16,6 +16,7 @@ import {
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
+import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-map/controls";
 import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
@@ -78,6 +79,7 @@ export function UtilityMapExperience() {
   const [activeLayers, setActiveLayers] = useState<LayerId[]>(["outages", "weather", "homes"]);
   const [activePresetId, setActivePresetId] = useState<string | null>("winter");
   const [showWarnings, setShowWarnings] = useState(false);
+  const [mode, setMode] = useState<ModeId>("risk");
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -90,9 +92,11 @@ export function UtilityMapExperience() {
         if (!r.ok) throw new Error(`Couldn't load ${url} (${r.status}).`);
         return r.json();
       });
-    loadUtilityMap(new URLSearchParams(window.location.search), fetchJson)
+    const search = new URLSearchParams(window.location.search);
+    loadUtilityMap(search, fetchJson)
       .then((result) => {
         setLoaded(result);
+        setMode(parseMode(search));
         const lens = result.data.presets.find((p) => p.id === "winter") ?? result.data.presets[0];
         if (lens) {
           setActiveLayers(lens.layers);
@@ -281,14 +285,18 @@ export function UtilityMapExperience() {
   };
 
   const onToggleLayer = (id: LayerId, on: boolean) => {
-    const next = on
-      ? data?.layers.map((l) => l.id).filter((l) => l === id || activeLayers.includes(l)) ?? []
-      : activeLayers.filter((l) => l !== id);
+    if (!data) return;
+    const next = toggleLayer(activeLayers, id, on, data.layers);
     setActiveLayers(next);
-    const match = data?.presets.find(
-      (p) => p.layers.length === next.length && p.layers.every((l) => next.includes(l)),
-    );
-    setActivePresetId(match?.id ?? null);
+    setActivePresetId(matchPreset(next, data.presets));
+  };
+
+  const onMode = (next: ModeId) => {
+    setMode(next);
+    const url = new URL(window.location.href);
+    if (next === "risk") url.searchParams.delete("mode");
+    else url.searchParams.set("mode", next);
+    window.history.replaceState(null, "", url);
   };
 
   return (
@@ -323,6 +331,9 @@ export function UtilityMapExperience() {
           </p>
           {data ? (
             <ControlsPanel
+              mode={mode}
+              onMode={onMode}
+              sources={data.sources}
               layers={data.layers}
               presets={data.presets}
               activeLayers={activeLayers}

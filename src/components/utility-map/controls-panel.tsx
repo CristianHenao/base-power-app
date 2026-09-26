@@ -1,20 +1,34 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  LEVEL_COLORS,
-  LEVEL_LABELS,
-  type Level,
-} from "@/lib/utility-map/scoring";
-import type { LayerId, MapLayerMeta, Preset } from "@/lib/utility-map/types";
+import { EvidencePopover } from "@/components/utility-map/evidence-popover";
+import { ModeSwitch } from "@/components/utility-map/mode-switch";
+import { MODES, lensCoverage, type ModeId } from "@/lib/utility-map/controls";
+import { LEVEL_COLORS, LEVEL_LABELS, type Level } from "@/lib/utility-map/scoring";
+import type {
+  LayerGroup,
+  LayerId,
+  MapLayerMeta,
+  Preset,
+  SourceRef,
+} from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
 
+const GROUPS: { id: LayerGroup; label: string }[] = [
+  { id: "grid", label: "Grid" },
+  { id: "hazard", label: "Hazards" },
+  { id: "exposure", label: "Exposure" },
+];
+
 type ControlsPanelProps = {
+  mode: ModeId;
   layers: MapLayerMeta[];
   presets: Preset[];
+  sources: SourceRef[];
   activeLayers: LayerId[];
   activePresetId: string | null;
   showWarnings: boolean;
+  onMode: (mode: ModeId) => void;
   onPreset: (preset: Preset) => void;
   onToggleLayer: (id: LayerId, on: boolean) => void;
   onToggleWarnings: (on: boolean) => void;
@@ -22,31 +36,43 @@ type ControlsPanelProps = {
 };
 
 export function ControlsPanel({
+  mode,
   layers,
   presets,
+  sources,
   activeLayers,
   activePresetId,
   showWarnings,
+  onMode,
   onPreset,
   onToggleLayer,
   onToggleWarnings,
   className,
 }: ControlsPanelProps) {
+  const activePreset = presets.find((p) => p.id === activePresetId);
+  const coverage = activePreset ? lensCoverage(activePreset, layers) : null;
+  const modeInfo = MODES.find((m) => m.id === mode);
+
   return (
-    <section aria-label="Map layers" className={cn("bp-panel space-y-5 p-5", className)}>
+    <section aria-label="Map controls" className={cn("bp-panel space-y-5 p-5", className)}>
       <div className="space-y-2">
         <p className="bp-eyebrow">Grid stress</p>
         <h1 className="text-[20px] leading-[27px]">Where Texas grids are stressed</h1>
-        <p className="text-[14px] leading-[21px] text-muted-foreground">
-          Turn evidence layers on or off. Each is ranked against Texas, and the score is
-          their average.
-        </p>
       </div>
 
       <div className="space-y-2">
-        <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">
-          Presets
-        </p>
+        <ModeSwitch mode={mode} onChange={onMode} />
+        {mode === "risk" ? (
+          <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
+        ) : (
+          <p className="bp-info px-3 py-2 text-[12px] leading-[18px]">
+            {modeInfo?.label} mode is coming in this release. The map shows Risk until then.
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Lens</p>
         <div className="flex flex-wrap gap-2">
           {presets.map((preset) => (
             <button
@@ -63,38 +89,34 @@ export function ControlsPanel({
             <span className="bp-pill border-dashed text-muted-foreground">Custom</span>
           ) : null}
         </div>
+        {coverage && coverage.missing.length > 0 ? (
+          <p className="text-[12px] leading-[18px] text-muted-foreground">
+            {coverage.available} of {coverage.requested} layers in this lens have data so far
+            {activePreset?.layers.includes("weather") ? "; the FEMA weather score stands in" : ""}.
+          </p>
+        ) : null}
       </div>
 
-      <fieldset className="space-y-1">
-        <legend className="mb-2 text-[12px] leading-[18px] font-semibold text-muted-foreground">
-          Scored layers
-        </legend>
-        {layers.map((layer) => {
-          const id = `layer-${layer.id}`;
-          return (
-            <label
-              key={layer.id}
-              htmlFor={id}
-              className="bp-row flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5"
-            >
-              <Checkbox
-                id={id}
-                className="mt-0.5"
+      {GROUPS.map((group) => {
+        const members = layers.filter((l) => l.group === group.id);
+        if (members.length === 0) return null;
+        return (
+          <fieldset key={group.id} className="space-y-1">
+            <legend className="mb-2 text-[12px] leading-[18px] font-semibold text-muted-foreground">
+              {group.label}
+            </legend>
+            {members.map((layer) => (
+              <LayerRow
+                key={layer.id}
+                layer={layer}
+                sources={sources}
                 checked={activeLayers.includes(layer.id)}
-                onCheckedChange={(checked) => onToggleLayer(layer.id, checked === true)}
+                onToggle={(on) => onToggleLayer(layer.id, on)}
               />
-              <span className="space-y-0.5">
-                <span className="block text-[14px] leading-[21px] font-semibold">
-                  {layer.label}
-                </span>
-                <span className="block text-[12px] leading-[18px] text-muted-foreground">
-                  {layer.unit}
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </fieldset>
+            ))}
+          </fieldset>
+        );
+      })}
 
       <label
         htmlFor="layer-warnings"
@@ -107,9 +129,7 @@ export function ControlsPanel({
           onCheckedChange={(checked) => onToggleWarnings(checked === true)}
         />
         <span className="space-y-0.5">
-          <span className="block text-[14px] leading-[21px] font-semibold">
-            Live NWS warnings
-          </span>
+          <span className="block text-[14px] leading-[21px] font-semibold">Live NWS warnings</span>
           <span className="block text-[12px] leading-[18px] text-muted-foreground">
             Shown on the map, never part of the score
           </span>
@@ -121,13 +141,48 @@ export function ControlsPanel({
   );
 }
 
+function LayerRow({
+  layer,
+  sources,
+  checked,
+  onToggle,
+}: {
+  layer: MapLayerMeta;
+  sources: SourceRef[];
+  checked: boolean;
+  onToggle: (on: boolean) => void;
+}) {
+  const id = `layer-${layer.id}`;
+  return (
+    <div
+      className={cn(
+        "bp-row flex items-start gap-3 rounded-lg px-2 py-1.5",
+        !layer.available && "opacity-60",
+      )}
+    >
+      <Checkbox
+        id={id}
+        className="mt-0.5"
+        disabled={!layer.available}
+        checked={checked}
+        onCheckedChange={(value) => onToggle(value === true)}
+      />
+      <label htmlFor={id} className={cn("min-w-0 flex-1 space-y-0.5", layer.available && "cursor-pointer")}>
+        <span className="block text-[14px] leading-[21px] font-semibold">{layer.label}</span>
+        <span className="block text-[12px] leading-[18px] text-muted-foreground">
+          {layer.available ? layer.unit : "Coming in this release"}
+        </span>
+      </label>
+      <EvidencePopover meta={layer} sources={sources} />
+    </div>
+  );
+}
+
 export function ScoreLegend() {
   const levels = [1, 2, 3, 4, 5] as Level[];
   return (
     <div className="space-y-2">
-      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">
-        Stress level
-      </p>
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Stress level</p>
       <ol className="grid grid-cols-5 gap-1">
         {levels.map((level) => (
           <li key={level} className="space-y-1">
