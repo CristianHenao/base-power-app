@@ -33,7 +33,22 @@ def yearly_files(raw_dir: Path, start_year: int) -> list[tuple[int, Path]]:
     return sorted(found)
 
 
+# The 2023 file names the outage count "sum" instead of customers_out.
+CUSTOMERS_OUT_ALIASES = (settings.EAGLEI_CUSTOMERS_OUT_COL, "sum")
+
+
+def customers_out_column(path: Path) -> str:
+    """The outage-count column in this year's header."""
+    with path.open() as handle:
+        header = handle.readline().strip().split(",")
+    for name in CUSTOMERS_OUT_ALIASES:
+        if name in header:
+            return name
+    raise ValueError(f"{path.name} has no outage-count column; header is {header}")
+
+
 def _texas_select(path: Path) -> str:
+    out_col = customers_out_column(path)
     # FIPS arrives as text or as a float like 48085.0; normalize before filtering.
     fips = (
         f"lpad(regexp_replace(trim(CAST({settings.EAGLEI_FIPS_COL} AS VARCHAR)), "
@@ -42,11 +57,11 @@ def _texas_select(path: Path) -> str:
     return f"""
         SELECT {fips} AS county_fips,
                county,
-               CAST({settings.EAGLEI_CUSTOMERS_OUT_COL} AS DOUBLE) AS customers_out,
+               CAST("{out_col}" AS DOUBLE) AS customers_out,
                CAST({settings.EAGLEI_TIMESTAMP_COL} AS TIMESTAMP) AS run_start_time
         FROM read_csv('{path}', header = true, all_varchar = true)
         WHERE {fips} LIKE '48%'
-          AND {settings.EAGLEI_CUSTOMERS_OUT_COL} IS NOT NULL
+          AND "{out_col}" IS NOT NULL
     """
 
 
