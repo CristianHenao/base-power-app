@@ -1,0 +1,1032 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Porchlight team playbook</title>
+<meta name="description" content="41-hour build plan for the Base Power and AITX Talent Hackathon.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&family=Overpass+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#F3F6F2; --surface:#FFFFFF; --ink:#223029; --ink-strong:#133722; --muted:#57645C;
+  --line:#CAD4CD; --green:#1E4D2B; --green-soft:#E2ECE4; --signal:#F2B705; --signal-ink:#332600;
+  --rust:#A3421B; --rust-soft:#F5E5DC; --code-bg:#E8EEE9;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1612; --surface:#15201A; --ink:#D8E2DB; --ink-strong:#F0F6F1; --muted:#98A69E;
+    --line:#2A3A31; --green:#8BCBA2; --green-soft:#1A2B21; --signal:#F5C542; --signal-ink:#2A2000;
+    --rust:#E68E67; --rust-soft:#321F17; --code-bg:#1A261F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1612; --surface:#15201A; --ink:#D8E2DB; --ink-strong:#F0F6F1; --muted:#98A69E;
+  --line:#2A3A31; --green:#8BCBA2; --green-soft:#1A2B21; --signal:#F5C542; --signal-ink:#2A2000;
+  --rust:#E68E67; --rust-soft:#321F17; --code-bg:#1A261F;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Overpass",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.62}
+a{color:var(--green);text-underline-offset:3px}
+a:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--signal);outline-offset:2px;border-radius:3px}
+code,pre,kbd{font-family:"Overpass Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+pre{background:var(--code-bg);padding:16px 18px;border-radius:6px;overflow-x:auto;font-size:.8rem;line-height:1.55;margin:14px 0}
+pre code{background:none;padding:0;font-size:inherit}
+img,svg{max-width:100%}
+
+.wrap{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;max-width:1200px;margin:0 auto;padding:0 28px 80px}
+.index{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;max-height:calc(100vh - 48px);overflow-y:auto;padding:28px 0 24px;font-size:.9rem}
+.index p{margin:0 0 10px;font-weight:800;color:var(--ink-strong)}
+.index ol{list-style:none;margin:0;padding:0}
+.index li a{display:flex;gap:10px;padding:4px 8px;margin-left:-8px;border-radius:4px;color:var(--ink);text-decoration:none}
+.index li a:hover{background:var(--green-soft)}
+.index li a[aria-current="true"]{background:var(--green-soft);color:var(--ink-strong);font-weight:600}
+.index .code{color:var(--green);font-weight:600;font-variant-numeric:tabular-nums;min-width:3.1em}
+main{min-width:0}
+
+.hero{padding:48px 0 36px;border-bottom:2px solid var(--ink-strong)}
+.hero .kicker{margin:0 0 18px;color:var(--muted);font-size:.95rem}
+.hero h1{margin:0;font-size:clamp(2.6rem,6.4vw,4.9rem);line-height:1;font-weight:800;letter-spacing:-.025em;color:var(--ink-strong);max-width:14ch}
+.hero .deck{font-size:1.18rem;max-width:62ch;margin:22px 0 0}
+.strip-wrap{margin-top:30px}
+.strip-track{position:relative;padding-top:14px}
+.strip{position:relative;display:flex;height:46px;border:1.5px solid var(--ink-strong);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg{display:flex;align-items:center;justify-content:center;min-width:0;padding:0 4px;border-right:1px solid var(--line);font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden}
+.seg:last-child{border-right:0}
+.seg.sleep{color:var(--muted);background:repeating-linear-gradient(135deg,transparent 0 6px,var(--line) 6px 7px)}
+.seg.is-now{background:var(--signal);color:var(--signal-ink)}
+.needle{position:absolute;top:0;left:0;width:0;height:0;margin-left:-7px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid var(--ink-strong);display:none}
+.strip-ends{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:6px}
+.now{margin:14px 0 0;font-size:1.02rem}
+.now strong{color:var(--ink-strong)}
+.now .gate{display:block;color:var(--muted);font-size:.92rem}
+
+section{padding:52px 0 8px}
+section + section{border-top:1px solid var(--line)}
+h2{font-size:1.75rem;line-height:1.2;margin:0 0 18px;color:var(--ink-strong);font-weight:800;letter-spacing:-.01em}
+h2 .sheet{display:inline-block;vertical-align:.28em;margin-right:12px;padding:1px 8px 0;border:1.5px solid var(--green);border-radius:3px;color:var(--green);font-size:.78rem;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+h3{font-size:1.1rem;margin:30px 0 8px;color:var(--ink-strong);font-weight:800}
+p,li{max-width:72ch}
+section p{margin:0 0 14px}
+ul,ol{padding-left:1.3em}
+li{margin:0 0 7px}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+
+.decision{border-left:4px solid var(--green);background:var(--green-soft);padding:16px 20px;border-radius:0 6px 6px 0;margin:0 0 22px}
+.decision p{margin:0;font-size:1.08rem}
+.facts{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 22px;margin:0}
+.facts dt{font-weight:800;color:var(--ink-strong)}
+.facts dd{margin:0;max-width:68ch}
+
+.checks{list-style:none;padding:0;margin:0}
+.checks > li{position:relative;padding:12px 0 12px 22px;border-bottom:1px solid var(--line);margin:0;max-width:78ch}
+.checks > li::before{content:"";position:absolute;left:0;top:21px;width:10px;height:10px;border-radius:2px;background:var(--rust)}
+.checks > li strong{color:var(--ink-strong)}
+
+.basefacts{border:1.5px solid var(--green);border-radius:6px;padding:14px 20px;margin:24px 0 0;background:var(--surface)}
+.basefacts h3{margin-top:4px}
+.basefacts ul{margin:0}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 20px}
+.card h3{margin:0 0 4px}
+.card .role{margin:0 0 10px;color:var(--muted);font-size:.95rem}
+.card dl{margin:0}
+.card dt{font-weight:800;color:var(--ink-strong);font-size:.9rem;margin-top:10px}
+.card dd{margin:2px 0 0;font-size:.95rem}
+.card ul{margin:6px 0 0;padding-left:1.1em;font-size:.95rem}
+.tier-mvp{border-top:4px solid var(--green)}
+.tier-p1{border-top:4px solid var(--signal)}
+.tier-p2{border-top:4px solid var(--line)}
+.tier-cut{border-top:4px solid var(--rust);background:var(--rust-soft)}
+
+.table-wrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.5}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-weight:800;color:var(--ink-strong);background:var(--green-soft)}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.wide{min-width:0}
+.mid{min-width:720px}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:3px;white-space:nowrap}
+.tag.mvp{background:var(--green-soft);color:var(--green);border:1px solid var(--green)}
+.tag.p1{background:var(--signal);color:var(--signal-ink)}
+.tag.p2{border:1px solid var(--line);color:var(--muted)}
+.gatecell{font-weight:600;color:var(--ink-strong)}
+
+details{border:1px solid var(--line);border-radius:6px;background:var(--surface);margin:12px 0}
+summary{cursor:pointer;padding:10px 14px;font-weight:600;color:var(--ink-strong)}
+details > div{padding:0 14px 12px}
+.mermaid-box{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;margin:14px 0}
+pre.mermaid{background:none;margin:0;font-family:"Overpass",system-ui,sans-serif;font-size:.85rem}
+
+.checklist{list-style:none;padding:0;margin:0}
+.checklist li{margin:0;padding:8px 0;border-bottom:1px solid var(--line)}
+.checklist label{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.checklist input{width:18px;height:18px;margin-top:3px;accent-color:var(--green);flex:none}
+.sources li{margin-bottom:5px}
+footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);color:var(--muted);font-size:.88rem}
+
+@media (max-width:900px){
+  html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+  .wrap{grid-template-columns:1fr;gap:0;padding:0 18px 64px}
+  .index{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;max-height:none;overflow-x:auto;overflow-y:hidden;padding:8px 0;margin:0 -18px;background:var(--paper);border-bottom:1px solid var(--line);order:2}
+  .index p{display:none}
+  .index ol{display:flex;gap:4px;padding:0 18px;width:max-content}
+  .index li a{margin:0;white-space:nowrap;font-size:.85rem}
+  main{order:3}
+  .hero{order:1}
+  .facts{grid-template-columns:1fr;gap:2px}
+  .facts dd{margin-bottom:12px}
+  .wide{min-width:900px}
+}
+@media (max-width:700px){
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .seg span{display:none}
+  h2{font-size:1.45rem}
+}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero" style="grid-column:1 / -1">
+  <p class="kicker">Team playbook for the Base Power and AITX Talent Hackathon, Austin, September 25 to 27, 2026</p>
+  <h1>Will my lights stay on?</h1>
+  <p class="deck">Porchlight answers that for any Texas address with public grid data, replays the real storms in that county against a Base Core, and shows Base where a battery pays twice. Christian, Victor, Nolan and Alejandro have 41 hours.</p>
+  <div class="strip-wrap" aria-label="Build schedule from Friday 6 PM to Sunday 11 AM">
+    <div class="strip-track">
+    <div class="needle" id="needle" aria-hidden="true"></div>
+    <div class="strip" id="strip">
+      <div class="seg" style="flex:2" data-start="2026-09-25T23:00:00Z" data-end="2026-09-26T01:00:00Z" data-gate="8:00 PM gate: contract committed, repo builds, downloads running"><span>Lock</span></div>
+      <div class="seg" style="flex:6" data-start="2026-09-26T01:00:00Z" data-end="2026-09-26T07:00:00Z" data-gate="1:30 AM gate: type Sally's address and see her county's real past outages"><span>Skeleton</span></div>
+      <div class="seg sleep" style="flex:5.5" data-start="2026-09-26T07:00:00Z" data-end="2026-09-26T12:30:00Z" data-gate="Texas rebuild and price downloads run overnight. Back at 7:30 AM"><span>Sleep</span></div>
+      <div class="seg" style="flex:5.5" data-start="2026-09-26T12:30:00Z" data-end="2026-09-26T18:00:00Z" data-gate="1:00 PM gate: three persona reports fully on real data"><span>Real data</span></div>
+      <div class="seg" style="flex:6" data-start="2026-09-26T18:00:00Z" data-end="2026-09-27T00:00:00Z" data-gate="7:00 PM gate: timed full demo run-through"><span>Depth</span></div>
+      <div class="seg" style="flex:4" data-start="2026-09-27T00:00:00Z" data-end="2026-09-27T04:00:00Z" data-gate="11:00 PM gate: feature freeze and a finished safety video"><span>Freeze</span></div>
+      <div class="seg sleep" style="flex:6.5" data-start="2026-09-27T04:00:00Z" data-end="2026-09-27T10:30:00Z" data-gate="Rest. Rehearsal at 6:00 AM, recording at 6:30 AM"><span>Sleep</span></div>
+      <div class="seg" style="flex:5.5" data-start="2026-09-27T10:30:00Z" data-end="2026-09-27T16:00:00Z" data-gate="10:15 AM gate: submitted, 45 minutes early"><span>Ship</span></div>
+    </div>
+    </div>
+    <div class="strip-ends"><span>Fri 6:00 PM kickoff</span><span>Sun 11:00 AM deadline</span></div>
+    <p class="now" id="now" aria-live="polite"><strong id="now-phase">Schedule</strong> <span id="countdown">Times assume the 6:00 PM Friday kickoff.</span><span class="gate" id="now-gate"></span></p>
+    <noscript><p class="small muted">The live phase marker needs JavaScript. The full schedule is in T-02.</p></noscript>
+  </div>
+</header>
+
+<nav class="index" aria-label="Sections">
+  <p>Sheets</p>
+  <ol>
+    <li><a href="#call"><span class="code">G-01</span>The call</a></li>
+    <li><a href="#reality"><span class="code">G-02</span>Reality check</a></li>
+    <li><a href="#product"><span class="code">P-01</span>Porchlight</a></li>
+    <li><a href="#scope"><span class="code">P-02</span>Scope</a></li>
+    <li><a href="#scoring"><span class="code">P-03</span>Scoring map</a></li>
+    <li><a href="#design"><span class="code">A-01</span>System design</a></li>
+    <li><a href="#contract"><span class="code">A-02</span>API contract</a></li>
+    <li><a href="#repo"><span class="code">A-03</span>Repo and stack</a></li>
+    <li><a href="#data"><span class="code">D-01</span>Data sources</a></li>
+    <li><a href="#models"><span class="code">M-01</span>Models</a></li>
+    <li><a href="#insights"><span class="code">M-02</span>Insights to hunt</a></li>
+    <li><a href="#owners"><span class="code">T-01</span>Owners</a></li>
+    <li><a href="#timeline"><span class="code">T-02</span>Timeline</a></li>
+    <li><a href="#video"><span class="code">V-01</span>Demo script</a></li>
+    <li><a href="#risks"><span class="code">R-01</span>Risks</a></li>
+    <li><a href="#job"><span class="code">H-01</span>Start the job</a></li>
+    <li><a href="#submit"><span class="code">S-01</span>Submit checklist</a></li>
+    <li><a href="#sources"><span class="code">S-02</span>Sources</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="call">
+  <h2><span class="sheet">G-01</span>The call</h2>
+  <div class="decision">
+    <p>Build Porchlight. Type a Texas address and get a calm, plain answer to three questions: how often does the power go out here, for how long, and would a Base Core carry this home through it? A real public-data pipeline sits underneath, and a second screen shows Base's growth team where a Core pays twice: for the homeowner during outages and for the grid during scarcity.</p>
+  </div>
+  <dl class="facts">
+    <dt>Tracks</dt>
+    <dd>Most Commercializable as the primary entry, Open Grid Data as the second. Skip Orchestration.</dd>
+    <dt>Who it's for</dt>
+    <dd>Texas homeowners in Base territory deciding whether backup power is worth it (Sally and Thomas), and the Base team that has to find and convince them.</dd>
+    <dt>The problem</dt>
+    <dd>Base's compare page answers "will I save?" Nothing answers "will my lights stay on?" for a specific address, season and home. The backup figure people hear, roughly 36 to 72 hours for one or two Cores, swings hard with August air conditioning or February electric heat.</dd>
+    <dt>Why it wins</dt>
+    <dd>It completes Base's own funnel, it runs on data Base engineers respect (15-minute outage history, ERCOT load profiles on the actual storm dates, load-zone prices), and it ships as an API plus an embeddable component Base could put on its site tomorrow.</dd>
+  </dl>
+  <details>
+    <summary>Alternatives we considered and dropped</summary>
+    <div>
+      <ul>
+        <li><strong>A pure ERCOT dashboard.</strong> Every other team will build one, and a chart of public prices scores low on insight.</li>
+        <li><strong>A savings calculator.</strong> Base already runs one on its compare page and published a 7,148-bill study behind it.</li>
+        <li><strong>A Track 2 fleet-dispatch simulator.</strong> Great fit for Base's ADER work, but it abandons our consumer direction and needs power-systems depth we can't fake in 41 hours.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<section id="reality">
+  <h2><span class="sheet">G-02</span>Reality check on our notes</h2>
+  <ul class="checks">
+    <li><strong>The clock is 41 hours, not 48.</strong> Kickoff is Friday 6:00 PM and the video plus repo are due Sunday 11:00 AM. After sleep and video production, plan on about 28 build hours each.</li>
+    <li><strong>The meeting summary is a roadmap, not a sprint.</strong> Its action items are dated October 2 to 16, after judging. Keep them as the "week two" slide and build one workflow end to end.</li>
+    <li><strong>Base already owns "will I save?"</strong> The compare page is a bill-upload savings tool, and Base's blog published a study of 7,148 real bills matched against ERCOT data. That is almost certainly the "7,400 data sets" we heard. Our wedge is the other half: reliability.</li>
+    <li><strong>Base already sells to utilities.</strong> Its utilities page lists six utility partners, an operators dashboard and distribution grid support. Our B2B piece is an internal "where should Base look next" map built from public data, not a new utility product.</li>
+    <li><strong>Don't hardcode prices.</strong> Base says availability, pricing and offers vary by address, and the $700, $20 and $300 figures in our notes conflict. Use only published specs and link to Base's own page for each utility.</li>
+    <li><strong>Engineers judge the video and the code.</strong> A CRM, a five-email sequence, a style guide, a referral program and a Rhythm competitor analysis earn almost nothing on the rubric. Log funnel events instead so the product is CRM-ready.</li>
+    <li><strong>ERCOT doesn't publish your outage.</strong> ERCOT data covers the bulk grid: prices, load, generation. Neighborhood outages come from utility outage maps, which ORNL's EAGLE-I archives every 15 minutes by county. Base's own outage guide makes the same point: most outages are local.</li>
+    <li><strong>Risk becomes outlook.</strong> Use a weather-style five-step scale and calm copy. Don't collect medical or child information; the "must stay on" checklist becomes a kilowatt number in the browser and never leaves it.</li>
+    <li><strong>Panel scanning and appliance maps are a month-two feature.</strong> Without Base telemetry there is nothing real to disaggregate. The honest stretch version is a Smart Meter Texas usage upload.</li>
+    <li><strong>LLMs only where they earn it.</strong> The rubric calls out simple API wrappers. The model narrates numbers the pipeline computed, and a validator rejects any number it can't trace.</li>
+  </ul>
+  <div class="basefacts">
+    <h3>Base numbers we can put on screen</h3>
+    <ul>
+      <li>Each Base Core is 39.2 kWh and 20 kW; Base quotes roughly 36 to 72 hours of backup for one or two Cores, and says it serves 30,000+ homes.</li>
+      <li>CenterPoint and Oncor list Energy + Backup; AEP Texas Central, AEP Texas North and TNMP link to energy plans; GVEC, CoServ, Farmers EC, Austin Energy and El Paso Electric have their own program pages; ComEd covers Illinois.</li>
+      <li>Members keep a minimum backup reserve at all times; grid dispatch only uses capacity above it, usually in 1 to 2 hour windows.</li>
+      <li>In ERCOT's ADER pilot, each aggregation is one resource per load zone, dispatched every 5 minutes and settled at the load-zone price. Base holds 103 of the 145 registered MW.</li>
+    </ul>
+    <p class="small muted" style="margin-top:10px">From Base's public pages as of September 25, 2026. Confirm anything you put in the video with a Base engineer.</p>
+  </div>
+</section>
+
+<section id="product">
+  <h2><span class="sheet">P-01</span>Porchlight, the product</h2>
+  <p class="muted small">Working name. Base's own photos feature porches, kids and lit windows, so it should feel at home next to their site. Swap it freely.</p>
+  <h3>The flow</h3>
+  <ol>
+    <li>Enter an address, or tap a persona chip (Sally, Thomas, or a third area).</li>
+    <li>We detect the utility and show what Base offers there: Energy + Backup, backup through a utility program, or energy only. The user confirms the utility.</li>
+    <li>Optional details: typical monthly kWh, whether the home heats with electricity, and a "must stay on" list (fridge, CPAP, well pump) that turns into kilowatts in the browser.</li>
+    <li>The report renders in under a second; the plain-language summary streams in after.</li>
+    <li>One next step: see Base's plans for this utility.</li>
+  </ol>
+  <h3>The report, block by block</h3>
+  <ul>
+    <li><strong>Outlook.</strong> A weather-style level for homes in this county, "a 12-hour-plus outage about once every N years," the uncertainty, and how many years of data sit behind it.</li>
+    <li><strong>Past storms, replayed.</strong> Every long outage in the county since 2018. Open one to see how long homes stayed dark (a band, not a single number) against a Core's energy curve for that exact week. This is the hero chart.</li>
+    <li><strong>Backup by month.</strong> Hours for one and two Cores across the year, with toggles for electric heat and storm mode.</li>
+    <li><strong>Right size.</strong> One or two Cores, with the reason in one sentence.</li>
+    <li><strong>Right now.</strong> Active weather alerts at the address and a small ERCOT snapshot, each with an as-of time.</li>
+    <li><strong>Summary and next step.</strong> About 120 words at a 7th-grade reading level, the link to Base, and a collapsible "what we assumed."</li>
+  </ul>
+  <details>
+    <summary>Wireframe for Christian (numbers are fake)</summary>
+    <div>
+<pre>┌──────────────────────────────────────────────────────────────┐
+│ Plano, TX 75023   Oncor   Base offers Energy + Backup here    │
+│ Outage outlook  ■■■□□  Elevated                              │
+│ Homes in Collin County see a 12h+ outage about every 2-3 yrs │
+├──────────────────────────────────────────────────────────────┤
+│ Past storms, replayed                  [ Feb 2021 storm ▾ ]   │
+│  Core energy  ██████████▇▇▆▅▄▃▂▁      1 Core   2 Cores        │
+│  Homes dark   ░░░░░░░░░░░░░░░░░░░░░░░ (typical to longest)    │
+├──────────────────────────────┬───────────────────────────────┤
+│ Backup by month              │ Right size: 2 Cores           │
+│ ▇▇█▇▅▃▂▂▃▆▇▆                 │ covers ~95% of past long      │
+│ [electric heat] [storm mode] │ outage hours here             │
+├──────────────────────────────┴───────────────────────────────┤
+│ Right now: no alerts   ERCOT normal (as of 2:05 PM)           │
+│ Summary streams here...            [ See Base plans for Oncor ]│
+└──────────────────────────────────────────────────────────────┘</pre>
+    </div>
+  </details>
+  <h3>The internal screen: Pays twice</h3>
+  <p>A county map for Base's growth and partnerships teams. It combines outage exposure, owner-occupied single-family homes, load-zone scarcity value and what Base sells in each county today, with a ranked table beside it. The punchline to look for: counties with high outage exposure where Base sells energy only today. That list is the whiteboard's "places of growth, target for Base," backed by data.</p>
+  <h3>Personas and demo addresses</h3>
+  <ul>
+    <li><strong>Sally, 68, Collin County, Oncor, electric heat.</strong> She wants her grandkids to stay over when an ice storm hits. Replay: February 2021.</li>
+    <li><strong>Thomas, 41, Harris County, CenterPoint, four kids.</strong> Big summer air-conditioning load. Replay: the July 2024 hurricane.</li>
+    <li><strong>A third address in a different product zone,</strong> such as Austin Energy's program or an AEP Texas energy-only area, to prove the eligibility logic.</li>
+    <li>Use public anchor addresses such as a library or city hall in the right ZIP code, never a real person's home.</li>
+  </ul>
+  <h3>Words we use</h3>
+  <p>Outlook, not risk. "Homes in your county," not "your home." Estimate, on every number. Member, Core, storm mode. Avoid fear words ("danger zone"), guarantees, and "never lose power," even though that phrase appears in Base's own marketing. Our numbers are estimates.</p>
+</section>
+
+<section id="scope">
+  <h2><span class="sheet">P-02</span>Scope</h2>
+  <div class="grid2">
+    <div class="card tier-mvp">
+      <h3>MVP, by the Saturday 1 PM gate</h3>
+      <ul>
+        <li>Address to utility to Base offer, with confirm</li>
+        <li>Outlook with uncertainty and years of data</li>
+        <li>Past storms list and replay chart</li>
+        <li>Backup by month, electric heat and storm mode toggles</li>
+        <li>Right-size recommendation</li>
+        <li>Weather alerts at the address</li>
+        <li>Template summary and link to Base</li>
+        <li>Degraded modes: nothing crashes when a source is down</li>
+      </ul>
+    </div>
+    <div class="card tier-p1">
+      <h3>P1, Saturday afternoon</h3>
+      <ul>
+        <li>LLM narrator with validators and evals</li>
+        <li>Pays twice map and ranked table</li>
+        <li>ERCOT grid snapshot</li>
+        <li>Backtest chart and three insight charts</li>
+        <li>Live URL and load-test numbers</li>
+      </ul>
+    </div>
+    <div class="card tier-p2">
+      <h3>P2, only if green at the 7 PM gate</h3>
+      <ul>
+        <li>Smart Meter Texas usage upload replaces the load profile</li>
+        <li>Automatic storm names from NOAA Storm Events</li>
+        <li>Housing growth layer from building permits</li>
+        <li>Member storm-mode card: "storm coming, here's your plan"</li>
+      </ul>
+    </div>
+    <div class="card tier-cut">
+      <h3>Cut, roadmap slide only</h3>
+      <ul>
+        <li>CRM, five-email sequence, referral hooks</li>
+        <li>Style guide, Rhythm competitor analysis</li>
+        <li>Panel scanning and appliance maps</li>
+        <li>B2B utility demo, agentic operations</li>
+        <li>Exploring every ERCOT dataset</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="scoring">
+  <h2><span class="sheet">P-03</span>Scoring map</h2>
+  <p>Every block of work should point at a line in the rubric. If it doesn't, it waits.</p>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Criterion</th><th>Points</th><th>How Porchlight earns it</th><th>Where judges see it</th></tr></thead>
+    <tbody>
+      <tr><td>Completeness</td><td>15</td><td>One workflow end to end; any external dependency can fail without a crash</td><td>Live demo plus a 10-second kill-switch clip</td></tr>
+      <tr><td>Technical depth</td><td>15</td><td>15-minute outage series to events to per-home durations; empirical-Bayes outlook with a backtest; simulator on ERCOT load profiles; guarded narrator</td><td>Architecture slide, repo, tests</td></tr>
+      <tr><td>The problem</td><td>15</td><td>Named users and a named gap in Base's funnel for Track 3; three insights from public grid data for Track 1</td><td>Video 0:20 to 0:45 and 3:15 to 4:15</td></tr>
+      <tr><td>The why</td><td>15</td><td>Base solved savings; reliability for your address is unsolved; ties directly to Energy + Backup and ADER</td><td>Voiceover and README opening</td></tr>
+      <tr><td>Insight quality</td><td>10</td><td>Seasonal backup gap, the major-event-day gap, energy-only counties with high exposure</td><td>Three charts</td></tr>
+      <tr><td>Usability</td><td>10</td><td>API, embeddable widget, deep links into Base's utility pages, sub-second report</td><td>Demo and README</td></tr>
+      <tr><td>Creativity</td><td>10</td><td>Replay real storms against a real home; weather-style outlook; calm design</td><td>Hero chart</td></tr>
+      <tr><td>Performance</td><td>10</td><td>Precomputed features in DuckDB, cached adapters, streamed narrative, load-test numbers</td><td>README table and 5 seconds of video</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="design">
+  <h2><span class="sheet">A-01</span>System design</h2>
+  <div class="mermaid-box">
+<pre class="mermaid">
+flowchart LR
+  subgraph OFF["Offline: make data, rebuildable"]
+    EI["EAGLE-I outages, 15-min by county"]
+    LP["ERCOT backcasted load profiles"]
+    SP["ERCOT RTM prices by load zone"]
+    CX["NRI, EIA-861, ACS, Base areas"]
+    ET["normalize and filter to Texas"]
+    EV["outage events and per-home durations"]
+    OM["outlook model, empirical Bayes"]
+    GV["grid value by load zone"]
+    FS[("features.duckdb")]
+    EI --> ET
+    LP --> ET
+    SP --> ET
+    CX --> ET
+    ET --> EV --> OM --> FS
+    ET --> GV --> FS
+    EV --> FS
+  end
+  subgraph ON["Online: docker compose"]
+    WEB["web: report and map"]
+    API["api: FastAPI"]
+    GEO["Census geocoder"]
+    SIM["backup simulator"]
+    NAR["narrator and validators"]
+    LLM["LLM API"]
+    NWS["NWS alerts"]
+    WRK["worker: ERCOT snapshot"]
+    RDS[("Redis cache")]
+    PG[("Postgres: funnel events")]
+    WEB --> API
+    API --> GEO
+    API --> SIM
+    API --> NAR --> LLM
+    API --> NWS
+    API --> RDS
+    WRK --> RDS
+    API --> PG
+  end
+  FS --> API
+</pre>
+  </div>
+  <h3>Principles</h3>
+  <ul>
+    <li><strong>Heavy offline, light online.</strong> Everything expensive (15-minute outage history, event extraction, model fitting, grid value) runs in <code>make data</code> and lands in one DuckDB file. The API looks things up, runs a small simulation and calls two live services.</li>
+    <li><strong>One contract.</strong> Pydantic models in <code>schemas.py</code> are the source of truth; the TypeScript client is generated from the OpenAPI spec, so the front end can't drift.</li>
+    <li><strong>Everything degrades.</strong> Each external call gets a timeout, one retry with jitter, a circuit breaker and a last-known-good cache. The report carries <code>sources[]</code> with status and as-of time, so the UI says "alerts unavailable" instead of failing.</li>
+    <li><strong>No raw addresses at rest.</strong> Geocode, keep county and tract, store a salted hash.</li>
+  </ul>
+  <h3>Latency budget</h3>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Step</th><th>Budget, p95 warm</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td>Geocode</td><td>400 ms</td><td>Cache by normalized address; persona addresses pre-warmed</td></tr>
+      <tr><td>Feature lookup</td><td>20 ms</td><td>DuckDB in-process, read-only</td></tr>
+      <tr><td>Backup simulation</td><td>50 ms</td><td>numpy across about 20 events, 7 days each, 96 steps a day</td></tr>
+      <tr><td>Weather alerts</td><td>300 ms</td><td>5-minute cache per point</td></tr>
+      <tr><td>Report JSON total</td><td>under 800 ms</td><td>Narrative streams separately; first token in about 1.5 s</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="contract">
+  <h2><span class="sheet">A-02</span>API contract</h2>
+  <p>Lock this in the first hour. Christian builds against fixture files generated from it, Victor serves the fixture until real data lands, Nolan fills in the numbers.</p>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>POST</td><td><code>/v1/report</code></td><td>Address and home details in, report JSON out</td></tr>
+      <tr><td>GET</td><td><code>/v1/report/{id}/narrative</code></td><td>Server-sent events stream of the summary</td></tr>
+      <tr><td>GET</td><td><code>/v1/areas?layer=pays_twice</code></td><td>County features for the internal map</td></tr>
+      <tr><td>GET</td><td><code>/v1/grid/now</code></td><td>Cached ERCOT snapshot</td></tr>
+      <tr><td>POST</td><td><code>/v1/events</code></td><td>Funnel events: report_viewed, replay_opened, cta_clicked</td></tr>
+      <tr><td>GET</td><td><code>/healthz</code>, <code>/metrics</code></td><td>Liveness and Prometheus metrics</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Response shape below. Every number is fake. Duration pairs are the first-out-first-restored and last-out-first-restored bounds from M-01. In <code>covered</code>, "homes" is the share of affected homes fully covered and "hours" is the share of dark hours covered.</p>
+<pre><code>{
+  "report_id": "rpt_01J9Z8",
+  "location": {
+    "county_fips": "48085", "county": "Collin", "tract_geoid": "48085xxxxxx",
+    "weather_zone": "NCENT", "load_zone": "LZ_NORTH",
+    "utility": { "name": "Oncor", "detected_from": "zip", "confirmed": true }
+  },
+  "base_offer": {
+    "product": "energy_plus_backup",
+    "url": "https://www.basepowercompany.com/oncor#pricing"
+  },
+  "outlook": {
+    "level": 3, "label": "Elevated",
+    "long_outages_per_year": 0.40, "interval_90": [0.27, 0.58],
+    "once_every_years": 2.5, "years_of_data": 7
+  },
+  "events": [{
+    "id": "48085-2021-02-15", "label": "February 2021 winter storm",
+    "start": "2021-02-15T01:00:00-06:00", "peak_out_pct": 41.0,
+    "duration_h": { "p50": [18, 26], "p90": [40, 61] },
+    "covered": {
+      "cores_1": { "homes": 0.55, "hours": 0.78 },
+      "cores_2": { "homes": 0.86, "hours": 0.95 }
+    }
+  }],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [21, 25, 34, 40, 29, 19, 15, 14, 18, 33, 36, 24],
+      "cores_2": [42, 50, 68, 80, 58, 38, 30, 28, 36, 66, 72, 48]
+    },
+    "assumptions": { "kwh_per_core": 39.2, "kw_per_core": 20, "start_soc": 1.0, "mode": "normal" }
+  },
+  "sizing": { "cores": 2, "reason": "Covers about 95% of past 12h+ outage hours here, versus 78% with one." },
+  "live": { "alerts": [], "grid": { "status": "normal", "as_of": "2026-09-26T14:05:00-05:00" } },
+  "narrative": { "status": "streaming", "url": "/v1/report/rpt_01J9Z8/narrative" },
+  "sources": [
+    { "id": "eaglei", "as_of": "2024-12-31", "status": "ok" },
+    { "id": "nws", "as_of": "2026-09-26T14:03:00-05:00", "status": "ok" },
+    { "id": "llm", "status": "degraded", "fallback": "template" }
+  ]
+}</code></pre>
+</section>
+
+<section id="repo">
+  <h2><span class="sheet">A-03</span>Repo and stack</h2>
+<pre><code>porchlight/
+├── README.md             60-second pitch, GIF, architecture, results, how to run, team
+├── Makefile              make data | make up | make test | make eval | make demo
+├── docker-compose.yml    web, api, worker, redis, postgres
+├── .env.example          no secrets in git
+├── docs/                 PLAN.md, DECISIONS.md (short ADRs), DATA_SOURCES.md, MODEL_CARD.md, NEXT.md
+├── pipeline/             offline ETL, writes data/features.duckdb
+│   ├── sources/          eaglei.py, ercot_profiles.py, ercot_prices.py, nri.py, eia861.py, acs.py, base_areas.yaml
+│   └── events.py  outlook.py  grid_value.py  build_features.py
+├── api/
+│   ├── app/              main.py, routes/, schemas.py, adapters/ (census, nws, ercot_live, llm), sim/, narrator/
+│   └── tests/
+├── worker/               ERCOT snapshot refresher
+├── web/                  Next.js app; mocks/ holds fixture JSON generated from schemas.py
+├── evals/                narrator fixtures and scorer
+└── notebooks/            insight analysis; exported charts land in web/public/insights</code></pre>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Layer</th><th>Pick</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Web</td><td>Next.js with TypeScript, Tailwind, MapLibre GL, Recharts</td><td>Christian's call; MapLibre needs no map token</td></tr>
+      <tr><td>API</td><td>FastAPI, Pydantic v2, httpx, tenacity</td><td>Typed contract, async adapters, retries</td></tr>
+      <tr><td>Features</td><td>DuckDB and Parquet, Polars for ETL</td><td>Whole-Texas rebuild in minutes, zero ops</td></tr>
+      <tr><td>Cache</td><td>Redis</td><td>Adapter cache, rate limits, worker handoff</td></tr>
+      <tr><td>Events</td><td>Postgres</td><td>Funnel events prove CRM-readiness without building a CRM</td></tr>
+      <tr><td>Models</td><td>numpy, scipy, statsmodels</td><td>Transparent, testable, fast</td></tr>
+      <tr><td>LLM</td><td>Any fast hosted model behind an adapter</td><td>Swappable, and it never computes numbers</td></tr>
+      <tr><td>Ops</td><td>docker compose, GitHub Actions, k6</td><td>One-command demo, CI badge, real load numbers</td></tr>
+    </tbody>
+  </table></div>
+  <p>CI runs lint, unit tests, a schema-drift check between <code>schemas.py</code> and the generated client, and narrator evals on recorded outputs. CODEOWNERS maps folders to people so each person's work is visible to judges.</p>
+</section>
+
+<section id="data">
+  <h2><span class="sheet">D-01</span>Data sources</h2>
+  <p>Seven sources carry the MVP. Start the big downloads in the first 30 minutes.</p>
+  <div class="table-wrap"><table class="wide">
+    <thead><tr><th>Source</th><th>What we use it for</th><th>Access</th><th>Watch out for</th><th>Owner</th><th>Tier</th></tr></thead>
+    <tbody>
+      <tr><td>U.S. Census Geocoder, geographies by one-line address</td><td>Address to lat/lon, county FIPS, tract</td><td>Free, no key</td><td>Can be slow; cache; fall back to ZIP centroid</td><td>Victor</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>EAGLE-I recorded outages 2014 to 2024 (ORNL)</td><td>15-minute customers out by county, turned into events, durations and outage hours</td><td>Figshare download; ORNL's portal lists 2025 as well</td><td>Coverage grows over time, so fit rates on 2018 onward; a zero doesn't always mean no outage; scraping gaps during big storms; filter to Texas on ingest</td><td>Alejandro, then Nolan</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>ERCOT backcasted (actual) load profiles, historical</td><td>15-minute household load shape by profile type and weather zone, on the actual storm dates</td><td>Public yearly files</td><td>Pick RESHIWR for electric heat or RESLOWR otherwise; scale to the home's kWh</td><td>Nolan</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>ERCOT historical RTM load zone and hub prices (NP6-785-ER)</td><td>Scarcity hours and battery value by load zone</td><td><code>gridstatus</code>: <code>Ercot().get_rtm_spp(year)</code>, no key</td><td>Daylight-saving duplicate intervals; large Excel files</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>Base availability by utility (Base pricing page)</td><td>Which Base product applies at the address</td><td>Hand-built YAML with source URL and date</td><td>Changes over time; confirm with Base engineers Friday night</td><td>Alejandro</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>ZIP to utility lookup, 2024 (NREL via OpenEI)</td><td>Detect the utility before the user confirms</td><td>CSV download (IOU and non-IOU files)</td><td>ZIP codes straddle utilities; always ask the user to confirm</td><td>Alejandro</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>NWS API, active alerts by point</td><td>The "right now" block</td><td>Free; send a User-Agent header</td><td>Cache 5 minutes; handle 5xx without failing the report</td><td>Victor</td><td><span class="tag mvp">MVP</span></td></tr>
+      <tr><td>FEMA National Risk Index</td><td>Hazard mix (hurricane, winter weather, ice, wind, flood, heat), flood context, and a prior for thin counties</td><td>Download by county and tract</td><td>Relative scores, not probabilities</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>EIA-861 reliability</td><td>SAIDI with versus without major event days, by utility</td><td>Annual files</td><td>2024 columns have been reported misaligned in at least one parser; check headers by hand</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>ACS 5-year (Census API)</td><td>Owner-occupied single-family homes for the map</td><td>Free API, key optional</td><td>Area-level only; never used to target individuals</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>ERCOT live grid (gridstatus, ERCOT public API)</td><td>"Texas grid right now" snapshot</td><td>Dashboards need no key; the ERCOT API needs a free account and subscription key</td><td>Poll every 5 minutes in the worker, never on the request path</td><td>Victor</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>PNNL event-correlated outages (EAGLE-I with DOE-417)</td><td>Shortcut for labeling major events</td><td>OEDI download</td><td>Ends in 2023</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
+      <tr><td>NOAA Storm Events</td><td>Storm names and causes by county and date</td><td>Bulk CSV</td><td>Fuzzy joins; keep a hand list for four marquee storms</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
+      <tr><td>Smart Meter Texas export</td><td>The home's own 15-minute usage replaces the profile</td><td>User uploads a CSV</td><td>Competitive areas only; parse client-side or discard after use</td><td>Christian and Nolan</td><td><span class="tag p2">P2</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>Leave alone this weekend</h3>
+  <p>Nodal and bus prices, shadow prices, and the 60-day SCED and state-estimator disclosures. They matter for real siting, and Base's ADER post shows substation-level siting using power transfer distribution factors, but that needs network topology we don't have. In the video, call our map a public-data prior that would feed that work.</p>
+</section>
+
+<section id="models">
+  <h2><span class="sheet">M-01</span>Models</h2>
+  <h3>Outage events and per-home durations</h3>
+  <p>An event is a run of 15-minute readings with customers out at or above max(50, 0.1% of modeled customers), merging gaps under an hour and dropping events under 30 minutes. Keep thresholds in config.</p>
+  <p>EAGLE-I only says how many customers are out, not who. Replay each event as a queue: rises are homes going dark, falls are homes coming back. Restoring in first-out-first-back order and in last-out-first-back order gives two different duration distributions with identical customer-hours, so SAIDI-style totals stay exact and the true tail sits between the bounds. Report both as a band.</p>
+  <h3>Outlook</h3>
+  <p>Metric: expected 12-hour-plus outages per year for a typical home in the county, the sum over events of the share of customers dark 12 hours or longer, divided by years of usable coverage from 2018. Shrink noisy counties with a gamma-Poisson empirical-Bayes prior fit within each ERCOT weather zone, and report the posterior mean with a 90% interval. Map to five levels by Texas-wide quantiles and phrase it as "about once every N years."</p>
+  <p>Backtest: fit on 2018 to 2022, score 2023 to 2024 per county with Poisson deviance and rank correlation against two baselines, the statewide mean and the raw county rate. Ship the chart whatever it says.</p>
+  <h3>Backup simulator</h3>
+  <ul>
+    <li><strong>Load:</strong> the ERCOT backcasted profile for the home's weather zone and heat type, scaled to the home's annual kWh so seasonality survives, for the seven days starting at each event.</li>
+    <li><strong>Battery:</strong> 39.2 kWh and 20 kW per Core. Start full, since storms are forecast, with a toggle for "starts at the reserve floor." The reserve percentage is a question for Base.</li>
+    <li><strong>Modes:</strong> normal use versus storm mode, a clearly labeled load reduction such as 30%.</li>
+    <li><strong>Output:</strong> hours until empty for each event and each month, plus coverage: the share of affected homes fully covered and the share of dark hours covered.</li>
+    <li><strong>Tests:</strong> energy conservation, monotonic in capacity, and about 36 hours at an average load near 1.1 kW, which is 39.2 kWh divided by 36 hours.</li>
+  </ul>
+  <h3>Right size</h3>
+  <p>Recommend the smallest Core count that covers at least 90% of historical 12-hour-plus outage hours for this county and home. Explain it in one sentence and say Base confirms sizing at install.</p>
+  <h3>Pays twice</h3>
+  <p>Homeowner value is expected outage hours per home per year times owner-occupied single-family homes. Grid value is, per load zone, the perfect-foresight daily arbitrage for one 20 kW, 39.2 kWh unit (a small daily linear program that runs in minutes) plus the count of intervals above $1,000/MWh; label it an upper bound. Add what Base sells in the county today. The index is the product of normalized components, with each component in the tooltip. Put the caveat on screen: load-zone granularity, and real siting needs nodal studies.</p>
+  <h3>Narrator</h3>
+  <p>Input is the report JSON with an ID on every fact. Output is a headline, a summary of 120 words or fewer, and the fact IDs used. Validators: every number in the text must match a fact after rounding, a banned-phrase list, Flesch-Kincaid grade 7 or lower (the grandma test as a unit test), and a length cap. On failure, retry once with the reason, then fall back to a deterministic template. Evals: 24 fixtures (8 counties by 3 homes), pass rates in the README, and CI runs them on recorded outputs so tests aren't flaky.</p>
+  <details>
+    <summary>Starter code: per-home durations and coverage (tested on a synthetic storm)</summary>
+    <div>
+<pre><code>from collections import deque
+import numpy as np
+
+def customer_durations(customers_out, dt_h=0.25, order="fifo"):
+    """Split one county outage event into per-customer outage durations (hours).
+
+    EAGLE-I only reports how many customers are out every 15 minutes. Treat rises as
+    homes going dark and falls as homes restored. The "fifo" and "lifo" orderings give
+    two bounds on the tail; customer-hours are identical under both.
+    """
+    c = np.asarray(customers_out, dtype=float)
+    steps = np.diff(np.concatenate(([0.0], c, [0.0])))  # open and close the event at zero
+    waiting = deque()                                   # [step_went_dark, customers]
+    durations, weights = [], []
+    for t, delta in enumerate(steps):
+        if delta &gt; 0:
+            waiting.append([t, delta])
+            continue
+        restored = -delta
+        while restored &gt; 1e-9 and waiting:
+            batch = waiting[0] if order == "fifo" else waiting[-1]
+            take = min(batch[1], restored)
+            durations.append((t - batch[0]) * dt_h)
+            weights.append(take)
+            batch[1] -= take
+            restored -= take
+            if batch[1] &lt;= 1e-9:
+                if order == "fifo":
+                    waiting.popleft()
+                else:
+                    waiting.pop()
+    return np.array(durations), np.array(weights)
+
+
+def coverage(durations, weights, backup_h):
+    """Share of affected homes fully covered, and share of their dark hours covered."""
+    homes = weights[durations &lt;= backup_h].sum() / weights.sum()
+    hours = (weights * np.minimum(durations, backup_h)).sum() / (weights * durations).sum()
+    return homes, hours</code></pre>
+    </div>
+  </details>
+  <details>
+    <summary>Starter code: empirical-Bayes outlook (tested on overdispersed synthetic counties)</summary>
+    <div>
+<pre><code>import numpy as np
+from scipy import stats
+
+def shrink_rates(events, years, floor_cv=0.25):
+    """Gamma-Poisson empirical Bayes: pull noisy county rates toward their zone mean.
+
+    events: effective long-outage count per county (fractional is fine)
+    years:  years of usable coverage per county
+    Returns posterior mean rate and a 90% interval.
+    """
+    events, years = np.asarray(events, float), np.asarray(years, float)
+    rate = events / years
+    mean = np.average(rate, weights=years)
+    raw_var = np.average((rate - mean) ** 2, weights=years)
+    noise = mean * np.average(1.0 / years, weights=years)       # expected Poisson share
+    var_between = max(raw_var - noise, (floor_cv * mean) ** 2)   # floor keeps the prior honest
+    beta = mean / var_between
+    alpha = mean * beta
+    a_post, b_post = alpha + events, beta + years
+    lo, hi = stats.gamma.ppf([[0.05], [0.95]], a_post, scale=1.0 / b_post)
+    return a_post / b_post, lo, hi</code></pre>
+      <p class="small muted">On 40 synthetic counties with gamma-distributed true rates, shrinkage cut mean squared error from 0.103 to 0.031 and the 90% interval covered the truth 97% of the time. Fit it separately per weather zone on the real data.</p>
+    </div>
+  </details>
+</section>
+
+<section id="insights">
+  <h2><span class="sheet">M-02</span>Insights to hunt for Track 1</h2>
+  <p>Treat these as hypotheses. Test all four Saturday morning, then put the strongest three in the video.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Same Core, different month</h3>
+      <p class="small"><strong>Test:</strong> backup hours for a typical home by month and weather zone, plus the February 2021 and July 2024 storm weeks.</p>
+      <p class="small"><strong>Win:</strong> one chart that tells Base what to say to members in August and in a freeze.</p>
+      <p class="small"><strong>If it's weak:</strong> it can't be flat; the size of the gap is the finding.</p>
+    </div>
+    <div class="card">
+      <h3>Official reliability leaves out the storms</h3>
+      <p class="small"><strong>Test:</strong> EIA-861 SAIDI with versus without major event days for Oncor, CenterPoint, AEP Texas, TNMP and Austin Energy, 2019 onward.</p>
+      <p class="small"><strong>Win:</strong> how much of the dark time people actually live through is removed from the headline number.</p>
+      <p class="small"><strong>If it's weak:</strong> a small gap for one utility is still a useful comparison.</p>
+    </div>
+    <div class="card">
+      <h3>The tail is the product</h3>
+      <p class="small"><strong>Test:</strong> share of each county's customer outage hours since 2018 that came from its five worst events.</p>
+      <p class="small"><strong>Win:</strong> a handful of nights is most of the darkness, so backup is sold on hours, not averages.</p>
+      <p class="small"><strong>If it's weak:</strong> if outages are spread out, pivot the message to frequency.</p>
+    </div>
+    <div class="card">
+      <h3>Where a Core pays twice</h3>
+      <p class="small"><strong>Test:</strong> the pays-twice index, filtered to counties where Base sells energy only today.</p>
+      <p class="small"><strong>Win:</strong> a short list of expansion candidates to sanity-check with Base engineers Saturday night.</p>
+      <p class="small"><strong>If it's weak:</strong> if homeowner and grid value don't overlap, that's a go-to-market finding in itself.</p>
+    </div>
+  </div>
+</section>
+
+<section id="owners">
+  <h2><span class="sheet">T-01</span>Owners</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Christian</h3>
+      <p class="role">Product UI and demo polish</p>
+      <dl>
+        <dt>Owns</dt><dd>The web app: address flow, report page, Pays twice map; loading, partial-data and error states; screen captures for the video.</dd>
+        <dt>First two hours</dt><dd>Paper-wireframe the report and map, scaffold Next.js, and build against fixture JSON from the contract.</dd>
+        <dt>Done means</dt><dd>Every state is designed, the report works on a phone, and nothing shifts while it loads.</dd>
+        <dt>What Base sees</dt><dd>Taste and product sense applied to their actual funnel.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>Victor</h3>
+      <p class="role">Platform and reliability</p>
+      <dl>
+        <dt>Owns</dt><dd>Repo, compose, FastAPI service, adapters (Census, NWS, ERCOT), Redis cache, Postgres funnel events, CI, deploy, load test.</dd>
+        <dt>First two hours</dt><dd>Repo skeleton, compose up with health checks, <code>/v1/report</code> serving the fixture, CI green.</dd>
+        <dt>Done means</dt><dd>Kill NWS or the LLM mid-demo and the report still renders with honest status chips; <code>make demo</code> works from a clean clone.</dd>
+        <dt>What Base sees</dt><dd>The same instincts Base describes for its own fleet: stale data is flagged, not trusted.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>Nolan</h3>
+      <p class="role">Models and AI</p>
+      <dl>
+        <dt>Owns</dt><dd>Event extraction, per-home durations, outlook model and backtest, backup simulator, sizing, grid value, narrator with validators and evals, model card.</dd>
+        <dt>First two hours</dt><dd>Lock the contract with Christian and Victor, then prototype event extraction on Collin, Harris and Travis while the full download runs.</dd>
+        <dt>Done means</dt><dd>Simulator tests pass, the backtest chart exists, and narrator pass rates are in the README.</dd>
+        <dt>What Base sees</dt><dd>Rigorous modeling with honest uncertainty, and AI used only where it earns its keep.</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>Alejandro</h3>
+      <p class="role">Data, story and glue</p>
+      <dl>
+        <dt>Owns</dt><dd>Downloads and ETL for every static source, the Base availability YAML, crosswalks, personas, insight charts with Nolan, the demo script, and submission.</dd>
+        <dt>First two hours</dt><dd>Start every big download, register for the ERCOT API, ask Base engineers the three questions in H-01, and pick anchor addresses.</dd>
+        <dt>Done means</dt><dd><code>make data</code> rebuilds features from scratch, and DATA_SOURCES.md lists every source with license and as-of date.</dd>
+        <dt>What Base sees</dt><dd>Someone who owns ambiguity end to end and already talked to their team.</dd>
+      </dl>
+    </div>
+  </div>
+  <p class="small muted">Rituals: a two-minute standup at every gate, small pull requests into a protected main branch, and one chat channel. New ideas go in docs/NEXT.md, not into the build.</p>
+</section>
+
+<section id="timeline">
+  <h2><span class="sheet">T-02</span>Timeline</h2>
+  <p>Friday 6:00 PM to Sunday 11:00 AM, Central time. Gates are hard: if a gate slips, cut scope rather than sleep.</p>
+  <div class="table-wrap"><table class="wide">
+    <thead><tr><th>When</th><th>Christian</th><th>Victor</th><th>Nolan</th><th>Alejandro</th><th>Gate</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Lock</strong><br>Fri 6 to 8 PM</td><td>Wireframes; Next.js scaffold with a mocks folder</td><td>Repo, compose (web, api, worker, redis, postgres), health checks, CI stub</td><td>Contract and fixtures with the team (30 min); start Texas pull from EAGLE-I</td><td>Kick off downloads; ERCOT API account; three questions to Base engineers; anchor addresses</td><td class="gatecell">8 PM: contract committed, repo builds, downloads running</td></tr>
+      <tr><td><strong>Skeleton</strong><br>Fri 8 PM to 2 AM</td><td>Landing, persona chips, report page on fixtures; outlook badge</td><td><code>/v1/report</code> on Census and NWS with caching and <code>sources[]</code>; generated TS client</td><td>Events and duration bounds for 3 counties; simulator on ERCOT profiles</td><td>Texas outage parquet; crosswalks (county to weather zone and load zone, ZIP to utility, utility to Base offer); features v0</td><td class="gatecell">1:30 AM: type Sally's address, see her county's real past outages</td></tr>
+      <tr><td><strong>Sleep</strong><br>Sat 2 to 7:30 AM</td><td colspan="4">Alejandro starts the full Texas rebuild and price downloads before bed. Everyone sleeps.</td><td class="gatecell">Overnight jobs finish</td></tr>
+      <tr><td><strong>Real data</strong><br>Sat 7:30 AM to 1 PM</td><td>Replay chart, backup by month, sizing, link to Base; mobile layout</td><td>Features mounted read-only; degraded paths; funnel events; pick deploy target</td><td>Statewide outlook with empirical Bayes and backtest; sizing rule; simulator tests</td><td>NRI, EIA-861 and ACS into features; label marquee storms; hand-check every persona number</td><td class="gatecell">1 PM: three persona reports fully real, no mocks on the MVP path</td></tr>
+      <tr><td><strong>Depth</strong><br>Sat 1 to 7 PM</td><td>Pays twice map and ranked table; empty and error states</td><td>ERCOT snapshot worker; circuit breakers; k6 load test; live URL</td><td>Narrator, validators, eval harness; grid value by load zone; model card</td><td>Insight charts with Nolan; demo script v1; README skeleton; second Base check-in</td><td class="gatecell">7 PM: timed full demo run-through</td></tr>
+      <tr><td><strong>Freeze</strong><br>Sat 7 to 11 PM</td><td>Polish; clean screen recordings</td><td>Failure-injection clip; latency table; clean-clone <code>make demo</code></td><td>Edge cases; export eval and backtest charts</td><td>Record the full safety video by 10:30 PM; upload unlisted</td><td class="gatecell">11 PM: feature freeze, tag v0.9, safety video exists</td></tr>
+      <tr><td><strong>Sleep</strong><br>Sat 11 PM to Sun 5:30 AM</td><td colspan="4">Everyone sleeps. Nothing new gets built after the freeze.</td><td class="gatecell">Rested voices</td></tr>
+      <tr><td><strong>Ship</strong><br>Sun 5:30 to 11 AM</td><td colspan="4">6:00 rehearsal. 6:30 to 8:30 record. 8:30 to 9:45 edit and captions. 9:45 final README pass. 10:15 submit. Then rehearse the 3-minute live version for awards.</td><td class="gatecell">10:15 AM: submitted</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="video">
+  <h2><span class="sheet">V-01</span>Demo script, 5:00</h2>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Time</th><th>On screen</th><th>Say</th></tr></thead>
+    <tbody>
+      <tr><td>0:00 to 0:20</td><td>Sally's address typed; the report appears</td><td>Base's compare page tells Texans what they'd save. We built the other half: will the lights stay on?</td></tr>
+      <tr><td>0:20 to 0:45</td><td>Sally and Thomas side by side</td><td>Who it's for, and why the honest answer depends on the county, the season and the home.</td></tr>
+      <tr><td>0:45 to 2:15</td><td>Sally: outlook, February 2021 replay, backup by month, two Cores, summary, link to Base. Thomas: hurricane-heavy mix, July 2024 replay, August air conditioning, storm mode. Third address: a different Base product.</td><td>Walk the product in plain language. Every number on screen came from our pipeline.</td></tr>
+      <tr><td>2:15 to 3:15</td><td>Architecture; duration band chart; backtest; narrator validators and pass rate; latency and load test; NWS and LLM killed live while the report keeps rendering</td><td>What's under the hood and why it holds up.</td></tr>
+      <tr><td>3:15 to 4:15</td><td>The three strongest insight charts from M-02</td><td>What we saw in Texas grid data that most people miss.</td></tr>
+      <tr><td>4:15 to 4:45</td><td>API docs, the widget embedded on a mock of Base's compare page</td><td>How Base could ship this tomorrow, what members get next, and our honest limits.</td></tr>
+      <tr><td>4:45 to 5:00</td><td>Four faces, one line each; repo URL</td><td>Who built what.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Record in segments at 1080p with a real microphone, pre-fill inputs so there's no typing lag, and add captions. Pull any statistic in the voiceover from our own pipeline, not from memory.</p>
+</section>
+
+<section id="risks">
+  <h2><span class="sheet">R-01</span>Risks</h2>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Risk</th><th>Mitigation</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td>Big downloads stall</td><td>Start at kickoff; Texas-only parquet; keep a three-county subset so the demo never depends on the full build</td><td>Alejandro</td></tr>
+      <tr><td>ERCOT API account takes time</td><td>Yearly price files and load profiles need no key; the API only powers live extras</td><td>Alejandro</td></tr>
+      <tr><td>County data read as "your house"</td><td>"Homes in your county" everywhere; show the duration band and years of data</td><td>Christian</td></tr>
+      <tr><td>Coverage gaps in outage data</td><td>Rates from 2018 on; flag thin counties; shrink them toward the zone mean</td><td>Nolan</td></tr>
+      <tr><td>Overclaiming Base's product</td><td>Only published specs; every number labeled an estimate; pricing links to Base</td><td>Alejandro</td></tr>
+      <tr><td>LLM invents a number</td><td>Validator plus template fallback; the model never calculates</td><td>Nolan</td></tr>
+      <tr><td>Scope creep at 2 AM</td><td>The cut list is final; ideas go to docs/NEXT.md</td><td>Everyone</td></tr>
+      <tr><td>Demo breaks on camera</td><td>Pre-warmed cache, local compose, safety video recorded Saturday night</td><td>Victor</td></tr>
+      <tr><td>Privacy</td><td>No raw addresses at rest; the must-stay-on list never leaves the browser</td><td>Victor</td></tr>
+      <tr><td>Fatigue</td><td>Sleep blocks are in the schedule; freeze at 11 PM Saturday</td><td>Everyone</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="job">
+  <h2><span class="sheet">H-01</span>Start the job before we have it</h2>
+  <h3>Tonight, ask Base engineers three questions</h3>
+  <ol>
+    <li>When a member asks how long their Core will last, what do you tell them, and what do you wish you could tell them?</li>
+    <li>What reserve level should we assume at the start of an outage nobody saw coming?</li>
+    <li>Does outage history factor into where you launch or which utilities you partner with, and what's missing?</li>
+  </ol>
+  <p>Write the answers down, build to them, and with permission say "we asked your team" in the video. That is the job, started.</p>
+  <h3>Speak Base</h3>
+  <p>Member, Core, Energy + Backup, load zone, ADER, SCED, reserve, dispatch. Nolan and Victor should read Base's ADER Phase IV post before bed: it shows how the team thinks about dispatch accuracy, stale telemetry and siting, and our code should read like it came from the same shop.</p>
+  <h3>Make the repo the work sample</h3>
+  <p>The README opens with a 60-second summary, a GIF, the architecture, results tables (latency, backtest, eval pass rate) and a "what we'd do in week two" section. Small commits, CODEOWNERS, short decision records, a model card, and data sources with as-of dates.</p>
+  <h3>One sentence each</h3>
+  <ul>
+    <li>Christian: I designed and built the report and the map.</li>
+    <li>Victor: I built the platform and made it fail gracefully.</li>
+    <li>Nolan: I built the outage models, the simulator and the guarded narrator.</li>
+    <li>Alejandro: I built the data pipeline and ran the story with Base's engineers.</li>
+  </ul>
+  <p>Say them in the video and in every follow-up. After Sunday, send each engineer you spoke with one insight and the repo link, and name the open role you're aiming for.</p>
+</section>
+
+<section id="submit">
+  <h2><span class="sheet">S-01</span>Submit checklist</h2>
+  <p class="small muted">Checks save on this device only.</p>
+  <ul class="checklist">
+    <li><label><input type="checkbox" id="c-video"> Video is 5:00 or shorter, 1080p, audible, captioned</label></li>
+    <li><label><input type="checkbox" id="c-link"> Video link plays in a private browser window</label></li>
+    <li><label><input type="checkbox" id="c-repo"> Repo is public, or judges have access</label></li>
+    <li><label><input type="checkbox" id="c-demo"> <span><code>make demo</code> works from a clean clone on a second laptop</span></label></li>
+    <li><label><input type="checkbox" id="c-secrets"> No secrets in git history; .env.example present</label></li>
+    <li><label><input type="checkbox" id="c-readme"> README has summary, GIF, architecture, results, how to run, team</label></li>
+    <li><label><input type="checkbox" id="c-tracks"> Entered in Most Commercializable and Open Grid Data</label></li>
+    <li><label><input type="checkbox" id="c-live"> 3-minute live version rehearsed for awards</label></li>
+    <li><label><input type="checkbox" id="c-sent"> Submitted by 10:15 AM Sunday</label></li>
+  </ul>
+</section>
+
+<section id="sources">
+  <h2><span class="sheet">S-02</span>Sources</h2>
+  <h3>Base</h3>
+  <ul class="sources">
+    <li><a href="https://www.basepowercompany.com/compare">Compare your bill</a></li>
+    <li><a href="https://www.basepowercompany.com/pricing">Plans by area</a></li>
+    <li><a href="https://www.basepowercompany.com/centerpoint">CenterPoint page with Base Core specs</a></li>
+    <li><a href="https://www.basepowercompany.com/utilities">Utility partnerships</a></li>
+    <li><a href="https://www.basepowercompany.com/blog/aggregated-ders-and-the-capacity-crunch">ADER Phase IV and the capacity crunch</a></li>
+    <li><a href="https://www.basepowercompany.com/blog">Blog index, including the bill study and the power outage guide</a></li>
+  </ul>
+  <h3>Data</h3>
+  <ul class="sources">
+    <li><a href="https://figshare.com/articles/dataset/The_Environment_for_Analysis_of_Geo-Located_Energy_Information_s_Recorded_Electricity_Outages_2014-2022/24237376">EAGLE-I recorded outages on figshare</a></li>
+    <li><a href="https://www.ercot.com/mktinfo/loadprofile/alp">ERCOT backcasted load profiles, historical</a></li>
+    <li><a href="https://opensource.gridstatus.io">gridstatus documentation</a></li>
+    <li><a href="https://apiexplorer.ercot.com/">ERCOT public API registration</a></li>
+    <li><a href="https://www.eia.gov/electricity/data/eia861/">EIA-861 detailed data</a></li>
+    <li><a href="https://hazards.fema.gov/nri/data-resources">FEMA National Risk Index downloads</a></li>
+    <li><a href="https://catalog.data.gov/dataset/u-s-electric-utility-companies-and-rates-look-up-by-zip-code-2024">Utility lookup by ZIP code, 2024</a></li>
+    <li><a href="https://data.openei.org/submissions/6458">Event-correlated outage dataset (PNNL)</a></li>
+    <li><a href="https://geocoding.geo.census.gov/geocoder/">Census Geocoder</a></li>
+    <li><a href="https://www.weather.gov/documentation/services-web-api">NWS API documentation</a></li>
+  </ul>
+  <h3>Event</h3>
+  <ul class="sources">
+    <li><a href="https://www.deep-tech-week.com/austin-2026">Deep Tech Week listing with the Friday 6:00 PM kickoff</a></li>
+  </ul>
+  <footer>Prepared Friday, September 25, 2026. Facts about Base come from its public site that day; confirm anything that goes in the video.</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+(function () {
+  var segs = Array.prototype.slice.call(document.querySelectorAll('#strip .seg'));
+  var needle = document.getElementById('needle');
+  var phaseEl = document.getElementById('now-phase');
+  var countEl = document.getElementById('countdown');
+  var gateEl = document.getElementById('now-gate');
+  var kickoff = Date.parse('2026-09-25T23:00:00Z');
+  var deadline = Date.parse('2026-09-27T16:00:00Z');
+  function span(ms) {
+    var m = Math.max(0, Math.round(ms / 60000));
+    var h = Math.floor(m / 60), r = m % 60;
+    return (h ? h + ' h ' : '') + r + ' min';
+  }
+  function tick() {
+    var now = Date.now();
+    var current = null;
+    segs.forEach(function (el) {
+      var s = Date.parse(el.dataset.start), e = Date.parse(el.dataset.end);
+      var on = now >= s && now < e;
+      el.classList.toggle('is-now', on);
+      if (on) current = el;
+    });
+    if (now < kickoff) {
+      needle.style.display = 'none';
+      phaseEl.textContent = 'Before kickoff.';
+      countEl.textContent = ' Kickoff in ' + span(kickoff - now) + ', submission in ' + span(deadline - now) + '.';
+      gateEl.textContent = 'First gate at 8:00 PM Friday: contract committed, repo builds, downloads running.';
+    } else if (now >= deadline) {
+      needle.style.display = 'none';
+      phaseEl.textContent = 'Deadline passed.';
+      countEl.textContent = ' Submissions closed at 11:00 AM Sunday.';
+      gateEl.textContent = 'Next: follow up with the Base engineers you met.';
+    } else {
+      needle.style.display = 'block';
+      needle.style.left = ((now - kickoff) / (deadline - kickoff) * 100).toFixed(2) + '%';
+      var name = current ? current.textContent.trim() : 'Build';
+      phaseEl.textContent = 'Now: ' + name + '.';
+      countEl.textContent = ' Submission closes in ' + span(deadline - now) + '.';
+      gateEl.textContent = current ? current.dataset.gate : '';
+    }
+  }
+  tick();
+  setInterval(tick, 30000);
+})();
+
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.index a'));
+  if (!('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      links.forEach(function (l) { l.removeAttribute('aria-current'); });
+      var a = byId[en.target.id];
+      if (!a) return;
+      a.setAttribute('aria-current', 'true');
+      var nav = document.querySelector('.index');
+      if (nav && nav.scrollWidth > nav.clientWidth + 4) {
+        nav.scrollLeft = a.offsetLeft - nav.clientWidth / 2 + a.offsetWidth / 2;
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  document.querySelectorAll('main section[id]').forEach(function (s) { obs.observe(s); });
+})();
+
+(function () {
+  var KEY = 'porchlight-checklist-v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function (cb) {
+    cb.checked = !!state[cb.id];
+    cb.addEventListener('change', function () {
+      state[cb.id] = cb.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    });
+  });
+})();
+</script>
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+</body>
+</html>
