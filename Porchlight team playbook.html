@@ -196,6 +196,7 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
     <li><a href="#product"><span class="code">P-01</span>Porchlight</a></li>
     <li><a href="#scope"><span class="code">P-02</span>Scope</a></li>
     <li><a href="#scoring"><span class="code">P-03</span>Scoring map</a></li>
+    <li><a href="#sales-map"><span class="code">P-04</span>Sales map</a></li>
     <li><a href="#design"><span class="code">A-01</span>System design</a></li>
     <li><a href="#contract"><span class="code">A-02</span>API contract</a></li>
     <li><a href="#repo"><span class="code">A-03</span>Repo and stack</a></li>
@@ -342,6 +343,7 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
       <ul>
         <li>LLM narrator with validators and evals</li>
         <li>Pays twice map and ranked table</li>
+        <li>Sales map thin slice (P-04)</li>
         <li>ERCOT grid snapshot</li>
         <li>Backtest chart and three insight charts</li>
         <li>Live URL and load-test numbers</li>
@@ -362,7 +364,7 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
         <li>CRM, five-email sequence, referral hooks</li>
         <li>Style guide, Rhythm competitor analysis</li>
         <li>Panel scanning and appliance maps</li>
-        <li>B2B utility demo, agentic operations</li>
+        <li>Sales map beyond the P-04 thin slice, agentic operations</li>
         <li>Exploring every ERCOT dataset</li>
       </ul>
     </div>
@@ -385,6 +387,85 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
       <tr><td>Performance</td><td>10</td><td>Precomputed features in DuckDB, cached adapters, streamed narrative, load-test numbers</td><td>README table and 5 seconds of video</td></tr>
     </tbody>
   </table></div>
+</section>
+
+<section id="sales-map">
+  <h2><span class="sheet">P-04</span>Sales map: where utilities need Base</h2>
+  <p>A second experience, for Base's sales and partnerships team rather than homeowners. It is a map of every Texas utility, colored by grid stress. A rep clicks a utility, drills into its counties, switches data layers on and off, and sees why that utility's customers need Base. It is separate from Pays twice and reads the same central data the pipeline builds. Decided in a design review on September 25.</p>
+
+  <h3>Decisions</h3>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Topic</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td>Audience</td><td>Base sales and partnerships. A demo of why utilities need Base, not a product sold to utilities: they already have better internal data (SCADA, outage management).</td></tr>
+      <tr><td>The story</td><td>Diagnosis first (stress score and its drivers), then "what if Base were here": outage hours covered, fleet MWh and MW, and scarcity value labeled an upper bound.</td></tr>
+      <tr><td>Coverage</td><td>Every utility is drawn. About 10 Base-relevant utilities (from the Base availability YAML) are fully clickable; the rest get an "expansion candidate" card.</td></tr>
+      <tr><td>Zoom levels</td><td>Statewide, utility territories are colored by score. Clicking a utility breaks it into its counties, each with its own score and layer detail. A utility's score is the customer-weighted mean of its counties.</td></tr>
+      <tr><td>Score</td><td>On/off layer toggles with equal weights, plus named presets. Each layer is ranked 0 to 1 against Texas, the score is the mean of the layers that are on, and it shows on the same 1 to 5 scale as the homeowner outlook. The panel shows every layer's contribution. No free weight sliders.</td></tr>
+      <tr><td>Presets</td><td>Winter freeze: outages, weather hazard, homes. Hurricane season: outages, weather hazard, flood, homes. Summer peak: grid scarcity, weather hazard, homes.</td></tr>
+      <tr><td>Live vs. structural</td><td>A stable structural score from history and hazard, plus a "Right now" strip per utility and county (NWS warnings, ERCOT conditions) with as-of times. Live data never changes the score. No free live outage feed exists, so say "past storms, replayed," never "live outages."</td></tr>
+      <tr><td>Fleet slider</td><td>Share of eligible homes: 1%, 5% or 10%, starting at 1%, with "For scale: Base serves 30,000+ homes today." Coverage scales linearly (a random rollout). Targeting the worst counties is week two.</td></tr>
+      <tr><td>Ranking</td><td>Utilities are ranked by score within three groups: expansion targets (high score, Base sells energy only or doesn't serve there), grow (high score, Base sells backup there), monitor (lower score). Eligible homes is a column, not a multiplier.</td></tr>
+      <tr><td>Access</td><td><code>/sales</code>, replacing the <code>/crm</code> scaffold, behind the existing Supabase sign-in with an email allowlist (team emails now, a <code>@basepowercompany.com</code> check later). Needs Christian's OK: <code>/crm</code> and auth are his.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Layers and how each is drawn</h3>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Toggle</th><th>Source</th><th>On the map</th><th>Number it adds to the score</th><th>Tier</th></tr></thead>
+    <tbody>
+      <tr><td>Outage history</td><td>EAGLE-I, via the homeowner pipeline</td><td>County color map of long-outage hours per customer per year; storm replay slider</td><td>Customer-weighted outage hours per year since 2018</td><td><span class="tag mvp">Slice</span></td></tr>
+      <tr><td>Weather hazard (winter and ice, hurricane, heat, wind, tornado)</td><td>FEMA National Risk Index</td><td>County color map</td><td>Mean of the hazard scores, by county</td><td><span class="tag mvp">Slice</span></td></tr>
+      <tr><td>Flood</td><td>FEMA National Risk Index flood score</td><td>County color map; detailed flood-zone outlines only in week two</td><td>County flood score</td><td><span class="tag p1">Full</span></td></tr>
+      <tr><td>Grid scarcity</td><td>ERCOT load-zone prices (the grid-value model)</td><td>Load zones shaded</td><td>Scarcity hours per year in the county's load zone</td><td><span class="tag p1">Full</span></td></tr>
+      <tr><td>Homes exposed</td><td>ACS owner-occupied single-family homes</td><td>County color map</td><td>Eligible homes</td><td><span class="tag p1">Full</span></td></tr>
+      <tr><td>Right now (not scored)</td><td>NWS alerts, ERCOT snapshot</td><td>Warning outlines and a strip with an as-of time</td><td>None</td><td><span class="tag mvp">Slice</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>Drawing rules: county color maps for county data, outlines for data with real edges, heatmaps only for dense point data. When a utility is selected, everything outside its territory fades while the toggles stay on.</p>
+
+  <h3>Stack</h3>
+  <p>Same stack as the homeowner app, not the MapLibre plan in A-03: <b>Next.js 16 and Mapbox GL 3</b>, with the token served by <code>/api/map/token</code>. Reuse <code>src/components/map/map-view.tsx</code>, adding GeoJSON fill layers with hover and click through <code>onMapReady</code> or a small <code>layers</code> prop rather than copying it. Use a flat statewide view: <code>pitch: 0</code> with Mapbox Standard's 3D objects off. The homeowner map's dusk lighting and 3D buildings suit one house, not 254 counties.</p>
+
+  <h3>Data contract</h3>
+  <p><code>make data</code> exports one precomputed file per release. The browser loads it once and computes scores as toggles change, so the thin slice needs no FastAPI service. The "Right now" strip is the only live call. Christian builds against a fixture of this shape now; real data replaces it later with no code change.</p>
+<pre><code>{
+  "as_of": "2026-09-26",
+  "layers": [{ "id": "outages", "label": "Outage history", "unit": "hours per customer per year",
+               "source": "eaglei", "as_of": "2024-12-31" }],
+  "counties": [{ "fips": "48085", "name": "Collin", "utilities": ["oncor"], "customers": 470000,
+                 "values": { "outages": 3.1 }, "ranks": { "outages": 0.72 } }],
+  "utilities": [{ "id": "oncor", "name": "Oncor", "scored": true, "base_offer": "energy_plus_backup",
+                  "counties": ["48085"], "eligible_homes": 0 }],
+  "geometry": { "counties": "counties.geojson", "utilities": "utilities.geojson" }
+}</code></pre>
+  <p>Values are illustrative. Territory shapes: the primary method dissolves Census county shapes by the EIA-861 county list, so they always match the county math. Archived HIFLD service-territory polygons are the more precise option (HIFLD Open shut down on August 26, 2025; copies are on DataLumos and the Data Rescue Project).</p>
+
+  <h3>Hackathon thin slice</h3>
+  <ul>
+    <li>Ships: territory map, then a utility, then its counties; outage history and weather hazard toggles; the score and its breakdown; the "Right now" strip; the grouped ranked list. All on real data.</li>
+    <li>Video: a 20 to 30 second beat inside 4:15 to 4:45, "and here's what Base's sales team gets from the same data."</li>
+    <li>7 PM gate: if the homeowner flow isn't solid, the slice becomes a clearly labeled prototype on fixture data.</li>
+    <li>Week two (<code>docs/NEXT.md</code>): the other three layers, the fleet overlay and slider, storm replay on this map, the 72-hour score, detailed flood outlines, wildfire, transmission and substations, a paid live outage feed.</li>
+  </ul>
+
+  <h3>Who does what</h3>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Owner</th><th>Task</th></tr></thead>
+    <tbody>
+      <tr><td>Alejandro</td><td>EIA-861 county-to-utility crosswalk; Census county shapes; territory shapes; per-county layer values and ranks; the export file and its fixture</td></tr>
+      <tr><td>Christian</td><td>The <code>/sales</code> screen: map layers, toggles, presets, utility and county panels, ranked list. OK the <code>/crm</code> replacement.</td></tr>
+      <tr><td>Victor</td><td>Reuse the NWS and ERCOT adapters for the "Right now" strip; the email allowlist</td></tr>
+      <tr><td>Nolan</td><td>Nothing new for the slice. The fleet overlay reuses coverage and grid value in week two.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Open questions for Base</h3>
+  <ul>
+    <li>Power limit: the help center says backup needs load at or below 11 kW (22 kW with two batteries); G-02 and CLAUDE.md use 20 kW per Core.</li>
+    <li>Backup hours: the duration calculator says about 12 to 36 hours for one 39.2 kWh battery and 24 to 72 for two; our copy says 36 to 72 hours for one or two Cores.</li>
+    <li>Would Base's sales team use a utility-level stress view, and which utilities are they talking to now?</li>
+  </ul>
 </section>
 
 <section id="design">
@@ -565,6 +646,9 @@ flowchart LR
       <tr><td>PNNL event-correlated outages (EAGLE-I with DOE-417)</td><td>Shortcut for labeling major events</td><td>OEDI download</td><td>Ends in 2023</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
       <tr><td>NOAA Storm Events</td><td>Storm names and causes by county and date</td><td>Bulk CSV</td><td>Fuzzy joins; keep a hand list for four marquee storms</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
       <tr><td>Smart Meter Texas export</td><td>The home's own 15-minute usage replaces the profile</td><td>User uploads a CSV</td><td>Competitive areas only; parse client-side or discard after use</td><td>Christian and Nolan</td><td><span class="tag p2">P2</span></td></tr>
+      <tr><td>EIA-861 service territory file</td><td>County-to-utility crosswalk for the sales map (P-04)</td><td>Same annual EIA-861 download</td><td>A county can have several utilities; weight by customers</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>Census cartographic boundary counties</td><td>County shapes, and utility territories dissolved from them (P-04)</td><td>Free shapefile or GeoJSON</td><td>Simplify for the web; keep FIPS as the join key</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>HIFLD Electric Retail Service Territories and Control Areas (archived)</td><td>Precise utility outlines and grid boundaries (ERCOT, SPP, MISO, WECC) for P-04</td><td>HIFLD Open shut down August 26, 2025; archived on DataLumos and the Data Rescue Project</td><td>Territories overlap and ignore county lines; display only, the math stays on counties</td><td>Alejandro</td><td><span class="tag p2">P2</span></td></tr>
       <tr><td>Household appliance loads (compiled reference, below)</td><td>The "must stay on" toggles: each appliance becomes kWh per day, then hours of backup left</td><td>Hand-built table with a source per value; ships as <code>src/lib/backup/appliance-loads.json</code></td><td>Nameplate watts are not average use: fridges, AC and heat cycle. Motors surge 2 to 3 times at start. Label every number an estimate</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
     </tbody>
   </table></div>
@@ -927,6 +1011,13 @@ def shrink_rates(events, years, floor_cv=0.25):
     <li><a href="https://bkvenergy.com/blog/how-much-electricity-does-refrigerator-use/">Refrigerator energy use (ENERGY STAR-certified average, 493 kWh a year)</a></li>
     <li><a href="https://eta-publications.lbl.gov/sites/default/files/lbnl-45967.pdf">LBNL whole-house measurements of standby power</a></li>
     <li><a href="https://www.eia.gov/consumption/residential/data/2020/">EIA Residential Energy Consumption Survey 2020</a></li>
+  </ul>
+  <h3>Sales map</h3>
+  <ul class="sources">
+    <li><a href="https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html">Census cartographic boundary files</a></li>
+    <li><a href="https://www.datalumos.org/datalumos/project/239091">HIFLD Open Electric Retail Service Territories, archived on DataLumos</a></li>
+    <li><a href="https://portal.datarescueproject.org/datasets/hifld-open-electric-retail-service-territories/">HIFLD Open Electric Retail Service Territories, Data Rescue Project</a></li>
+    <li><a href="https://hazards.fema.gov/nri/data-resources">FEMA National Risk Index data</a></li>
   </ul>
   <h3>Event</h3>
   <ul class="sources">
