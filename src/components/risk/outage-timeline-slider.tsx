@@ -13,10 +13,12 @@ import {
 import { WEATHER_HAZARD_META } from "@/lib/risk/synthetic-weather";
 import { cn } from "@/lib/utils";
 
-/** Degrees between major event stops on the dial */
-const STEP_DEG = 20;
-/** Horizontal drag sensitivity (degrees per pixel) */
-const DRAG_DEG_PER_PX = 0.22;
+/** Spacing between major event ticks (px) */
+const STEP_PX = 72;
+/** Horizontal drag sensitivity */
+const DRAG_PX_PER_PX = 1;
+/** Minor ticks between each major stop */
+const MINOR_PER_STEP = 3;
 
 type OutageTimelineSliderProps = {
   events: HomeOutageEvent[];
@@ -30,13 +32,13 @@ function clampIndex(index: number, length: number) {
   return Math.max(0, Math.min(length - 1, index));
 }
 
-function indexFromRotation(rotationDeg: number, length: number) {
+function indexFromOffset(offsetPx: number, length: number) {
   if (length <= 1) return 0;
-  return clampIndex(Math.round(-rotationDeg / STEP_DEG), length);
+  return clampIndex(Math.round(-offsetPx / STEP_PX), length);
 }
 
-function rotationForIndex(index: number) {
-  return -index * STEP_DEG;
+function offsetForIndex(index: number) {
+  return -index * STEP_PX;
 }
 
 function shortMonth(date: Date) {
@@ -54,47 +56,28 @@ export function OutageTimelineSlider({
   className,
 }: OutageTimelineSliderProps) {
   const safeIndex = clampIndex(activeIndex, events.length);
-  const [rotation, setRotation] = useState(() => rotationForIndex(safeIndex));
+  const [offset, setOffset] = useState(() => offsetForIndex(safeIndex));
   const [dragging, setDragging] = useState(false);
-  const [wheelSize, setWheelSize] = useState(420);
   const shellRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     pointerId: number;
     startX: number;
-    startRotation: number;
+    startOffset: number;
   } | null>(null);
   const lastEmittedIndex = useRef(safeIndex);
-  const rotationRef = useRef(rotation);
-  rotationRef.current = rotation;
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
 
   useEffect(() => {
     if (dragging) return;
-    setRotation(rotationForIndex(safeIndex));
+    setOffset(offsetForIndex(safeIndex));
     lastEmittedIndex.current = safeIndex;
   }, [safeIndex, dragging]);
 
-  // Dial diameter tracks full viewport width so the arc runs edge-to-edge.
-  useEffect(() => {
-    const el = shellRef.current;
-    if (!el) return;
-
-    const update = () => {
-      const width = el.getBoundingClientRect().width;
-      setWheelSize(Math.max(320, Math.round(width * 1.08)));
-    };
-    update();
-
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   if (!events.length) return null;
 
-  const tickRadius = Math.round(wheelSize * 0.4);
-  const dialHeight = Math.round(tickRadius * 0.72);
   const visualIndex = dragging
-    ? indexFromRotation(rotation, events.length)
+    ? indexFromOffset(offset, events.length)
     : safeIndex;
   const active = events[safeIndex]!;
   const accent = active.impactedHome
@@ -113,7 +96,7 @@ export function OutageTimelineSlider({
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
-      startRotation: rotationRef.current,
+      startOffset: offsetRef.current,
     };
     setDragging(true);
   }
@@ -122,13 +105,13 @@ export function OutageTimelineSlider({
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
 
-    const nextRotation =
-      drag.startRotation + (event.clientX - drag.startX) * DRAG_DEG_PER_PX;
-    const minRot = rotationForIndex(events.length - 1);
-    const maxRot = rotationForIndex(0);
-    const clamped = Math.max(minRot, Math.min(maxRot, nextRotation));
-    setRotation(clamped);
-    emitIndex(indexFromRotation(clamped, events.length));
+    const nextOffset =
+      drag.startOffset + (event.clientX - drag.startX) * DRAG_PX_PER_PX;
+    const minOffset = offsetForIndex(events.length - 1);
+    const maxOffset = offsetForIndex(0);
+    const clamped = Math.max(minOffset, Math.min(maxOffset, nextOffset));
+    setOffset(clamped);
+    emitIndex(indexFromOffset(clamped, events.length));
   }
 
   function endDrag(event: ReactPointerEvent<HTMLDivElement>) {
@@ -137,8 +120,8 @@ export function OutageTimelineSlider({
     dragRef.current = null;
     setDragging(false);
 
-    const snapped = indexFromRotation(rotationRef.current, events.length);
-    setRotation(rotationForIndex(snapped));
+    const snapped = indexFromOffset(offsetRef.current, events.length);
+    setOffset(offsetForIndex(snapped));
     emitIndex(snapped);
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -151,7 +134,7 @@ export function OutageTimelineSlider({
       ref={shellRef}
       className={cn(
         "pointer-events-auto relative w-full select-none",
-        "pt-3 pb-[max(0.5rem,var(--sab))]",
+        "px-3 pt-3 pb-[max(0.5rem,var(--sab))]",
         className,
       )}
       role="slider"
@@ -171,17 +154,17 @@ export function OutageTimelineSlider({
         }
       }}
     >
-      {/* Dark vignette behind the dial — map stays readable above */}
+      {/* Soft vignette above the bar */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-6"
+        className="pointer-events-none absolute inset-x-0 -top-10 bottom-0"
         style={{
           background:
-            "radial-gradient(ellipse 95% 120% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.28) 42%, transparent 72%)",
+            "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)",
         }}
       />
 
-      <div className="relative mb-1 px-4 text-center">
+      <div className="relative mb-2 px-1 text-center">
         <p className="text-[11px] font-medium uppercase tracking-wide text-white/70 drop-shadow-sm">
           Outage timeline
         </p>
@@ -197,24 +180,19 @@ export function OutageTimelineSlider({
         </p>
       </div>
 
+      {/* Horizontal glass rectangle */}
       <div
-        className="relative w-full touch-none overflow-hidden"
-        style={{ height: dialHeight }}
+        className="relative overflow-hidden rounded-2xl border border-white/40 shadow-[0_10px_28px_rgba(0,0,0,0.22)] touch-none"
+        style={{ height: 88 }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        {/* Light Liquid Glass filled disc */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 overflow-hidden rounded-full border border-white/40 shadow-[0_10px_32px_rgba(0,0,0,0.22)]"
-          style={{ width: wheelSize, height: wheelSize }}
-        >
-          <div className="frost-glass rounded-full" />
-          <div className="frost-wash rounded-full" />
-        </div>
+        <div aria-hidden className="frost-glass absolute inset-0 rounded-2xl" />
+        <div aria-hidden className="frost-wash absolute inset-0 rounded-2xl" />
 
+        {/* Center caret */}
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1.5 z-20 -translate-x-1/2"
@@ -225,84 +203,80 @@ export function OutageTimelineSlider({
           />
         </div>
 
+        {/* Center guide line */}
         <div
-          className="absolute left-1/2 top-3"
+          aria-hidden
+          className="pointer-events-none absolute bottom-3 left-1/2 top-3 z-10 w-px -translate-x-1/2"
+          style={{ backgroundColor: accent, opacity: 0.35 }}
+        />
+
+        {/* Sliding tick strip — active stop sits under center */}
+        <div
+          className="absolute inset-y-0 left-1/2 z-10"
           style={{
-            width: wheelSize,
-            height: wheelSize,
-            marginLeft: -wheelSize / 2,
-            transform: `rotate(${rotation}deg)`,
+            transform: `translateX(${offset}px)`,
             transition: dragging
               ? "none"
               : "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
           {events.map((event, index) => {
-            const angle = index * STEP_DEG;
             const isActive = index === visualIndex;
             const tickColor = event.impactedHome
               ? WEATHER_HAZARD_META[event.causeKind].color
               : "rgba(0,0,0,0.28)";
+            const x = index * STEP_PX;
 
             return (
               <div key={event.id}>
                 {index < events.length - 1
-                  ? [1, 2, 3].map((frac) => (
-                      <div
-                        key={`${event.id}-m${frac}`}
-                        aria-hidden
-                        className="absolute left-1/2 top-1/2 h-0 w-0"
-                        style={{
-                          transform: `rotate(${angle + (STEP_DEG * frac) / 4}deg)`,
-                        }}
-                      >
+                  ? Array.from({ length: MINOR_PER_STEP }, (_, frac) => {
+                      const mx = x + (STEP_PX * (frac + 1)) / (MINOR_PER_STEP + 1);
+                      return (
                         <span
-                          className="absolute left-0 h-2 w-px -translate-x-1/2 bg-black/20"
-                          style={{ top: -tickRadius }}
+                          key={`${event.id}-m${frac}`}
+                          aria-hidden
+                          className="absolute top-4 h-2 w-px -translate-x-1/2 bg-black/20"
+                          style={{ left: mx }}
                         />
-                      </div>
-                    ))
+                      );
+                    })
                   : null}
 
-                <div
-                  className="absolute left-1/2 top-1/2 h-0 w-0"
-                  style={{ transform: `rotate(${angle}deg)` }}
+                <button
+                  type="button"
+                  aria-label={event.title}
+                  aria-current={isActive ? "true" : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOffset(offsetForIndex(index));
+                    emitIndex(index);
+                  }}
+                  className="absolute top-2.5 flex w-[4.5rem] -translate-x-1/2 flex-col items-center"
+                  style={{ left: x }}
                 >
-                  <button
-                    type="button"
-                    aria-label={event.title}
-                    aria-current={isActive ? "true" : undefined}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRotation(rotationForIndex(index));
-                      emitIndex(index);
+                  <span
+                    className={cn(
+                      "mb-1 block w-px rounded-full",
+                      isActive ? "h-4" : "h-2.5",
+                    )}
+                    style={{
+                      backgroundColor: isActive ? accent : tickColor,
+                      boxShadow: isActive ? `0 0 10px ${accent}` : undefined,
                     }}
-                    className="absolute left-0 flex w-[4.5rem] -translate-x-1/2 flex-col items-center"
-                    style={{ top: -tickRadius - 6 }}
+                  />
+                  <span
+                    className={cn(
+                      "text-[13px] font-semibold leading-none",
+                      isActive ? "text-foreground" : "text-foreground/75",
+                    )}
                   >
-                    <span
-                      className={cn(
-                        "mb-1 block w-px rounded-full",
-                        isActive ? "h-4" : "h-2.5",
-                      )}
-                      style={{
-                        backgroundColor: isActive ? accent : tickColor,
-                        boxShadow: isActive ? `0 0 10px ${accent}` : undefined,
-                      }}
-                    />
-                    <span
-                      className={cn(
-                        "text-[13px] font-semibold leading-none",
-                        isActive ? "text-foreground" : "text-foreground/75",
-                      )}
-                    >
-                      {shortDay(event.startedAt)}
-                    </span>
-                    <span className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {shortMonth(event.startedAt)}
-                    </span>
-                  </button>
-                </div>
+                    {shortDay(event.startedAt)}
+                  </span>
+                  <span className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {shortMonth(event.startedAt)}
+                  </span>
+                </button>
               </div>
             );
           })}

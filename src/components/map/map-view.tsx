@@ -16,6 +16,15 @@ import {
   syncHomePowerGlow,
 } from "@/lib/map/home-power-glow";
 import {
+  removeBuildingPowerStates,
+  syncBuildingPowerStates,
+} from "@/lib/map/building-power-state";
+import {
+  removeOutagePerimeterLayers,
+  syncOutagePerimeterLayers,
+  type OutagePerimeterCollection,
+} from "@/lib/map/outage-perimeter-layers";
+import {
   removeWeatherHazardLayers,
   syncWeatherHazardLayers,
 } from "@/lib/map/weather-hazard-layers";
@@ -34,6 +43,11 @@ export type WeatherHazardOverlay = {
   visible: boolean;
 };
 
+export type OutagePerimeterOverlay = {
+  area: OutagePerimeterCollection;
+  visible: boolean;
+};
+
 export type MapViewProps = {
   className?: string;
   center?: LngLatLike;
@@ -45,6 +59,8 @@ export type MapViewProps = {
   basemap?: MapBasemapConfig;
   marker?: MapMarker | null;
   weatherHazards?: WeatherHazardOverlay | null;
+  /** Active outage affected-area perimeter */
+  outagePerimeter?: OutagePerimeterOverlay | null;
   /**
    * Neighborhood blackout: night lighting + amber glow on home.
    */
@@ -107,6 +123,7 @@ export function MapView({
   basemap = MAP_DEFAULTS.basemap,
   marker = null,
   weatherHazards = null,
+  outagePerimeter = null,
   outageBlackout = false,
   enableThreeLayer = false,
   onMapReady,
@@ -213,6 +230,8 @@ export function MapView({
       markerRef.current?.remove();
       markerRef.current = null;
       removeWeatherHazardLayers(map);
+      removeOutagePerimeterLayers(map);
+      removeBuildingPowerStates(map);
       removeHomePowerGlow(map);
       map.remove();
       mapRef.current = null;
@@ -284,6 +303,57 @@ export function MapView({
       weatherHazards.visible && !outageBlackout,
     );
   }, [status, weatherHazards, outageBlackout]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
+
+    if (!outagePerimeter) {
+      syncOutagePerimeterLayers(
+        map,
+        { type: "FeatureCollection", features: [] },
+        false,
+      );
+      return;
+    }
+
+    syncOutagePerimeterLayers(
+      map,
+      outagePerimeter.area,
+      outagePerimeter.visible,
+    );
+  }, [status, outagePerimeter]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
+
+    const home =
+      marker?.lngLat ??
+      (Array.isArray(center) ? (center as [number, number]) : null);
+
+    const powerShading = Boolean(outagePerimeter?.visible);
+    const baseOptions = {
+      perimeter: powerShading ? outagePerimeter!.area : null,
+      home,
+      homePowered: Boolean(marker?.lit),
+      active: powerShading,
+    };
+
+    syncBuildingPowerStates(map, { ...baseOptions, mode: "full" });
+    if (!powerShading) {
+      applyBasemapConfig(map, basemap);
+    }
+
+    const onIdle = () => {
+      if (!powerShading) return;
+      syncBuildingPowerStates(map, { ...baseOptions, mode: "refresh" });
+    };
+    map.on("idle", onIdle);
+    return () => {
+      map.off("idle", onIdle);
+    };
+  }, [status, outagePerimeter, marker, center, basemap]);
 
   useEffect(() => {
     const map = mapRef.current;
