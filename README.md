@@ -25,7 +25,7 @@ Built for the Base Power x AITX hackathon by Christian, Victor, Nolan and Alejan
 |---|---|
 | Outlook backtest (fit 2018-22, scored 2023-24) | Poisson deviance 122 against 126 for the weather-zone mean and 152 for the statewide mean; rank correlation 0.42 ([MODEL_CARD.md](MODEL_CARD.md)) |
 | Narrator eval pass rate | 88-100% first reply, 96-100% after one retry across runs, 24 fixtures ([Narrator evals](#narrator-evals)) |
-| Report latency (p95) and load test | TODO (Victor) |
+| Report latency (p95) and load test | 82 ms for a county report and 112 ms for a cached address at 20 concurrent, 0 errors in 900 requests ([API](#api)) |
 | Persona numbers hand-checked against raw data | 50 checks, none flagged ([docs/persona-check.md](docs/persona-check.md)) |
 
 ## Data
@@ -175,6 +175,17 @@ curl -X POST localhost:8000/v1/debug/faults -d '{"nws": true, "llm": true}' \
 | `GET /v1/report/{id}/narrative` | Server-sent events: status, headline, tokens, done. Only validated text streams |
 | `GET /v1/report/{id}/narrative.json` | The same narrative as JSON |
 | `GET /health`, `/metrics` | Liveness and Prometheus metrics (latency by route, adapter outcomes) |
+
+Load test (`make loadtest`, one uvicorn worker on a laptop, 300 requests per row):
+
+| Scenario (20 concurrent) | Errors | p50 ms | p95 ms | p99 ms | req/s |
+|---|---|---|---|---|---|
+| `POST /v1/report` by county | 0 | 62 | 82 | 87 | 319 |
+| `POST /v1/report` by address, geocode and alerts cached | 0 | 90 | 112 | 129 | 219 |
+| `GET` stored narrative | 0 | 30 | 92 | 120 | 504 |
+
+A first-time address adds the live Census and NWS calls (about 0.7 s), and a first narrative
+adds the Grok call (about 3 s); both are cached after that.
 
 Census geocoding (4 s timeout, cached 24 h) and NWS alerts (3 s, cached 5 min) each report `ok`,
 `degraded` or `unavailable` in `sources[]`. The address goes only to the Census geocoder; it is

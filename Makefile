@@ -3,7 +3,7 @@
 
 PY ?= .venv/bin/python
 
-.PHONY: data download build check test api demo
+.PHONY: data download build check test api demo loadtest
 
 data: download build
 
@@ -43,3 +43,7 @@ api:
 # Everything in containers from a clean clone: API on :4000, web on :3000.
 demo:
 	docker compose up --build --wait
+
+# Latency table against a running API (make api in another terminal).
+loadtest:
+	$(PY) -m api.loadtest --url http://localhost:8000 --requests 300 --concurrency 20
