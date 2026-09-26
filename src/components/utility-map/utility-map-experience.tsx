@@ -8,6 +8,7 @@ import { ControlsPanel } from "@/components/utility-map/controls-panel";
 import { DetailPanel } from "@/components/utility-map/detail-panel";
 import { MapKey } from "@/components/utility-map/map-key";
 import { MethodsSheet } from "@/components/utility-map/methods-sheet";
+import { RiskTableSheet } from "@/components/utility-map/risk-table-sheet";
 import {
   LAYER_COUNTY_3D,
   LAYER_COUNTY_FILL,
@@ -110,6 +111,7 @@ export function UtilityMapExperience() {
   // The one analytical state: question, its settings, and the place in focus (see lib/utility-map/view.ts).
   const [view, setView] = useState<ViewState>(() => defaultViewState());
   const [showWarnings, setShowWarnings] = useState(false);
+  const [riskTableOpen, setRiskTableOpen] = useState(false);
   const [view3d, setView3dOn] = useState(false);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip | null>(null);
@@ -594,11 +596,6 @@ export function UtilityMapExperience() {
         </div>
       ) : null}
 
-      {keyProps ? (
-        <div className="pointer-events-auto absolute bottom-8 left-[calc(22rem+env(safe-area-inset-left))] z-10 hidden w-[min(20rem,calc(100vw-22rem-432px))] lg:block">
-          <MapKey {...keyProps} />
-        </div>
-      ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
         <div className="pointer-events-auto flex max-h-[34dvh] w-full shrink-0 flex-col gap-3 overflow-y-auto lg:max-h-full lg:w-80">
@@ -615,9 +612,14 @@ export function UtilityMapExperience() {
             </div>
           ) : null}
           {keyProps ? (
-            <div className="order-1 lg:hidden">
-              <MapKey {...keyProps} defaultOpen={false} />
-            </div>
+            <>
+              <div className="order-1 lg:hidden">
+                <MapKey {...keyProps} defaultOpen={false} />
+              </div>
+              <div className="hidden lg:order-last lg:block">
+                <MapKey {...keyProps} />
+              </div>
+            </>
           ) : null}
           {data && ctx ? (
             <ControlsPanel
@@ -668,12 +670,26 @@ export function UtilityMapExperience() {
               onSelectUtility={selectUtility}
               onSelectCounty={selectFips}
               onOpenCounty={openCounty}
+              onOpenRiskTable={() => setRiskTableOpen(true)}
             />
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
           )}
         </div>
       </div>
+      {data ? (
+        <RiskTableSheet
+          open={riskTableOpen}
+          onOpenChange={setRiskTableOpen}
+          data={data}
+          countiesByFips={countiesByFips}
+          onPick={(row, kind) => {
+            setRiskTableOpen(false);
+            if (kind === "county") openCounty(row.id);
+            else selectUtility(row.id);
+          }}
+        />
+      ) : null}
     </main>
   );
 }

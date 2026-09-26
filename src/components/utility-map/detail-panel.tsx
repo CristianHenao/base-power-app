@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Maximize2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { CountyPicker } from "@/components/utility-map/county-picker";
@@ -20,7 +20,14 @@ import {
 import { HAZARD_IDS, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, generationSummary, paintLabel } from "@/lib/utility-map/format";
-import { utilityLayerQuality, utilityLayerSummary, type ScoreModel } from "@/lib/utility-map/scoring";
+import { riskRows, sortRiskRows } from "@/lib/utility-map/risk-table";
+import {
+  LEVEL_COLORS,
+  utilityLayerQuality,
+  utilityLayerSummary,
+  type Level,
+  type ScoreModel,
+} from "@/lib/utility-map/scoring";
 import { pickerOptions } from "@/lib/utility-map/selection";
 import type { CountyRecord, LayerId, Quality, UtilityMapData, UtilityRecord } from "@/lib/utility-map/types";
 import type { FleetShare, ViewState } from "@/lib/utility-map/view";
@@ -48,6 +55,7 @@ type DetailPanelProps = {
   onSelectUtility: (id: string | null) => void;
   onSelectCounty: (fips: string | null) => void;
   onOpenCounty: (fips: string) => void;
+  onOpenRiskTable: () => void;
   onClosePicker: () => void;
   className?: string;
 };
@@ -69,6 +77,8 @@ export function DetailPanel(props: DetailPanelProps) {
           <CountyView {...props} county={selectedCounty} utility={selectedUtility} />
         ) : selectedUtility ? (
           <UtilityView {...props} utility={selectedUtility} />
+        ) : props.view.question === "risk" ? (
+          <RiskList {...props} />
         ) : (
           <ResultList {...props} />
         )}
@@ -82,6 +92,82 @@ function Heading({ title, children }: { title: string; children?: ReactNode }) {
     <div className="space-y-1">
       <h2 className="text-[20px] leading-[27px]">{title}</h2>
       {children ? <p className="text-[14px] leading-[21px] text-muted-foreground">{children}</p> : null}
+    </div>
+  );
+}
+
+/** Grid Risk Index, statewide: every utility ranked in a compact table, with the full breakdown one click away. */
+function RiskList({ data, countiesByFips, onSelectUtility, onOpenRiskTable }: DetailPanelProps) {
+  const [open, setOpen] = useState(false);
+  const rows = sortRiskRows(riskRows(data, "utility", countiesByFips), "rank", "asc");
+  const shown = open ? rows : rows.slice(0, 15);
+  return (
+    <div className="space-y-4">
+      <Heading title="Grid Risk Index">
+        All {rows.length} Texas utilities, ranked. 1–100 against each other; higher is more at risk.
+      </Heading>
+      <button
+        type="button"
+        onClick={onOpenRiskTable}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-[var(--bp-grey-100)] px-4 py-3 text-left hover:bg-[var(--bp-grey-5)]"
+      >
+        <span>
+          <span className="block text-[14px] leading-[21px] font-semibold">Open the full table</span>
+          <span className="block text-[12px] leading-[18px] text-muted-foreground">
+            All {rows.length} utilities and {data.counties.length} counties, every factor, sortable and searchable
+          </span>
+        </span>
+        <Maximize2 className="size-4 shrink-0" aria-hidden />
+      </button>
+      <table className="w-full text-[13px] leading-[18px]">
+        <thead>
+          <tr className="border-b text-left text-[12px] text-muted-foreground">
+            <th scope="col" className="py-1.5 pr-2 font-semibold">#</th>
+            <th scope="col" className="py-1.5 pr-2 font-semibold">Utility</th>
+            <th scope="col" className="py-1.5 pr-2 font-semibold">Index</th>
+            <th scope="col" className="py-1.5 pr-2 text-right font-semibold" title="Hazard exposure, 1–100">Hazard</th>
+            <th scope="col" className="py-1.5 text-right font-semibold" title="Grid stress, 1–100">Grid</th>
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map((row) => (
+            <tr
+              key={row.id}
+              tabIndex={0}
+              onClick={() => onSelectUtility(row.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectUtility(row.id);
+                }
+              }}
+              className="cursor-pointer border-b hover:bg-[var(--bp-grey-5)] focus-visible:bg-[var(--bp-grey-5)]"
+            >
+              <td className="py-2 pr-2 tabular-nums text-muted-foreground">{row.rank ?? "—"}</td>
+              <td className="py-2 pr-2 font-semibold">{row.name}</td>
+              <td className="py-2 pr-2">
+                {row.index == null ? (
+                  "—"
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-semibold whitespace-nowrap"
+                    style={{
+                      backgroundColor: LEVEL_COLORS[row.level as Level],
+                      color: (row.level ?? 0) >= 3 ? "white" : undefined,
+                    }}
+                  >
+                    <span className="tabular-nums">{row.index}</span>
+                    {row.band}
+                  </span>
+                )}
+              </td>
+              <td className="py-2 pr-2 text-right tabular-nums">{row.hazard ?? "—"}</td>
+              <td className="py-2 text-right tabular-nums">{row.stress ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {rows.length > 15 ? <ShowAll open={open} count={rows.length} onToggle={() => setOpen(!open)} /> : null}
     </div>
   );
 }
