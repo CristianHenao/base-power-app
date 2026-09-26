@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ProfileOnboardingSettings } from "@/components/auth/profile-onboarding-settings";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -64,11 +65,11 @@ export function ProfileSettings() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="text-sm text-muted-foreground">
-          Manage your account settings.
+          Manage your account and the home details from onboarding.
         </p>
       </div>
 
@@ -104,7 +105,9 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <ProfileOnboardingSettings />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <Link
           href="/risk"
           className={cn(buttonVariants({ variant: "outline" }))}
