@@ -171,34 +171,30 @@ export function OutageTimelineSlider({
         }
       }}
     >
-      {/* Bottom-up light Liquid Glass — fades clear toward the map */}
+      {/* Dark vignette behind the dial — map stays readable above */}
       <div
         aria-hidden
-        className="frost-glass"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-6"
         style={{
-          WebkitMaskImage:
-            "linear-gradient(to top, #000 0%, #000 42%, transparent 100%)",
-          maskImage:
-            "linear-gradient(to top, #000 0%, #000 42%, transparent 100%)",
+          background:
+            "radial-gradient(ellipse 95% 120% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.28) 42%, transparent 72%)",
         }}
-      />
-      <div
-        aria-hidden
-        className="frost-wash !bg-gradient-to-t from-white/90 via-white/55 to-transparent"
       />
 
       <div className="relative mb-1 px-4 text-center">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-white/70 drop-shadow-sm">
           Outage timeline
         </p>
         <p
-          className="truncate text-base font-semibold tabular-nums"
+          className="truncate text-base font-semibold tabular-nums drop-shadow-sm"
           style={{ color: accent }}
         >
           {shortMonth(active.startedAt)} {shortDay(active.startedAt)} ·{" "}
           {formatDurationHours(active.durationHours)}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{active.title}</p>
+        <p className="truncate text-xs text-white/75 drop-shadow-sm">
+          {active.title}
+        </p>
       </div>
 
       <div
@@ -209,11 +205,15 @@ export function OutageTimelineSlider({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
+        {/* Light Liquid Glass filled disc */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-black/10 bg-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
+          className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 overflow-hidden rounded-full border border-white/40 shadow-[0_10px_32px_rgba(0,0,0,0.22)]"
           style={{ width: wheelSize, height: wheelSize }}
-        />
+        >
+          <div className="frost-glass rounded-full" />
+          <div className="frost-wash rounded-full" />
+        </div>
 
         <div
           aria-hidden

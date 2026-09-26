@@ -150,7 +150,6 @@ export function RiskAnalysisDashboard() {
 
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
-    setShowBasePower(false);
   }
 
   const activeOutage =
@@ -271,8 +270,11 @@ export function RiskAnalysisDashboard() {
                 </Link>
               </div>
             </FrostPanel>
-          ) : activeOutage && !showBasePower ? (
-            <OutageBatteryCallout event={activeOutage} />
+          ) : activeOutage ? (
+            <OutageBatteryCallout
+              event={activeOutage}
+              showBasePower={showBasePower}
+            />
           ) : null}
         </div>
 

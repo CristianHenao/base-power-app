@@ -72,11 +72,11 @@ export function OutageBatteryCallout({
         </div>
 
         <div className="grid grid-cols-2 gap-1.5">
-          <div className="rounded-lg bg-black/5 px-2.5 py-1.5">
-            <p className="text-sm font-semibold tabular-nums">
+          <div className="rounded-lg bg-red-500/15 px-2.5 py-1.5">
+            <p className="text-sm font-semibold tabular-nums text-red-700">
               {formatDurationHours(event.durationHours)}
             </p>
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <p className="text-[10px] text-red-700/70">
               Grid outage
             </p>
           </div>
@@ -94,7 +94,7 @@ export function OutageBatteryCallout({
             >
               {showBasePower ? "100% uptime" : "—"}
             </p>
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               With battery
             </p>
           </div>

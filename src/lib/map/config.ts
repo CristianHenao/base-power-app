@@ -21,11 +21,11 @@ export const MAP_DEFAULTS = {
   /** Close zoom while scrubbing an outage that hit the home block */
   outageHomeZoom: 17.4,
   /** Closer side-angle view when revealing Base Power on the home */
-  batteryRevealZoom: 18.8,
+  batteryRevealZoom: 19.85,
   pitch: 60,
   bearing: -20,
   /** Pitch looking at the home facade for battery placement */
-  batteryRevealPitch: 70,
+  batteryRevealPitch: 72,
   /** Orbit to expose the left side wall of the home */
   batteryRevealBearing: 48,
   antialias: true,
