@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dataModeLabel, formatLayerValue, formatPeriod, liveSummary } from "./format.ts";
+import { dataModeLabel, formatLayerValue, formatPeriod, generationSummary, liveSummary } from "./format.ts";
 import type { MapLayerMeta } from "./types.ts";
 
 function meta(id: MapLayerMeta["id"], extra: Partial<MapLayerMeta> = {}): MapLayerMeta {
@@ -45,4 +45,13 @@ test("live warnings never claim all-clear when the feed is down", () => {
     liveSummary({ status: "ok", as_of: "x", ercot: null,
       alerts: [{ fips: "48001", event: "Heat Advisory" }, { fips: "48999", event: "Flood Warning" }] }, ["48001"]),
     "1 county under Heat Advisory");
+});
+
+test("generation mix reads as words, biggest first, zeros left out", () => {
+  assert.equal(
+    generationSummary({ solar: 120, wind: 0, gas: 7927.1, coal: 0, nuclear: 0, storage: 413.5, other: 0 }),
+    "8,461 MW: gas 7,927, storage 414, solar 120",
+  );
+  assert.equal(generationSummary({ solar: 0, wind: 0, gas: 0, coal: 0, nuclear: 0, storage: 0, other: 0 }), "No power plants");
+  assert.equal(generationSummary(undefined), null);
 });

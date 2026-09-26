@@ -64,6 +64,8 @@ export type CountyRecord = {
   outage_coverage_12h?: number | null;
   /** Percent of land in FEMA's 1% annual-chance floodplain (demo counties only). */
   sfha_land_pct?: number | null;
+  /** Operable net summer capacity by fuel, MW (EIA-860 2024). */
+  generation_mix?: Record<"solar" | "wind" | "gas" | "coal" | "nuclear" | "storage" | "other", number>;
 };
 
 /** A utility's estimated customers in one county (EIA-861 membership, modeled split). */
@@ -130,5 +132,6 @@ export type UtilityMapData = {
     territories: string;
     flood?: Record<string, string>;
     hazards?: Partial<Record<"tornado" | "hurricane" | "severe_storm", string>>;
+    grid?: { generators?: string };
   };
 };

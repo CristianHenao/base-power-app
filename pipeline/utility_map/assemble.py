@@ -38,7 +38,12 @@ LAYERS: list[dict] = [
      "method": "EIA-861 utility summer peak; wires companies without one get ERCOT weather-zone peak x their "
                "share of zone customers. Split to counties by estimated customers. Non-coincident peaks.",
      "table": "county_peak_demand.parquet"},
-    {"id": "generation", "group": "grid", "label": "Local generation", "pending": "EIA-860 generators (UM-1.4)"},
+    {"id": "generation", "group": "grid", "label": "Local generation", "pending": "EIA-860 generators (UM-1.4)",
+     "unit": "MW of operable power plants in the county (net summer capacity, 2024)",
+     "period_start": "2024-01-01", "period_end": "2024-12-31", "source_ids": ["eia860"],
+     "method": "EIA-860 operable generators summed by county. ERCOT is one connected grid: generation inside a "
+               "county is not reserved for it, and transmission limits aren't modeled.",
+     "table": "county_generation.parquet"},
     {"id": "price_spikes", "group": "grid", "label": "Price spikes",
      "unit": "hours per year at or above $1,000/MWh in the county's load zone (average)",
      "period_start": "2018-01-01", "period_end": "2025-12-31", "source_ids": ["ercot_rtm"],
@@ -118,6 +123,7 @@ SOURCES = [
     {"id": "noaa_storm_events", "name": "NOAA NCEI Storm Events Database", "url": "https://www.ncei.noaa.gov/stormevents/"},
     {"id": "fema_nfhl", "name": "FEMA National Flood Hazard Layer (effective flood maps)", "url": "https://www.fema.gov/flood-maps/national-flood-hazard-layer"},
     {"id": "spc_tornadoes", "name": "NOAA SPC Severe Weather Database (tornado tracks)", "url": "https://www.spc.noaa.gov/wcm/"},
+    {"id": "eia860", "name": "EIA-860 2024 generator inventory", "url": "https://www.eia.gov/electricity/data/eia860/"},
     {"id": "spc_hail_wind", "name": "NOAA SPC Severe Weather Database (hail and wind reports)", "url": "https://www.spc.noaa.gov/wcm/"},
     {"id": "nhc_hurdat2", "name": "NOAA NHC HURDAT2 Atlantic best tracks", "url": "https://www.nhc.noaa.gov/data/#hurdat"},
     {"id": "ercot_load", "name": "ERCOT hourly native load by weather zone", "url": "https://www.ercot.com/gridinfo/load/load_hist"},
@@ -182,6 +188,7 @@ HAZARD_FILES = {
     "hurricane": "hazards/hurricane_tracks.geojson",
     "severe_storm": "hazards/severe_reports.geojson",
 }
+GRID_FILES = {"generators": "hazards/generators.geojson"}
 
 GRID_STATS = ("summer_peak_mw", "winter_peak_mw", "sales_mwh", "residential_mwh", "peak_source")
 
@@ -452,6 +459,17 @@ def main() -> int:
     if hazards:
         release["geometry"]["hazards"] = hazards
         extra_files.update({v: settings.UTILITY_MAP_DIR / v for v in hazards.values()})
+    grid_files = {k: v for k, v in GRID_FILES.items() if (settings.UTILITY_MAP_DIR / v).exists()}
+    if grid_files:
+        release["geometry"]["grid"] = grid_files
+        extra_files.update({v: settings.UTILITY_MAP_DIR / v for v in grid_files.values()})
+    generation_path = settings.UTILITY_MAP_DIR / "county_generation.parquet"
+    if generation_path.exists():
+        mix = pd.read_parquet(generation_path).set_index("county_fips")
+        for fuel in ("solar", "wind", "gas", "coal", "nuclear", "storage", "other"):
+            release_mix = mix[f"{fuel}_mw"]
+            for county in release["counties"]:
+                county.setdefault("generation_mix", {})[fuel] = float(release_mix.get(county["fips"], 0.0))
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
     rid = publish(release, V1_DIR, PUBLIC_DIR, today, extra_files=extra_files)
     unverified = sum(u["base_offer"] is None for u in release["utilities"])

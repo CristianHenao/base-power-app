@@ -10,7 +10,7 @@ import { FleetCard, GridCard, type FleetShare } from "@/components/utility-map/f
 import { HazardChip } from "@/components/utility-map/hazard-chip";
 import { isHazard, type HazardId } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
-import { formatLayerValue, liveSummary } from "@/lib/utility-map/format";
+import { formatLayerValue, generationSummary, liveSummary } from "@/lib/utility-map/format";
 import {
   RANK_GROUPS,
   offerLabel,
@@ -376,6 +376,14 @@ function CountyView({
           {county.load_zone ? ` · ${county.load_zone} (approximate)` : ""}
         </p>
       </div>
+      {generationSummary(county.generation_mix) ? (
+        <p className="text-[14px] leading-[21px]">
+          <span className="font-semibold">Power plants in the county:</span> {generationSummary(county.generation_mix)}
+          <span className="block text-[12px] leading-[18px] text-muted-foreground">
+            EIA-860 2024, net summer capacity. ERCOT is one grid, so this isn&apos;t reserved for the county.
+          </span>
+        </p>
+      ) : null}
       {hazardsOn.length > 0 ? (
         <div className="space-y-2">
           <p className="text-[14px] leading-[21px] font-semibold">

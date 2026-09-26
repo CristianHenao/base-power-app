@@ -14,13 +14,15 @@ import {
   paintCounty,
   paintTerritory,
   setFillRamp,
+  GRID_RAMP,
   setFloodZones,
+  setGenerators,
   setHazardTracks,
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
 import type { FleetShare } from "@/components/utility-map/fleet-card";
-import { BivariateLegend, SequentialLegend } from "@/components/utility-map/legend";
+import { BivariateLegend, SequentialLegend, SizeLegend } from "@/components/utility-map/legend";
 import { FLEET_COLORS, fleetLevel, fleetScenario } from "@/lib/utility-map/fleet";
 import {
   BIVARIATE_COLORS,
@@ -169,7 +171,15 @@ export function UtilityMapExperience() {
     () => (data?.layers ?? []).filter((l) => l.available && isHazard(l.id)).map((l) => l.id as HazardId),
     [data],
   );
+  const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
   const hazardPaint = useMemo(() => {
+    if (data && mode === "grid") {
+      // Grid mode: estimated summer peak demand, in Texas fifths.
+      const levels = new globalThis.Map<string, number | null>(
+        data.counties.map((c) => [c.fips, hazardLevel(c.ranks.peak_demand)]),
+      );
+      return { levels, colors: GRID_RAMP as readonly string[] };
+    }
     if (!data || mode !== "hazards" || hazardPicks.length === 0) return null;
     const levels = new globalThis.Map<string, number | null>();
     for (const c of data.counties) {
@@ -189,7 +199,7 @@ export function UtilityMapExperience() {
         : hazardPicks.length === 2
           ? BIVARIATE_COLORS
           : [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
-    return { levels, colors };
+    return { levels, colors: colors as readonly string[] };
   }, [data, mode, hazardPicks]);
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
@@ -391,6 +401,24 @@ export function UtilityMapExperience() {
       cancelled = true;
     };
   }, [loaded, mode, hazardPicks, trackCache]);
+  // Power plants for the Grid mode, fetched the first time the mode opens.
+  useEffect(() => {
+    const file = loaded?.data.geometry.grid?.generators;
+    if (!loaded || mode !== "grid" || generators || !file) return;
+    let cancelled = false;
+    fetch(`${loaded.base}/${file}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((geo) => {
+        if (!cancelled && geo) setGeneratorsData(geo);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, mode, generators]);
+  useEffect(() => {
+    if (map && loaded) setGenerators(map, mode === "grid" ? generators : null);
+  }, [map, loaded, mode, generators]);
+
   useEffect(() => {
     if (!map || !loaded) return;
     const show = (h: "tornado" | "hurricane" | "severe_storm") =>
@@ -456,7 +484,24 @@ export function UtilityMapExperience() {
     setHazardPicks((prev) => (prev.includes(hazard) ? prev.filter((h) => h !== hazard) : [...prev, hazard]));
 
   const hazardLegend =
-    mode !== "hazards" || hazardPicks.length === 0 ? null : hazardPicks.length === 1 ? (
+    mode === "grid" ? (
+      <>
+        <SequentialLegend
+          title="Estimated summer peak demand, Texas fifths"
+          colors={GRID_RAMP}
+          labels={["Lowest", "", "Middle", "", "Top fifth"]}
+          note="Each utility's 2024 peak split across its counties by customers."
+        />
+        <SizeLegend
+          title="Power plants (net summer MW, EIA-860 2024)"
+          stops={[
+            { label: "100", radius: 4 },
+            { label: "1,000", radius: 8 },
+            { label: "5,000", radius: 14 },
+          ]}
+        />
+      </>
+    ) : mode !== "hazards" || hazardPicks.length === 0 ? null : hazardPicks.length === 1 ? (
       <SequentialLegend
         title={`${HAZARDS[hazardPicks[0]].label}: Texas rank, in fifths`}
         colors={HAZARDS[hazardPicks[0]].ramp}

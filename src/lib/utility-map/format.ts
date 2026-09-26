@@ -55,3 +55,11 @@ export function liveSummary(live: UtilityMapData["live"], fips: string[]): strin
   const events = [...new Set(alerts.map((a) => a.event))];
   return `${alerts.length} ${alerts.length === 1 ? "county" : "counties"} under ${events.join(", ")}`;
 }
+
+export function generationSummary(mix: Record<string, number> | undefined): string | null {
+  if (!mix) return null;
+  const parts = Object.entries(mix).filter(([, mw]) => mw >= 0.5).sort((a, b) => b[1] - a[1]);
+  if (parts.length === 0) return "No power plants";
+  const total = parts.reduce((sum, [, mw]) => sum + mw, 0);
+  return `${whole.format(total)} MW: ${parts.map(([fuel, mw]) => `${fuel} ${whole.format(mw)}`).join(", ")}`;
+}

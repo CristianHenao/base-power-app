@@ -16,6 +16,9 @@ const LAYER_FLOOD_COAST = "um-flood-coast";
 const HATCH = "um-hatch";
 
 /** FEMA flood-zone colors (PRD v3 §12.3): the flood hue, light for 0.2%, full for 1%, dark floodway. */
+/** Grid mode: grey-blue ramp ending in the style guide's blue-100. */
+export const GRID_RAMP = ["#e6edf3", "#bccddb", "#8aa6bf", "#557da0", "#07314b"] as const;
+
 export const FLOOD_ZONE_COLORS = { "0.2pct": "#9ecae1", "1pct": "#2166ac", floodway: "#08306b" } as const;
 
 /** Fill color by the county's level 1..n from a ramp or class palette (n = colors.length). */
@@ -301,6 +304,32 @@ export function setHazardTracks(
   (map.getSource(SOURCE_SEVERE) as GeoJSONSource).setData(tracks.severe_storm ?? empty);
   (map.getSource(SOURCE_TORNADO) as GeoJSONSource).setData(tracks.tornado ?? empty);
   (map.getSource(SOURCE_HURRICANE) as GeoJSONSource).setData(tracks.hurricane ?? empty);
+}
+
+const SOURCE_GENERATORS = "um-generators";
+const LAYER_GENERATORS = "um-generators";
+
+/** Power plants as neutral circles sized by MW (fuel is in the panel, not in color). null hides them. */
+export function setGenerators(map: Map, data: GeoJSON.FeatureCollection | null) {
+  if (!map.getLayer(LAYER_TERRITORY_LINE)) return;
+  const empty: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+  if (!map.getSource(SOURCE_GENERATORS)) {
+    map.addSource(SOURCE_GENERATORS, { type: "geojson", data: empty });
+    map.addLayer({
+      id: LAYER_GENERATORS,
+      type: "circle",
+      source: SOURCE_GENERATORS,
+      slot: "top",
+      paint: {
+        "circle-color": "#ffffff",
+        "circle-opacity": 0.85,
+        "circle-stroke-color": "#07314b",
+        "circle-stroke-width": 1.2,
+        "circle-radius": ["interpolate", ["linear"], ["sqrt", ["get", "mw"]], 0, 1.5, 10, 4, 32, 8, 71, 14],
+      },
+    });
+  }
+  (map.getSource(SOURCE_GENERATORS) as GeoJSONSource).setData(data ?? empty);
 }
 
 export function setWarningsVisible(map: Map, visible: boolean) {

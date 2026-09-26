@@ -30,6 +30,27 @@ export function SequentialLegend({
   );
 }
 
+/** Reference circles for a size encoding (radius grows with the square root of the value). */
+export function SizeLegend({ title, stops }: { title: string; stops: { label: string; radius: number }[] }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">{title}</p>
+      <div className="flex items-end gap-4">
+        {stops.map((stop) => (
+          <span key={stop.label} className="flex flex-col items-center gap-1">
+            <span
+              className="rounded-full border-[1.2px] border-[#07314b] bg-white"
+              style={{ width: stop.radius * 2, height: stop.radius * 2 }}
+              aria-hidden
+            />
+            <span className="text-[11px] leading-tight text-muted-foreground">{stop.label}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** FEMA flood-zone swatches, matching the map's fills and floodway hatch. */
 export function FloodZoneLegend() {
   const hatch = "repeating-linear-gradient(135deg, rgba(255,255,255,0.8) 0 2px, transparent 2px 6px)";

@@ -25,7 +25,7 @@ const GROUPS: { id: LayerGroup; label: string }[] = [
   { id: "exposure", label: "Exposure" },
 ];
 
-const LIVE_MODES: ModeId[] = ["risk", "hazards", "fleet"];
+const LIVE_MODES: ModeId[] = ["risk", "hazards", "grid", "fleet"];
 
 type ControlsPanelProps = {
   mode: ModeId;
