@@ -361,6 +361,72 @@
       "title": "Event",
       "type": "object"
     },
+    "GapSeason": {
+      "properties": {
+        "season": {
+          "enum": [
+            "winter",
+            "spring",
+            "summer",
+            "fall"
+          ],
+          "title": "Season",
+          "type": "string"
+        },
+        "outages_per_year": {
+          "title": "Outages Per Year",
+          "type": "number"
+        },
+        "outages_lo": {
+          "title": "Outages Lo",
+          "type": "number"
+        },
+        "outages_hi": {
+          "title": "Outages Hi",
+          "type": "number"
+        },
+        "p50_hours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P50 Hours"
+        },
+        "p90_hours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P90 Hours"
+        },
+        "survival": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Survival",
+          "type": "array"
+        }
+      },
+      "required": [
+        "season",
+        "outages_per_year",
+        "outages_lo",
+        "outages_hi",
+        "p50_hours",
+        "p90_hours",
+        "survival"
+      ],
+      "title": "GapSeason",
+      "type": "object"
+    },
     "GridNow": {
       "description": "ERCOT conditions from the snapshot worker; the price is for the report's load zone.",
       "properties": {
@@ -503,6 +569,35 @@
         "cores_2"
       ],
       "title": "HoursByMonth",
+      "type": "object"
+    },
+    "HouseholdGap": {
+      "description": "Expected hours a year this home is dark, and the per-season survival curves on hours_grid.",
+      "properties": {
+        "typical_home": {
+          "$ref": "#/$defs/TypicalHomeGap"
+        },
+        "hours_grid": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Hours Grid",
+          "type": "array"
+        },
+        "seasons": {
+          "items": {
+            "$ref": "#/$defs/GapSeason"
+          },
+          "title": "Seasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "typical_home",
+        "hours_grid",
+        "seasons"
+      ],
+      "title": "HouseholdGap",
       "type": "object"
     },
     "Live": {
@@ -814,6 +909,60 @@
       "title": "Surprise",
       "type": "object"
     },
+    "TypicalHomeGap": {
+      "properties": {
+        "dark_hours": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "propertyNames": {
+            "enum": [
+              "none",
+              "one_core",
+              "two_cores",
+              "one_core_reserve",
+              "two_cores_reserve"
+            ]
+          },
+          "title": "Dark Hours",
+          "type": "object"
+        },
+        "gap_chance": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "propertyNames": {
+            "enum": [
+              "one_core",
+              "two_cores"
+            ]
+          },
+          "title": "Gap Chance",
+          "type": "object"
+        },
+        "interval_scale": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Interval Scale",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dark_hours",
+        "gap_chance",
+        "interval_scale"
+      ],
+      "title": "TypicalHomeGap",
+      "type": "object"
+    },
     "Utility": {
       "properties": {
         "name": {
@@ -891,6 +1040,16 @@
     "sizing": {
       "$ref": "#/$defs/Sizing"
     },
+    "household_gap": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HouseholdGap"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "live": {
       "$ref": "#/$defs/Live"
     },
@@ -914,6 +1073,7 @@
     "events",
     "backup",
     "sizing",
+    "household_gap",
     "live",
     "narrative",
     "sources"

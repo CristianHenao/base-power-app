@@ -112,6 +112,11 @@ export function homeDeviceFromRow(row: HomeDeviceRow): HomeDevice {
     notes: row.notes,
     isMedical: row.is_medical,
     needsRefrigeration: row.needs_refrigeration,
+    isPriority:
+      row.is_priority ||
+      row.is_medical ||
+      row.kind === "medical" ||
+      row.category === "medical",
     thumbnailUrl: row.thumbnail_url,
     specs: asSpecFields(row.specs),
     nameplateScannedAt: row.nameplate_scanned_at,
@@ -140,6 +145,12 @@ export function homeDeviceToInsert(
     notes: device.notes,
     is_medical: device.isMedical,
     needs_refrigeration: device.needsRefrigeration,
+    is_priority:
+      device.isMedical ||
+      device.kind === "medical" ||
+      device.category === "medical"
+        ? true
+        : device.isPriority,
     thumbnail_url: device.thumbnailUrl?.startsWith("data:")
       ? null
       : device.thumbnailUrl,

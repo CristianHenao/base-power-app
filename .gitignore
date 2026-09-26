@@ -62,6 +62,10 @@ public/home/scans/*
 data/processed/eaglei_tx.parquet
 # Large observation extracts and ingest diagnostics are generated locally.
 data/processed/outage_observations*/
+# Duration model training points; rebuild with python -m pipeline.durations
+data/processed/duration_samples.parquet
 
 # Utility map: rebuildable hourly tables (python -m pipeline.utility_map.ercot_load)
 data/processed/utility_map/zone_load.parquet
+# In-progress ingest runs write hidden temp dirs; only published outputs are tracked
+data/processed/outage_observations/.*/

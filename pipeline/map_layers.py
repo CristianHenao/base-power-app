@@ -25,6 +25,7 @@ import duckdb
 import pandas as pd
 
 from pipeline import settings
+from pipeline.sources.eia861_reliability import state_reliability
 
 ROOT = settings.REPO_ROOT
 OUTLOOK = ROOT / "data" / "processed" / "outlook.parquet"
@@ -85,21 +86,15 @@ def percentile_ranks(values: pd.Series) -> pd.Series:
 
 
 def reliability(path: Path = RELIABILITY_XLSX, state: str = "TX") -> pd.DataFrame:
-    """SAIDI and SAIFI with and without major event days, IEEE standard, per utility."""
-    frame = pd.read_excel(path, sheet_name="Reliability_States", header=None, skiprows=3)
-    frame = frame.loc[frame[3] == state]
-    numeric = lambda column: pd.to_numeric(frame[column], errors="coerce")  # noqa: E731
-    return pd.DataFrame(
-        {
-            "utility_id": frame[1].astype(int),
-            "utility_name": frame[2].astype(str),
-            "saidi_with_med": numeric(5),
-            "saifi_with_med": numeric(6),
-            "saidi_without_med": numeric(8),
-            "saifi_without_med": numeric(9),
-            "customers": numeric(14),
-        }
-    ).dropna(subset=["saidi_with_med"]).reset_index(drop=True)
+    """SAIDI and SAIFI with and without major event days per utility.
+
+    IEEE figures when reported, else the Other standard, so Oncor and TNMP are included; columns
+    are found by their labels (pipeline/sources/eia861_reliability.py), not by position.
+    """
+    raw = pd.read_excel(path, sheet_name="Reliability_States", header=None)
+    table = state_reliability(raw, state)
+    return table[["utility_id", "utility_name", "saidi_with_med", "saifi_with_med", "saidi_without_med",
+                  "saifi_without_med", "customers", "standard"]].reset_index(drop=True)
 
 
 def county_features(map_counties: list[dict]) -> pd.DataFrame:

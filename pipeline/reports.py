@@ -11,7 +11,8 @@ reports to data/processed/reports/{fips}.json for the web app.
 Keys beyond the contract: home, outlook.since, outlook.customers_floored, events[].storm,
 events[].peak_out, events[].backup_h,
 events[].covered_order, sizing.share, backup.surprise (hours from the 20% reserve),
-narrative text.
+household_gap (expected dark hours a year with 0, 1 or 2 Cores, and per-season survival
+curves for the browser's household answer), narrative text.
 """
 from __future__ import annotations
 
@@ -28,6 +29,7 @@ import yaml
 from api.app.narrator.facts import from_contract
 from api.app.narrator.narrate import ModelCall, narrate
 from pipeline import settings
+from pipeline.household_gap import GRID_HOURS
 
 MONTHS = (
     "January", "February", "March", "April", "May", "June",
@@ -121,6 +123,32 @@ def zip_utility(con: duckdb.DuckDBPyConnection, zip_code: str | None) -> tuple[i
     if len(rows) != 1 or int(rows[0][2]) != 1:
         return None
     return int(rows[0][0]), str(rows[0][1])
+
+
+def household_gap(con: duckdb.DuckDBPyConnection, fips: str, profile: str, tables: set[str]) -> dict | None:
+    """Typical-home backup gap plus the per-season ingredients the browser needs for a household answer."""
+    if not {"household_gap", "household_gap_seasons"} <= tables:
+        return None
+    row = con.execute("select * from household_gap where county_fips = ? and profile_type = ?", [fips, profile]).df()
+    seasons = con.execute("select seasons from household_gap_seasons where county_fips = ?", [fips]).fetchone()
+    if row.empty or seasons is None:
+        return None
+    r = row.iloc[0]
+    lo, hi = json.loads(r["interval_scale"])
+    return {
+        "typical_home": {
+            "dark_hours": {"none": round(float(r["dark_hours_0"]), 2),
+                           "one_core": round(float(r["dark_hours_1_full"]), 2),
+                           "two_cores": round(float(r["dark_hours_2_full"]), 2),
+                           "one_core_reserve": round(float(r["dark_hours_1_reserve"]), 2),
+                           "two_cores_reserve": round(float(r["dark_hours_2_reserve"]), 2)},
+            "gap_chance": {"one_core": round(float(r["gap_chance_1_full"]), 4),
+                           "two_cores": round(float(r["gap_chance_2_full"]), 4)},
+            "interval_scale": [lo, hi],
+        },
+        "hours_grid": [float(h) for h in GRID_HOURS],
+        "seasons": json.loads(seasons[0]),
+    }
 
 
 def is_persona(fips: str, profile_type: str) -> bool:
@@ -219,6 +247,7 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, profile_type: str | 
                          "hours_by_month": mode_hours(monthly, "surprise", fips)},
         },
         "sizing": sizing,
+        "household_gap": household_gap(con, fips, profile, tables),
         "live": {"alerts": [], "grid": None},
         "narrative": None,
         "sources": [

@@ -1,5 +1,6 @@
 import json
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -231,3 +232,101 @@ def test_event_store_falls_back_to_memory_without_a_database():
 
     assert isinstance(event_store(None), MemoryStore)
     assert isinstance(event_store("postgres://nobody:nothing@127.0.0.1:1/none"), MemoryStore)
+
+
+def test_unmatched_street_falls_back_to_the_zip_county():
+    from api.app.service import zip_in
+
+    def no_match(address):
+        raise AdapterError("no match")
+
+    service = ReportService(settings.FEATURES_DUCKDB, None, Metrics(), geocode=no_match,
+                            alerts=lambda lat, lon: [], zip_counties={"75025": "48085"},
+                            centroids={"48085": (33.19, -96.57)})
+    client = TestClient(create_app(service))
+    report = client.post("/v1/report", json={"address": "1200 Juniper Hollow Ln, Plano, TX 75025"}).json()
+    assert report["location"]["county"] == "Collin" and report["location"]["tract_geoid"] is None
+    sources = {s["id"]: s["status"] for s in report["sources"]}
+    assert sources["census"] == "degraded" and sources["nws"] == "ok"
+    assert zip_in("Houston TX 77084-1234") == "77084" and zip_in("Oakland CA 94612") is None
+
+
+def test_geocoder_misses_are_cached(monkeypatch):
+    from api.app.adapters import census
+
+    calls = []
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"result": {"addressMatches": []}}
+
+    class Client:
+        def get(self, *args, **kwargs):
+            calls.append(1)
+            return Response()
+
+    address = "1 Nowhere Lane, Plano, TX 75025 (cache test)"
+    for _ in range(2):
+        with pytest.raises(AdapterError):
+            census.geocode(address, client=Client())
+    assert len(calls) == 1
+
+
+def test_identical_facts_reuse_the_validated_narrative():
+    replies = []
+
+    def call(system, user, timeout_s):
+        replies.append(1)
+        return json.dumps({"headline": "Long outages in Harris County", "fact_ids": ["county.name"],
+                           "summary": "Homes in Harris County. Base confirms sizing at install."})
+
+    service = ReportService(settings.FEATURES_DUCKDB, call, Metrics(), geocode=lambda a: PLANO, alerts=lambda la, lo: [])
+    client = TestClient(create_app(service))
+    for _ in range(2):
+        rid = client.post("/v1/report", json={"county_fips": "48201"}).json()["report_id"]
+        assert client.get(f"/v1/report/{rid}/narrative.json").json()["status"] == "ok"
+    assert len(replies) == 1
+
+
+def test_nws_retries_once_then_raises():
+    from api.app.adapters import nws
+
+    calls = []
+
+    class Flaky:
+        def get(self, *args, **kwargs):
+            calls.append(1)
+            raise httpx.ConnectTimeout("slow")
+
+    with pytest.raises(AdapterError, match="after a retry"):
+        nws.active_alerts(10.001, -10.001, client=Flaky())
+    assert len(calls) == 2
+
+
+def test_nws_outage_serves_the_last_good_alerts():
+    def down(lat, lon):
+        raise AdapterError("NWS down")
+
+    service = ReportService(settings.FEATURES_DUCKDB, None, Metrics(), geocode=lambda a: PLANO, alerts=down,
+                            last_good_alerts=lambda lat, lon: [{"event": "Flood Watch", "severity": "Moderate",
+                                                                "headline": "Flood Watch", "ends": None}])
+    report = TestClient(create_app(service)).post("/v1/report", json={"address": "123 Main St, Plano, TX 75024"}).json()
+    assert report["live"]["alerts"][0]["event"] == "Flood Watch"
+    nws_source = next(s for s in report["sources"] if s["id"] == "nws")
+    assert nws_source["status"] == "degraded" and nws_source["fallback"] == "cache"
+
+
+def test_nws_keeps_only_live_alerts():
+    feature = lambda **props: {"properties": {"event": "Flood Watch", "severity": "Moderate", **props}}  # noqa: E731
+    payload = {"features": [
+        feature(status="Actual", messageType="Alert"),
+        feature(status="Actual", messageType="Update", event="Heat Advisory"),
+        feature(status="Test", messageType="Alert"),
+        feature(status="Actual", messageType="Cancel"),
+        feature(status="Actual", messageType="Alert", event="  "),
+    ]}
+    assert [a["event"] for a in parse_alerts(payload)] == ["Flood Watch", "Heat Advisory"]
+    assert parse_alerts({"features": []}) == []

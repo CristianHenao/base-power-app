@@ -1,0 +1,128 @@
+{
+  "model": {
+    "levels": {
+      "severity": [
+        "<0.1%",
+        "0.1-1%",
+        "1-3%",
+        "3-10%",
+        "10-30%",
+        ">30%"
+      ],
+      "hazard": [
+        "tropical",
+        "winter",
+        "wind",
+        "flood",
+        "other"
+      ],
+      "season": [
+        "winter",
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "weather_zone": [
+        "COAST",
+        "EAST",
+        "FWEST",
+        "NCENT",
+        "NORTH",
+        "SCENT",
+        "SOUTH",
+        "WEST"
+      ]
+    },
+    "scale_factor": "severity",
+    "beta": [
+      2.628931,
+      -0.122098,
+      0.115429,
+      0.262804,
+      0.690645,
+      1.34803,
+      -0.02927,
+      -0.912206,
+      -1.31719,
+      -1.844078,
+      0.108924,
+      0.098835,
+      0.061213,
+      -0.267893,
+      -0.333201,
+      -0.228335,
+      -0.483287,
+      -0.461144,
+      -0.282847,
+      -0.668001
+    ],
+    "gamma": [
+      0.0,
+      -0.055385,
+      0.049236,
+      0.101852,
+      0.213695,
+      0.188323
+    ]
+  },
+  "quantity": "per-home outage hours, stay bound",
+  "backtest": {
+    "train": [
+      2018,
+      2022
+    ],
+    "test": [
+      2023,
+      2024
+    ],
+    "metric": "log-likelihood per home affected (higher is better)",
+    "scores": {
+      "severity_hazard_season_zone": -2.5644,
+      "hazard_season_zone": -2.6469,
+      "zone_only": -3.0214,
+      "pooled": -3.0541
+    },
+    "calibration": [
+      {
+        "hazard": "flood",
+        "homes": 520479,
+        "p50_predicted": 2.4,
+        "p50_observed": 1.8,
+        "p90_predicted": 8.0,
+        "p90_observed": 10.9
+      },
+      {
+        "hazard": "other",
+        "homes": 24366937,
+        "p50_predicted": 1.4,
+        "p50_observed": 1.2,
+        "p90_predicted": 4.6,
+        "p90_observed": 4.9
+      },
+      {
+        "hazard": "tropical",
+        "homes": 3145206,
+        "p50_predicted": 27.2,
+        "p50_observed": 43.1,
+        "p90_predicted": 118.8,
+        "p90_observed": 153.5
+      },
+      {
+        "hazard": "wind",
+        "homes": 7975768,
+        "p50_predicted": 4.7,
+        "p50_observed": 5.4,
+        "p90_predicted": 17.7,
+        "p90_observed": 47.5
+      },
+      {
+        "hazard": "winter",
+        "homes": 727724,
+        "p50_predicted": 10.3,
+        "p50_observed": 19.1,
+        "p90_predicted": 39.4,
+        "p90_observed": 93.0
+      }
+    ]
+  }
+}

@@ -12,6 +12,14 @@
   "counties": 254,
   "zero_train_counties_with_test_outages": 5,
   "methods": {
+    "covariate_bayes": {
+      "poisson_deviance": 123.2831,
+      "spearman": 0.3272
+    },
+    "covariate_glm": {
+      "poisson_deviance": 125.4119,
+      "spearman": 0.2881
+    },
     "empirical_bayes": {
       "poisson_deviance": 122.5005,
       "spearman": 0.4153
@@ -27,6 +35,52 @@
     "raw_rate": {
       "poisson_deviance": "inf",
       "spearman": 0.323
+    }
+  },
+  "rolling": {
+    "tests": [
+      "2021-2022",
+      "2022-2023",
+      "2023-2024",
+      "2024-2025"
+    ],
+    "summary": {
+      "covariate_bayes": {
+        "total_deviance": 534.4949,
+        "mean_spearman": 0.193,
+        "folds_better_than_empirical_bayes": 3,
+        "folds": 4
+      },
+      "covariate_glm": {
+        "total_deviance": 538.8158,
+        "mean_spearman": 0.1636,
+        "folds_better_than_empirical_bayes": 2,
+        "folds": 4
+      },
+      "empirical_bayes": {
+        "total_deviance": 564.9283,
+        "mean_spearman": 0.2409,
+        "folds_better_than_empirical_bayes": 0,
+        "folds": 4
+      },
+      "raw_rate": {
+        "total_deviance": "inf",
+        "mean_spearman": 0.2669,
+        "folds_better_than_empirical_bayes": 0,
+        "folds": 4
+      },
+      "statewide_mean": {
+        "total_deviance": 538.5414,
+        "mean_spearman": null,
+        "folds_better_than_empirical_bayes": 1,
+        "folds": 4
+      },
+      "zone_mean": {
+        "total_deviance": 555.8302,
+        "mean_spearman": 0.1899,
+        "folds_better_than_empirical_bayes": 2,
+        "folds": 4
+      }
     }
   }
 }

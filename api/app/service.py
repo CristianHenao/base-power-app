@@ -5,6 +5,10 @@ match and no county_fips) stops a report.
 """
 from __future__ import annotations
 
+import csv
+import hashlib
+import json
+import re
 import threading
 import uuid
 from collections.abc import Callable
@@ -18,9 +22,33 @@ from api.app.metrics import Metrics
 from api.app.narrator.facts import from_contract
 from api.app.narrator.narrate import ModelCall, narrate
 from api.app.schemas import Report, ReportRequest
+from pipeline import settings
 from pipeline.reports import build_report
 
 PROFILE_BY_HEAT = {"electric": "RESHIWR", "gas": "RESLOWR"}
+TEXAS_ZIP = re.compile(r"\b(7[5-9]\d{3})(?:-\d{4})?\b")
+
+
+def load_zip_counties(path: Path) -> dict[str, str]:
+    """Texas ZIP to its majority county (pipeline/zip_county.py); empty if the file is missing."""
+    if not path.exists():
+        return {}
+    with path.open() as handle:
+        return {row["zip"]: row["county_fips"] for row in csv.DictReader(handle)}
+
+
+def load_centroids(path: Path) -> dict[str, tuple[float, float]]:
+    """County (latitude, longitude) from the sales map's county list; empty if missing."""
+    if not path.exists():
+        return {}
+    counties = json.loads(path.read_text()).get("counties", [])
+    return {c["fips"]: (float(c["centroid"][1]), float(c["centroid"][0])) for c in counties if c.get("centroid")}
+
+
+def zip_in(text: str) -> str | None:
+    """The last Texas ZIP written in an address, if any."""
+    found = TEXAS_ZIP.findall(text)
+    return found[-1] if found else None
 FAULTS = frozenset({"census", "nws", "llm", "ercot"})
 REPORT_TTL_S = 3600.0
 
@@ -37,15 +65,23 @@ class ReportService:
         metrics: Metrics,
         geocode: Callable[[str], census.Place] = census.geocode,
         alerts: Callable[[float, float], list[dict]] = nws.active_alerts,
+        last_good_alerts: Callable[[float, float], list[dict] | None] = nws.last_good_alerts,
         grid: SnapshotWorker | None = None,
+        zip_counties: dict[str, str] | None = None,
+        centroids: dict[str, tuple[float, float]] | None = None,
     ) -> None:
         self.grid = grid
+        self._zip_counties = load_zip_counties(settings.ZIP_COUNTY_CSV) if zip_counties is None else zip_counties
+        self._centroids = load_centroids(settings.COUNTY_CENTROIDS_JSON) if centroids is None else centroids
         self._con = duckdb.connect(str(features_path), read_only=True)
         self._call = call
         self._metrics = metrics
         self._geocode = geocode
         self._alerts = alerts
+        self._last_good_alerts = last_good_alerts
         self._reports: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=2048)
+        # Validated narratives by the facts they were written from; identical facts reuse them.
+        self._narratives: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=1024)
         self._faults: set[str] = set()
         self._lock = threading.Lock()
 
@@ -74,8 +110,13 @@ class ReportService:
             self._record("census", "ok")
         except AdapterError:
             self._record("census", "degraded")
-            if request.county_fips:
-                return request.county_fips, None, {"id": "census", "status": "degraded"}
+            fips = request.county_fips or self._zip_counties.get(request.zip or zip_in(request.address) or "")
+            if fips:
+                # The street did not match (the demo homes use made-up streets); the ZIP still places the county.
+                zip_code = request.zip or zip_in(request.address)
+                center = self._centroids.get(fips)
+                place = census.Place(fips, None, center[0], center[1], zip_code, "TX") if center else None
+                return fips, place, {"id": "census", "status": "degraded", "fallback": "zip"}
             raise PlaceNotFound("we could not find that address; try adding the city and ZIP") from None
         if not place.county_fips.startswith("48"):
             raise ValueError("Porchlight covers Texas addresses only")
@@ -92,6 +133,9 @@ class ReportService:
             return alerts, {"id": "nws", "status": "ok"}
         except AdapterError:
             self._record("nws", "degraded")
+            stale = None if "nws" in self._faults else self._last_good_alerts(place.latitude, place.longitude)
+            if stale is not None:
+                return stale, {"id": "nws", "status": "degraded", "fallback": "cache"}
             return [], {"id": "nws", "status": "degraded"}
 
     def _grid(self, load_zone: str | None) -> tuple[dict | None, dict]:
@@ -152,9 +196,17 @@ class ReportService:
         if report["narrative"]["status"] != "pending":
             return report["narrative"]
         call = None if "llm" in self._faults else self._call
-        result = narrate(from_contract(report), call)
-        if call is not None:
-            self._record("llm", "ok" if result["status"] != "template" else "degraded")
+        facts = from_contract(report)
+        key = hashlib.sha256(json.dumps(facts, sort_keys=True).encode()).hexdigest()
+        cached = self._narratives.get(key) if call is not None else None
+        if cached is not None:
+            result = cached
+        else:
+            result = narrate(facts, call)
+            if call is not None:
+                self._record("llm", "ok" if result["status"] != "template" else "degraded")
+                if result["status"] != "template":
+                    self._narratives.put(key, result)
         narrative = {key: result[key] for key in ("status", "headline", "summary", "fact_ids")}
         narrative["url"] = report["narrative"]["url"]
         llm = {"id": "llm", "status": "ok" if result["status"] != "template" else "degraded"}

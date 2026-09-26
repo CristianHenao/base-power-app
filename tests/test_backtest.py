@@ -61,3 +61,18 @@ def test_crosswalk_must_cover_every_county(tmp_path: Path):
     path.write_text("county_fips,weather_zone\n48085,NCENT\n")
     with pytest.raises(ValueError, match="48201"):
         load_zones(path, pd.Index(["48085", "48201"]))
+
+
+def test_rolling_summary_counts_folds_that_beat_empirical_bayes():
+    from pipeline.backtest import rolling_summary
+
+    folds = pd.DataFrame({
+        "test": ["2021-2022", "2021-2022", "2023-2024", "2023-2024"],
+        "method": ["empirical_bayes", "zone_mean", "empirical_bayes", "zone_mean"],
+        "poisson_deviance": [100.0, 90.0, 50.0, 60.0],
+        "spearman": [0.2, 0.1, 0.4, 0.3],
+    })
+    summary = rolling_summary(folds)
+    assert summary["zone_mean"] == {"total_deviance": 150.0, "mean_spearman": 0.2,
+                                    "folds_better_than_empirical_bayes": 1, "folds": 2}
+    assert summary["empirical_bayes"]["folds_better_than_empirical_bayes"] == 0

@@ -4,6 +4,24 @@ This is a reviewable starting contract for the Base/Porchlight map and report. I
 
 These are **normalized application payloads**, not verbatim provider responses or verified provider schemas. Backend adapters will translate and validate real provider records into these shapes. No ingestion jobs, API routes, live feeds, database migrations, or UI changes are included.
 
+## How this maps to the served report
+
+The API serves `Report` (`src/lib/report/types.ts`, from `api/app/schemas.py`) at `POST /v1/report`.
+This proposal is broader. Where the two meet:
+
+| Proposal (`RiskReport`) | Served (`Report`) | Notes |
+| --- | --- | --- |
+| `reportId` | `report_id` | |
+| `location` (`HomeLocation`) | `location` | County, tract, weather zone, load zone. No point geometry is returned; the address is never stored |
+| `home.utilities` (`UtilityMatch`) | `location.utility` | From the ZIP when it lists one utility, else the county's primary |
+| `home.availability` | `base_offer` | From `data/reference/base_availability.yaml` |
+| `grid.countyOutages` (`CountyOutageEvent[]`) | `events` | Top five outages, storm name, peak share, duration band [rotate, stay], replayed Core hours and coverage |
+| `grid.live` (`GridSnapshot`) | `live.grid` | ERCOT conditions, reserves, demand, load-zone price; stale is flagged |
+| `weather.current` (`CurrentThreat[]`) | `live.alerts` | Active NWS alerts at the address or the county center |
+| `Section.status` and `Issue[]` | `sources[]` | One status per source: `ok`, `degraded` (with a fallback), `unavailable`, `not_connected` |
+| (not in the proposal) | `outlook`, `backup`, `sizing`, `household_gap`, `narrative` | The models: long-outage outlook, backup by month, Core recommendation, household backup gap, validated summary |
+| `grid.reliability`, `weather.exposures`, `weather.history`, `grid.prices`, `usage`, `mapLayers`, `home.housingContext` | not served in the report | Reliability, hazard layers and prices are on the sales map (`public/utility-map/`) and in `/v1/areas`; usage upload is future work (`docs/NEXT.md`) |
+
 ## Files to hand off
 
 | File | Use |

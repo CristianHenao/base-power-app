@@ -113,6 +113,32 @@ def reliability_rows(raw: pd.DataFrame, year: int, utilities: dict[int, str]) ->
     return pd.DataFrame(rows)
 
 
+def state_reliability(raw: pd.DataFrame, state: str = "TX") -> pd.DataFrame:
+    """Every utility in `state`: SAIDI and SAIFI with and without major event days, and customers.
+
+    IEEE figures when the utility reports them, else the Other standard (Oncor and TNMP).
+    """
+    labels, header_row = column_labels(raw)
+    names = [label.split("|")[2] for label in labels]
+    number_col, name_col, state_col = names.index("Utility Number"), names.index("Utility Name"), names.index("State")
+    cols = {std: {"saidi_with_med": _find(labels, std, True), "saidi_without_med": _find(labels, std, False),
+                  "saifi_with_med": _find(labels, std, True, "SAIFI"),
+                  "saifi_without_med": _find(labels, std, False, "SAIFI"), "customers": _customers(labels, std)}
+            for std in STANDARDS}
+    rows = []
+    for _, row in raw.iloc[header_row + 1:].iterrows():
+        number = _number(row.iloc[number_col])
+        if row.iloc[state_col] != state or np.isnan(number):
+            continue
+        for std in STANDARDS:
+            values = {key: _number(row.iloc[col]) for key, col in cols[std].items()}
+            if not np.isnan(values["saidi_with_med"]):
+                rows.append({"utility_id": int(number), "utility_name": str(row.iloc[name_col]),
+                             "standard": std, **values})
+                break
+    return pd.DataFrame(rows)
+
+
 def read_year(year: int, directory: Path = settings.RAW_EIA861_DIR,
               utilities: dict[int, str] = settings.EIA861_UTILITIES) -> pd.DataFrame:
     with zipfile.ZipFile(zip_path(year, directory)) as archive:

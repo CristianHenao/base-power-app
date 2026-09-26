@@ -24,6 +24,9 @@ COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zon
 # Alejandro's EIA-861 crosswalks and Base's offer by utility.
 COUNTY_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "county_utility.csv"
 ZIP_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "zip_utility.csv"
+ZIP_COUNTY_CSV = REPO_ROOT / "data" / "processed" / "zip_county.csv"
+# County centroids from the sales map (Alejandro); used to place weather alerts when only a ZIP is known.
+COUNTY_CENTROIDS_JSON = REPO_ROOT / "public" / "utility-map" / "data" / "utility-map.json"
 BASE_AVAILABILITY_YAML = REPO_ROOT / "data" / "reference" / "base_availability.yaml"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
@@ -36,6 +39,9 @@ INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 PAYS_TWICE_CSV = REPO_ROOT / "data" / "processed" / "pays_twice.csv"
 # Alejandro's NOAA Storm Events for Texas (built by pipeline/utility_map/storm_events.py on ale-dev).
 STORM_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "utility_map" / "storm_events.parquet"
+# Duration model inputs (large, local only) and the fitted model with its backtest.
+DURATION_SAMPLES_PARQUET = REPO_ROOT / "data" / "processed" / "duration_samples.parquet"
+DURATION_MODEL_JSON = REPO_ROOT / "data" / "processed" / "duration_model.json"
 REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
 # Exported charts land where the web app serves static files.
 INSIGHTS_CHART_DIR = REPO_ROOT / "public" / "insights"
@@ -58,6 +64,8 @@ RATES_START = "2018-01-01"
 # Backtest windows, UTC, end exclusive.
 BACKTEST_TRAIN = ("2018-01-01", "2023-01-01")
 BACKTEST_TEST = ("2023-01-01", "2025-01-01")
+# Rolling-origin backtest: train from RATES_START to each year, test that year and the next.
+ROLLING_TEST_STARTS = (2021, 2022, 2023, 2024)
 # 12-hour-plus shares use the conservative long-tail ordering.
 LONG_OUTAGE_ORDER = "stay"
 

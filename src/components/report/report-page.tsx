@@ -45,6 +45,12 @@ export function ReportPage() {
       const next = await createReport({ address: address.trim(), heat });
       setReport(next);
       trackEvent("report_viewed", next);
+      if (next.narrative.status !== "pending" && next.narrative.summary) {
+        // A saved report already carries its validated summary.
+        setNarrative({ headline: next.narrative.headline ?? "", text: next.narrative.summary, done: true,
+          status: next.narrative.status });
+        return;
+      }
       closeStream.current = streamNarrative(next.report_id, {
         onHeadline: (headline) => setNarrative((n) => ({ ...n, headline })),
         onToken: (token) => setNarrative((n) => ({ ...n, text: n.text + token })),
