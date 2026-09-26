@@ -187,6 +187,7 @@ HAZARD_FILES = {
     "tornado": "hazards/tornado_tracks.geojson",
     "hurricane": "hazards/hurricane_tracks.geojson",
     "severe_storm": "hazards/severe_reports.geojson",
+    "storms": "hazards/storms.json",
 }
 GRID_FILES = {"generators": "hazards/generators.geojson"}
 

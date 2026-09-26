@@ -1,0 +1,36 @@
+{
+  "release_id": "2026-09-26-7b657075",
+  "passed": true,
+  "checked_at": "2026-09-26T21:27:59.498561+00:00",
+  "counties": 254,
+  "utilities": 150,
+  "layers_available": [
+    "peak_demand",
+    "generation",
+    "price_spikes",
+    "outages",
+    "flood",
+    "tornado",
+    "severe_storm",
+    "hurricane",
+    "winter",
+    "heat",
+    "weather",
+    "homes"
+  ],
+  "layers_pending": [],
+  "files": {
+    "counties.geojson": 135985,
+    "territories.geojson": 222211,
+    "flood/48201.geojson": 2089034,
+    "flood/48167.geojson": 2250535,
+    "flood/48453.geojson": 2106725,
+    "flood/48085.geojson": 2154681,
+    "flood/48355.geojson": 1179841,
+    "hazards/tornado_tracks.geojson": 588644,
+    "hazards/hurricane_tracks.geojson": 78311,
+    "hazards/severe_reports.geojson": 730041,
+    "hazards/storms.json": 39815,
+    "hazards/generators.geojson": 133069
+  }
+}

@@ -73,3 +73,18 @@ export function fingerprintRows(ranks: Partial<Record<HazardId, number | null>>)
     .map((hazard) => ({ hazard, rank: ranks[hazard] ?? null, topFifth: (ranks[hazard] ?? 0) >= 0.8 }))
     .sort((a, b) => (b.rank ?? -1) - (a.rank ?? -1));
 }
+
+/** Storm spotlight: peak share of customers out, binned <5, 5-15, 15-30, 30-50, 50%+. */
+export function outageShareLevel(pct: number): 1 | 2 | 3 | 4 | 5 {
+  return (1 + [5, 15, 30, 50].filter((cut) => pct >= cut).length) as 1 | 2 | 3 | 4 | 5;
+}
+
+export type SpotlightStorm = {
+  name: string;
+  start: string;
+  end: string;
+  source: string | null;
+  note: string | null;
+  track_storm_id: string | null;
+  counties: { fips: string; peak_out: number; peak_out_pct: number; customer_hours: number }[];
+};

@@ -4,7 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { ReactNode } from "react";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { HazardPicker } from "@/components/utility-map/hazard-chip";
-import type { HazardId } from "@/lib/utility-map/hazard-style";
+import { StormSpotlight } from "@/components/utility-map/storm-spotlight";
+import type { HazardId, SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { FloodZoneLegend, SequentialLegend } from "@/components/utility-map/legend";
 import { ModeSwitch } from "@/components/utility-map/mode-switch";
 import { FLEET_COLORS } from "@/lib/utility-map/fleet";
@@ -35,6 +36,10 @@ type ControlsPanelProps = {
   hazardPicks: HazardId[];
   onToggleHazard: (hazard: HazardId) => void;
   hazardLegend: ReactNode;
+  storms: SpotlightStorm[];
+  spotlight: SpotlightStorm | null;
+  onSpotlight: (name: string | null) => void;
+  countyName: (fips: string) => string;
   layers: MapLayerMeta[];
   presets: Preset[];
   sources: SourceRef[];
@@ -56,6 +61,10 @@ export function ControlsPanel({
   hazardPicks,
   onToggleHazard,
   hazardLegend,
+  storms,
+  spotlight,
+  onSpotlight,
+  countyName,
   layers,
   presets,
   sources,
@@ -91,7 +100,10 @@ export function ControlsPanel({
       </div>
 
       {mode === "hazards" ? (
-        <HazardPicker available={availableHazards} picked={hazardPicks} onToggle={onToggleHazard} />
+        <>
+          <HazardPicker available={availableHazards} picked={hazardPicks} onToggle={onToggleHazard} />
+          <StormSpotlight storms={storms} selected={spotlight} countyName={countyName} onSelect={onSpotlight} />
+        </>
       ) : null}
 
       <div className="space-y-2">

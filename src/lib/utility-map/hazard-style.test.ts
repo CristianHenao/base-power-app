@@ -6,6 +6,7 @@ import {
   bivariateClass,
   efWidth,
   fingerprintRows,
+  outageShareLevel,
   hazardLevel,
   overlapCount,
 } from "./hazard-style.ts";
@@ -64,4 +65,8 @@ test("fingerprint rows sort by rank, flag the top fifth and keep unknowns last",
   assert.deepEqual(rows.map((r) => [r.hazard, r.topFifth]), [
     ["flood", true], ["heat", true], ["tornado", false], ["hurricane", false],
   ]);
+});
+
+test("storm outage levels use fixed share-out bins", () => {
+  assert.deepEqual([0.5, 5, 14.9, 15, 30, 49, 50, 99].map(outageShareLevel), [1, 2, 2, 3, 4, 4, 5, 5]);
 });

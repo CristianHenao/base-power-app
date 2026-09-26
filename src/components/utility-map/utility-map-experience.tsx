@@ -31,6 +31,8 @@ import {
   bivariateClass,
   hazardLevel,
   isHazard,
+  outageShareLevel,
+  type SpotlightStorm,
   overlapCount,
   type HazardId,
 } from "@/lib/utility-map/hazard-style";
@@ -174,6 +176,24 @@ export function UtilityMapExperience() {
   );
   const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
+  const [storms, setStorms] = useState<SpotlightStorm[]>([]);
+  const [spotlightName, setSpotlightName] = useState<string | null>(null);
+  const spotlight = mode === "hazards" ? storms.find((s) => s.name === spotlightName) ?? null : null;
+
+  // Labeled storms for the spotlight, fetched the first time the Hazards mode opens.
+  useEffect(() => {
+    const file = loaded?.data.geometry.hazards?.storms;
+    if (!loaded || mode !== "hazards" || storms.length || !file) return;
+    let cancelled = false;
+    fetch(`${loaded.base}/${file}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: { storms: SpotlightStorm[] } | null) => {
+        if (!cancelled && body) setStorms(body.storms);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, mode, storms.length]);
 
   // Live NWS warnings every 60 s while the tab is visible (not in the dummy mockup).
   useEffect(() => {
@@ -209,6 +229,16 @@ export function UtilityMapExperience() {
       );
       return { levels, colors: GRID_RAMP as readonly string[] };
     }
+    if (data && spotlight) {
+      const byFips = new globalThis.Map(spotlight.counties.map((c) => [c.fips, c.peak_out_pct]));
+      const levels = new globalThis.Map<string, number | null>(
+        data.counties.map((c) => [c.fips, byFips.has(c.fips) ? outageShareLevel(byFips.get(c.fips)!) : null]),
+      );
+      return {
+        levels,
+        colors: [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]] as readonly string[],
+      };
+    }
     if (!data || mode !== "hazards" || hazardPicks.length === 0) return null;
     const levels = new globalThis.Map<string, number | null>();
     for (const c of data.counties) {
@@ -229,7 +259,7 @@ export function UtilityMapExperience() {
           ? BIVARIATE_COLORS
           : [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
     return { levels, colors: colors as readonly string[] };
-  }, [data, mode, hazardPicks]);
+  }, [data, mode, hazardPicks, spotlight]);
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
@@ -450,14 +480,34 @@ export function UtilityMapExperience() {
 
   useEffect(() => {
     if (!map || !loaded) return;
-    const show = (h: "tornado" | "hurricane" | "severe_storm") =>
-      mode === "hazards" && hazardPicks.includes(h) ? trackCache[h] ?? null : null;
+    const show = (h: "tornado" | "hurricane" | "severe_storm") => {
+      if (mode !== "hazards") return null;
+      if (spotlight) {
+        // Only the spotlighted storm's own track, when it has one.
+        const track = h === "hurricane" && spotlight.track_storm_id ? trackCache.hurricane : null;
+        return track
+          ? { ...track, features: track.features.filter((f) => f.properties?.storm_id === spotlight.track_storm_id) }
+          : null;
+      }
+      return hazardPicks.includes(h) ? trackCache[h] ?? null : null;
+    };
     setHazardTracks(
       map,
       { tornado: show("tornado"), hurricane: show("hurricane"), severe_storm: show("severe_storm") },
       { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp, severe: HAZARDS.severe_storm.ramp[4] },
     );
-  }, [map, loaded, mode, hazardPicks, trackCache]);
+  }, [map, loaded, mode, hazardPicks, trackCache, spotlight]);
+
+  // Fit the map to a spotlighted storm's counties; also make sure its track file is loaded.
+  const onSpotlight = (name: string | null) => {
+    setSpotlightName(name);
+    const storm = storms.find((s) => s.name === name);
+    if (!storm || !map || !loaded) return;
+    if (storm.track_storm_id && !hazardPicks.includes("hurricane")) setHazardPicks((p) => [...p, "hurricane"]);
+    const fips = new Set(storm.counties.map((c) => c.fips));
+    const features = loaded.counties.features.filter((f) => fips.has(String(f.properties?.fips)));
+    if (features.length) map.fitBounds(boundsOf(features), { padding: mapPadding(), duration: 800, maxZoom: 8 });
+  };
 
   // FEMA flood zones for demo counties in view; fetched once each, drawn only with the flood layer on.
   const floodInView = useMemo(
@@ -512,8 +562,14 @@ export function UtilityMapExperience() {
   const onToggleHazard = (hazard: HazardId) =>
     setHazardPicks((prev) => (prev.includes(hazard) ? prev.filter((h) => h !== hazard) : [...prev, hazard]));
 
-  const hazardLegend =
-    mode === "grid" ? (
+  const hazardLegend = spotlight ? (
+    <SequentialLegend
+      title={`${spotlight.name}: peak share of customers out`}
+      colors={[LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]]}
+      labels={["< 5%", "5–15%", "15–30%", "30–50%", "50%+"]}
+      note="Grey: no outage event labeled with this storm."
+    />
+  ) : mode === "grid" ? (
       <>
         <SequentialLegend
           title="Estimated summer peak demand, Texas fifths"
@@ -610,6 +666,10 @@ export function UtilityMapExperience() {
               hazardPicks={hazardPicks}
               onToggleHazard={onToggleHazard}
               hazardLegend={hazardLegend}
+              storms={storms}
+              spotlight={spotlight}
+              onSpotlight={onSpotlight}
+              countyName={(fips) => countiesByFips.get(fips)?.name ?? fips}
               sources={data.sources}
               layers={data.layers}
               presets={data.presets}
