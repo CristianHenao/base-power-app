@@ -11,6 +11,7 @@ import {
   PlugZap,
   ScanLine,
   Snowflake,
+  Star,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -34,8 +35,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  canTogglePriority,
   groupDevicesByCategory,
   HOME_DEVICE_CATEGORY_META,
+  isPriorityDevice,
   type HomeDevice,
   type HomeDeviceKind,
 } from "@/lib/home/devices";
@@ -131,6 +134,12 @@ export function MyHomeScreen({
                   Core +{bestGeneratorExt.extensionHours} h est.
                 </span>
               ) : null}
+              {criticalCount > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
+                  <Cross className="size-3" aria-hidden />
+                  {criticalCount} critical for health
+                </span>
+              ) : null}
             </div>
             <p className="text-sm text-muted-foreground">
               Devices by room — including medical gear, refrigerated medication,
@@ -153,13 +162,6 @@ export function MyHomeScreen({
             </div>
           ) : (
             <div className="mt-5 space-y-5">
-              {criticalCount > 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
-                  <Cross className="size-3" aria-hidden />
-                  {criticalCount} critical for health
-                </span>
-              ) : null}
-
               {grouped.map((group) => (
                 <section key={group.category} className="space-y-2">
                   <h2 className="text-sm font-semibold tracking-wide text-foreground">
@@ -184,6 +186,8 @@ export function MyHomeScreen({
                       const Icon = kindIcon(device.kind);
                       const critical =
                         device.isMedical || device.needsRefrigeration;
+                      const priority = isPriorityDevice(device);
+                      const canToggle = canTogglePriority(device);
                       return (
                         <li
                           key={device.id}
@@ -243,7 +247,7 @@ export function MyHomeScreen({
                                     ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
                                     : null}
                               </p>
-                              {critical ? (
+                              {critical || (priority && !critical) ? (
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   {device.isMedical ? (
                                     <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
@@ -261,6 +265,15 @@ export function MyHomeScreen({
                                         aria-hidden
                                       />
                                       Needs refrigeration
+                                    </span>
+                                  ) : null}
+                                  {priority && !critical ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-black/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                                      <Star
+                                        className="size-2.5 fill-current"
+                                        aria-hidden
+                                      />
+                                      Priority
                                     </span>
                                   ) : null}
                                 </div>
@@ -282,6 +295,27 @@ export function MyHomeScreen({
                                 <MoreVertical className="size-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" sideOffset={4}>
+                                {canToggle ? (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      onUpdateDevice({
+                                        ...device,
+                                        isPriority: !priority,
+                                      })
+                                    }
+                                  >
+                                    <Star
+                                      className={cn(
+                                        "size-4",
+                                        priority && "fill-current",
+                                      )}
+                                      aria-hidden
+                                    />
+                                    {priority
+                                      ? "Remove from priority"
+                                      : "Add to priority"}
+                                  </DropdownMenuItem>
+                                ) : null}
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setPendingDelete(device)}

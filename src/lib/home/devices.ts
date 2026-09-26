@@ -27,7 +27,7 @@ export const HOME_DEVICE_CATEGORY_META: Record<
   HomeDeviceCategory,
   { label: string; sortOrder: number }
 > = {
-  medical: { label: "Medical & medication", sortOrder: 0 },
+  medical: { label: "Priority", sortOrder: 0 },
   panel: { label: "Panel", sortOrder: 1 },
   generator: { label: "Generator", sortOrder: 2 },
   kitchen: { label: "Kitchen", sortOrder: 3 },
@@ -130,6 +130,8 @@ export type HomeDevice = {
   notes: string | null;
   isMedical: boolean;
   needsRefrigeration: boolean;
+  /** User-marked priority; medical devices are always treated as priority. */
+  isPriority: boolean;
   /** Cropped device outline PNG — data URL (transient) or Supabase Storage public URL */
   thumbnailUrl: string | null;
   /** Extra nameplate fields shown in the detail grid */
@@ -222,6 +224,11 @@ export function createScannedDevice(
   if (isGenerator) kind = "generator";
   else if (isMedical && kind === "appliance") kind = "medical";
 
+  const medical = isGenerator ? false : isMedical;
+  const needsRefrigeration = isGenerator
+    ? false
+    : result.needsRefrigeration;
+
   return {
     id: `device-${Date.now()}-${index}`,
     name: result.name,
@@ -233,8 +240,9 @@ export function createScannedDevice(
     wattsExact: false,
     confidence: result.confidence,
     notes: result.notes,
-    isMedical: isGenerator ? false : isMedical,
-    needsRefrigeration: isGenerator ? false : result.needsRefrigeration,
+    isMedical: medical,
+    needsRefrigeration,
+    isPriority: medical || needsRefrigeration || kind === "medical",
     thumbnailUrl,
     specs: [],
     nameplateScannedAt: null,
@@ -243,6 +251,25 @@ export function createScannedDevice(
     scannedAt: new Date().toISOString(),
     source: "scan",
   };
+}
+
+/** Medical loads stay on Priority; other devices use the isPriority flag. */
+export function isPriorityDevice(device: HomeDevice): boolean {
+  return (
+    device.isPriority ||
+    device.isMedical ||
+    device.kind === "medical" ||
+    device.category === "medical"
+  );
+}
+
+/** Medical devices cannot be unmarked as priority. */
+export function canTogglePriority(device: HomeDevice): boolean {
+  return !(
+    device.isMedical ||
+    device.kind === "medical" ||
+    device.category === "medical"
+  );
 }
 
 /** Merge nameplate OCR into an existing device (prefer plate values). */
@@ -404,14 +431,21 @@ export function groupDevicesByCategory(
   label: string;
   devices: HomeDevice[];
 }> {
+  const priority: HomeDevice[] = [];
   const buckets = new Map<HomeDeviceCategory, HomeDevice[]>();
+
   for (const device of devices) {
+    if (isPriorityDevice(device)) {
+      priority.push(device);
+      continue;
+    }
     const list = buckets.get(device.category) ?? [];
     list.push(device);
     buckets.set(device.category, list);
   }
 
-  return [...buckets.entries()]
+  const groups = [...buckets.entries()]
+    .filter(([category]) => category !== "medical")
     .map(([category, items]) => ({
       category,
       label: HOME_DEVICE_CATEGORY_META[category].label,
@@ -422,6 +456,19 @@ export function groupDevicesByCategory(
         HOME_DEVICE_CATEGORY_META[a.category].sortOrder -
         HOME_DEVICE_CATEGORY_META[b.category].sortOrder,
     );
+
+  if (priority.length > 0) {
+    return [
+      {
+        category: "medical",
+        label: HOME_DEVICE_CATEGORY_META.medical.label,
+        devices: priority,
+      },
+      ...groups,
+    ];
+  }
+
+  return groups;
 }
 
 export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {

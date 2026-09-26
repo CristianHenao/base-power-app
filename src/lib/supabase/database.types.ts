@@ -64,6 +64,7 @@ export type Database = {
           notes: string | null;
           is_medical: boolean;
           needs_refrigeration: boolean;
+          is_priority: boolean;
           thumbnail_url: string | null;
           specs: Json;
           nameplate: Json | null;
@@ -90,6 +91,7 @@ export type Database = {
           notes?: string | null;
           is_medical?: boolean;
           needs_refrigeration?: boolean;
+          is_priority?: boolean;
           thumbnail_url?: string | null;
           specs?: Json;
           nameplate?: Json | null;
@@ -116,6 +118,7 @@ export type Database = {
           notes?: string | null;
           is_medical?: boolean;
           needs_refrigeration?: boolean;
+          is_priority?: boolean;
           thumbnail_url?: string | null;
           specs?: Json;
           nameplate?: Json | null;
