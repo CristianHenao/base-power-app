@@ -33,53 +33,40 @@ export function ControlsPanel({
   className,
 }: ControlsPanelProps) {
   return (
-    <section
-      aria-label="Map layers"
-      className={cn(
-        "space-y-4 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-lg backdrop-blur-md",
-        className,
-      )}
-    >
-      <div className="space-y-1">
-        <h1 className="text-base font-semibold tracking-tight">Utility grid stress</h1>
-        <p className="text-xs text-muted-foreground">
-          Toggle evidence layers. Each layer is ranked against Texas; the score is their
-          average.
+    <section aria-label="Map layers" className={cn("bp-panel space-y-5 p-5", className)}>
+      <div className="space-y-2">
+        <p className="bp-eyebrow">Grid stress</p>
+        <h1 className="text-[20px] leading-[27px]">Where Texas grids are stressed</h1>
+        <p className="text-[14px] leading-[21px] text-muted-foreground">
+          Turn evidence layers on or off. Each is ranked against Texas, and the score is
+          their average.
         </p>
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">Presets</p>
-        <div className="flex flex-wrap gap-1.5">
-          {presets.map((preset) => {
-            const active = preset.id === activePresetId;
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => onPreset(preset)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs transition-colors",
-                  active
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-                )}
-              >
-                {preset.label}
-              </button>
-            );
-          })}
+        <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">
+          Presets
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {presets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              aria-pressed={preset.id === activePresetId}
+              onClick={() => onPreset(preset)}
+              className="bp-pill"
+            >
+              {preset.label}
+            </button>
+          ))}
           {activePresetId == null ? (
-            <span className="rounded-full border border-dashed px-3 py-1 text-xs text-muted-foreground">
-              Custom
-            </span>
+            <span className="bp-pill border-dashed text-muted-foreground">Custom</span>
           ) : null}
         </div>
       </div>
 
-      <fieldset className="space-y-2">
-        <legend className="mb-2 text-xs font-medium text-muted-foreground">
+      <fieldset className="space-y-1">
+        <legend className="mb-2 text-[12px] leading-[18px] font-semibold text-muted-foreground">
           Scored layers
         </legend>
         {layers.map((layer) => {
@@ -88,7 +75,7 @@ export function ControlsPanel({
             <label
               key={layer.id}
               htmlFor={id}
-              className="flex cursor-pointer items-start gap-2.5 rounded-lg px-1 py-1 hover:bg-muted/60"
+              className="bp-row flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5"
             >
               <Checkbox
                 id={id}
@@ -97,8 +84,10 @@ export function ControlsPanel({
                 onCheckedChange={(checked) => onToggleLayer(layer.id, checked === true)}
               />
               <span className="space-y-0.5">
-                <span className="block text-sm leading-none">{layer.label}</span>
-                <span className="block text-[11px] leading-snug text-muted-foreground">
+                <span className="block text-[14px] leading-[21px] font-semibold">
+                  {layer.label}
+                </span>
+                <span className="block text-[12px] leading-[18px] text-muted-foreground">
                   {layer.unit}
                 </span>
               </span>
@@ -109,7 +98,7 @@ export function ControlsPanel({
 
       <label
         htmlFor="layer-warnings"
-        className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-dashed px-2 py-2 hover:bg-muted/60"
+        className="bp-row flex cursor-pointer items-start gap-3 rounded-lg border border-dashed px-2 py-2"
       >
         <Checkbox
           id="layer-warnings"
@@ -118,8 +107,10 @@ export function ControlsPanel({
           onCheckedChange={(checked) => onToggleWarnings(checked === true)}
         />
         <span className="space-y-0.5">
-          <span className="block text-sm leading-none">Live NWS warnings</span>
-          <span className="block text-[11px] leading-snug text-muted-foreground">
+          <span className="block text-[14px] leading-[21px] font-semibold">
+            Live NWS warnings
+          </span>
+          <span className="block text-[12px] leading-[18px] text-muted-foreground">
             Shown on the map, never part of the score
           </span>
         </span>
@@ -133,17 +124,19 @@ export function ControlsPanel({
 export function ScoreLegend() {
   const levels = [1, 2, 3, 4, 5] as Level[];
   return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">Stress level</p>
-      <ol className="grid grid-cols-5 gap-0.5">
+    <div className="space-y-2">
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">
+        Stress level
+      </p>
+      <ol className="grid grid-cols-5 gap-1">
         {levels.map((level) => (
           <li key={level} className="space-y-1">
             <span
-              className="block h-2.5 rounded-sm ring-1 ring-black/10"
+              className="block h-3 rounded-sm ring-1 ring-black/10"
               style={{ backgroundColor: LEVEL_COLORS[level] }}
               aria-hidden
             />
-            <span className="block text-[10px] leading-tight text-muted-foreground">
+            <span className="block text-[11px] leading-tight text-muted-foreground">
               {level} {LEVEL_LABELS[level]}
             </span>
           </li>
@@ -156,7 +149,12 @@ export function ScoreLegend() {
 export function LevelChip({ level, className }: { level: Level | null; className?: string }) {
   if (level == null) {
     return (
-      <span className={cn("rounded-full border px-2 py-0.5 text-xs text-muted-foreground", className)}>
+      <span
+        className={cn(
+          "rounded-full border bg-white px-2.5 py-0.5 text-[12px] leading-[18px] font-semibold text-muted-foreground",
+          className,
+        )}
+      >
         No data
       </span>
     );
@@ -164,7 +162,7 @@ export function LevelChip({ level, className }: { level: Level | null; className
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-white px-2.5 py-0.5 text-[12px] leading-[18px] font-semibold",
         className,
       )}
     >
