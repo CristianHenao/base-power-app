@@ -370,6 +370,9 @@ export function RiskAnalysisDashboard() {
               activeAnalysisId={activeAnalysisId}
               onAnalysisChange={setActiveAnalysisId}
               weatherRiskBadges={weatherRiskBadges}
+              onScanPress={
+                showMyHome ? () => setDeviceScanOpen(true) : undefined
+              }
             />
           </div>
         ) : null}

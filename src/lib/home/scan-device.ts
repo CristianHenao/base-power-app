@@ -6,27 +6,49 @@ import {
 
 const DEFAULT_MODEL = "claude-sonnet-5";
 
-const SYSTEM_PROMPT = `You identify home electrical devices, appliances, breaker panels, and home batteries from a photo.
+const SYSTEM_PROMPT = `You identify home electrical devices, appliances, breaker panels, home batteries, and critical medical / medication loads from a photo.
 
 Return ONLY a single JSON object (no markdown, no prose) with this shape:
 {
-  "name": string,              // short product name, e.g. "Refrigerator" or "Square D breaker panel"
-  "kind": "appliance" | "panel" | "battery" | "unknown",
-  "brand": string | null,      // manufacturer if visible
-  "model": string | null,      // model / nameplate if readable
-  "watts": number | null,      // typical continuous draw estimate; null for panels or if unsure
-  "confidence": number,        // 0–1 how sure you are of the identification
-  "notes": string | null,      // one short sentence; mention OCR text if useful
+  "name": string,
+  "kind": "appliance" | "panel" | "battery" | "medical" | "unknown",
+  "category": "kitchen" | "living_room" | "bedroom" | "bathroom" | "garage" | "laundry" | "office" | "outdoor" | "panel" | "medical" | "other",
+  "brand": string | null,
+  "model": string | null,
+  "watts": number | null,
+  "confidence": number,
+  "notes": string | null,
+  "isMedical": boolean,
+  "needsRefrigeration": boolean,
   "bbox": [number, number, number, number] | null
-  // normalized [x, y, width, height] relative to image (0–1), primary subject
 }
 
-Rules:
-- Prefer the primary subject in frame (device/panel), not the whole room.
-- If it is an electrical panel / load center, kind must be "panel" and watts null.
-- If it is a home battery (Base Core, Powerwall, etc.), kind must be "battery".
-- Never invent a precise wattage from thin air; use null when unsure.
-- Label confidence honestly (blurry / partial / unclear → lower).`;
+Category guidance:
+- kitchen: fridge, freezer, microwave, dishwasher, range, etc.
+- living_room: TV, soundbar, living-area lamps / fans
+- bedroom: bedroom lamps, fans, chargers, bedroom electronics
+- bathroom: vanity lights, exhaust, bathroom heaters
+- garage: garage fridge, EV charger, tools, freezer in garage
+- laundry: washer, dryer
+- office: desktop, monitor, modem/router if in office
+- outdoor: exterior lights, pool pump, outdoor AC condenser
+- panel: breaker / load center only
+- medical: CPAP/BiPAP, oxygen concentrator, nebulizer, dialysis, powered medical equipment, medication fridge / insulin cooler
+- other: when unclear
+
+Critical load rules (prioritize these):
+- isMedical=true for any powered medical equipment (breathing, oxygen, dialysis, infusion, etc.). kind should be "medical" and category "medical".
+- needsRefrigeration=true when the device must stay powered to keep medication cold (insulin, specialty meds, vaccine/mini fridge used for meds). Mark isMedical=true as well.
+- A normal kitchen fridge is category "kitchen", isMedical=false, needsRefrigeration=false unless clearly used for medication.
+
+Other rules:
+- Prefer the primary subject in frame, not the whole room.
+- Always return bbox tightly around the primary device when visible (normalized 0–1).
+- Electrical panel / load center → kind "panel", category "panel", watts null.
+- Home battery (Base Core, Powerwall, etc.) → kind "battery".
+- Never invent precise wattage; use null when unsure.
+- Do not invent patient names or medical conditions — describe the device only.
+- Confidence should drop when the photo is blurry or ambiguous.`;
 
 export type ScanDeviceImageInput = {
   imageBase64: string;
@@ -63,7 +85,7 @@ export async function identifyHomeDeviceFromImage(
 
   const response = await client.messages.create({
     model,
-    max_tokens: 700,
+    max_tokens: 800,
     system: SYSTEM_PROMPT,
     messages: [
       {
@@ -79,7 +101,7 @@ export async function identifyHomeDeviceFromImage(
           },
           {
             type: "text",
-            text: "Identify the primary home device, appliance, panel, or battery in this photo. Return JSON only.",
+            text: "Identify the primary home device, appliance, panel, battery, or medical/medication load in this photo. Assign category and medical/refrigeration flags. Return JSON only.",
           },
         ],
       },
