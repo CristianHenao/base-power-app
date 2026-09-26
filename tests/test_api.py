@@ -317,3 +317,16 @@ def test_nws_outage_serves_the_last_good_alerts():
     assert report["live"]["alerts"][0]["event"] == "Flood Watch"
     nws_source = next(s for s in report["sources"] if s["id"] == "nws")
     assert nws_source["status"] == "degraded" and nws_source["fallback"] == "cache"
+
+
+def test_nws_keeps_only_live_alerts():
+    feature = lambda **props: {"properties": {"event": "Flood Watch", "severity": "Moderate", **props}}  # noqa: E731
+    payload = {"features": [
+        feature(status="Actual", messageType="Alert"),
+        feature(status="Actual", messageType="Update", event="Heat Advisory"),
+        feature(status="Test", messageType="Alert"),
+        feature(status="Actual", messageType="Cancel"),
+        feature(status="Actual", messageType="Alert", event="  "),
+    ]}
+    assert [a["event"] for a in parse_alerts(payload)] == ["Flood Watch", "Heat Advisory"]
+    assert parse_alerts({"features": []}) == []

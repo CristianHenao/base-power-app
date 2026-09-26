@@ -28,9 +28,17 @@ def point_key(latitude: float, longitude: float) -> str:
 
 
 def parse_alerts(payload: dict) -> list[dict]:
+    """Live alerts only (Victor's filter): status Actual, message Alert or Update, with an event name.
+
+    NWS also publishes test messages, exercises and cancellations; those are not shown.
+    """
     alerts = []
     for feature in payload.get("features", []):
-        props = feature.get("properties", {})
+        props = feature.get("properties") or {}
+        if props.get("status", "Actual") != "Actual" or props.get("messageType", "Alert") not in ("Alert", "Update"):
+            continue
+        if not isinstance(props.get("event"), str) or not props["event"].strip():
+            continue
         alerts.append({
             "event": props.get("event"),
             "severity": props.get("severity"),
