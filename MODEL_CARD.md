@@ -123,6 +123,8 @@ Fit on 2018-2022 and scored on 2023-2024, over the 254 counties with data in bot
 | Method | Poisson deviance (lower is better) | Spearman rank correlation |
 |---|---|---|
 | Empirical Bayes, weather-zone prior | **122** | **0.42** |
+| Empirical Bayes, prior from county covariates | 123 | 0.33 |
+| Covariate Poisson model alone | 125 | 0.29 |
 | Weather-zone mean | 126 | 0.34 |
 | Statewide mean | 152 | n/a (one value) |
 | Raw county rate | infinite | 0.32 |
@@ -133,6 +135,75 @@ little on top in deviance (122 against 126) and more in ranking (0.42 against 0.
 correlation is still modest: two test years is a short window, and one storm can move a county a lot. The UI shows the interval and
 says "estimate." Earlier builds reported 551 against 708. Those were on the inflated counts and are
 not comparable.
+
+We also tried county covariates (`pipeline/covariates.py`): FEMA NRI weather and flood scores, log
+customers, the share of customers served by co-ops, and the weather zone, fit as a Poisson model and
+used as each county's prior mean for the same shrinkage. It did not beat the zone prior, and no
+subset of covariates did either (co-op share alone: 125; NRI weather alone: 126). A county's own
+eight years plus its weather zone already carry what these features know. The outlook keeps
+empirical Bayes, and `backtest.json` records both. NRI is a 2025 snapshot, so that experiment also
+saw slightly later information than its training years.
+
+## Household backup gap (`pipeline/hazards.py`, `pipeline/durations.py`, `pipeline/household_gap.py`)
+
+The outlook says how often long outages hit a county. The gap says how many hours a year this home
+would be dark with 0, 1 or 2 Cores, and it can use the home's own appliances.
+
+**Storm type.** Each outage is labeled tropical, winter, wind, flood or other. Alejandro's
+hand-checked marquee storms (`storms.yaml`) come first, since they are 59% of all outage
+customer-hours; NOAA's zone-based Storm Events miss some of them (Harris has no rows for Beryl).
+Other outages take the most severe NOAA hazard in the same county from 12 hours before to 6 hours
+after they start. Heat is left out because multi-day heat advisories would label unrelated outages.
+Statewide, winter storms are 28% of outage customer-hours, tropical 24%, wind 24%, flood 1% and
+unlabeled 23%.
+
+**Duration.** A weighted Weibull accelerated-failure-time model of per-home outage hours (stay bound),
+written with scipy: log D = x.beta + sigma(severity) * W, where x covers severity (share of the
+county out at peak, six bins), storm type, season and weather zone. Each outage adds ten
+weighted-quantile points carrying the homes it affected, 1.47 million points in all. Backtest, fit on
+2018-2022 and scored on 2023-2024 by log-likelihood per home affected (higher is better):
+
+| Model | Log-likelihood per home |
+|---|---|
+| Severity, storm type, season, zone (used) | **-2.56** |
+| Storm type, season, zone | -2.65 |
+| Weather zone only | -3.02 |
+| Pooled Weibull | -3.05 |
+
+Calibration on the test years (predicted vs observed, hours): everyday outages p50 1.4 vs 1.2 and
+p90 4.6 vs 4.9; floods p90 8.0 vs 10.9. It is short on the worst storms: tropical p50 27 vs 43 and
+p90 119 vs 154, wind p90 18 vs 48, winter p90 39 vs 93. The training years had no Beryl-scale
+hurricane and no 2024-scale derecho. The model in the product is refit on 2018-2025, so it has
+seen them, but treat the tails of the worst storm types as understated.
+
+**Frequency and the gap.** Each past outage adds homes affected / customers / years of data to its
+county's outages per home per year, scaled by the same zone shrinkage as the outlook (with a 90%
+interval). Each season's duration is a mixture, over the county's own outages, of the Weibull at
+each outage's severity, storm type, season and zone. So a county keeps its own mix of everyday
+outages and catastrophes, which one smooth curve flattened (the first version put Harris at 4 dark
+hours a year against 14 measured). For backup hours T in a season:
+dark hours a year = sum of rate x E[max(D - T, 0)], and the chance of a gap = 1 - exp(-sum of
+rate x P(D > T)). With no backup, the model gives Harris 14.2 hours a year against 14.5 measured
+from EAGLE-I, with rank correlation 0.75 across counties.
+
+| Typical gas-heat home | No backup | One Core | Two Cores | Chance an outage outlasts one Core in a year |
+|---|---|---|---|---|
+| Harris | 14.2 h | 8.1 h | 6.4 h | 12% |
+| Collin | 5.9 h | 1.4 h | 0.7 h | 3% |
+| Travis | 5.5 h | 1.1 h | 0.4 h | 3% |
+
+**The home's own appliances.** Reports carry the per-season rates and survival curves on a fixed
+hours grid. The browser (`src/lib/report/household-answer.ts`) turns the chosen appliances into
+backup hours by season, using Alejandro's appliance table (kWh a day, standby, summer and winter
+loads, the largest start surge), and repeats the same integral. The appliance list, which can include
+medical devices, never leaves the device. Starred must-stay-on items get their own answer, as if
+everything else were switched off. `tests/test_household_gap_parity.py` checks that the TypeScript
+and Python math agree. Example, a Harris home: essentials plus central AC, about 6 dark hours a
+year on one Core; the fridge and a CPAP alone, about 16 minutes.
+
+Limits: the stay bound overstates continuous time in the dark during rolling blackouts; outages
+cut off by a data gap longer than an hour are treated as over (not censored); and the appliance
+table uses typical values that people can edit but that are not measured for their home.
 
 ## Backup simulator (`api/app/sim/backup.py`, `pipeline/simulate.py`)
 
