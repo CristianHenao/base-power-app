@@ -59,26 +59,33 @@ Central day (the Travis 2021 freeze is `48453-2021-02-14-2`).
 An event starts when customers out reach at least 50 or 0.1% of the county's customers, whichever
 is larger. Gaps under 1 hour are merged, and events under 30 minutes are dropped.
 
-EAGLE-I reports how many customers are out, not which ones. To turn the county curve into per-home
-durations we replay it as a queue, where a rise means homes going dark and a fall means homes
-restored, under two orderings:
+EAGLE-I reports how many customers are out, not which ones. We read per-home durations two ways
+and report them as a band, `[rotate, stay]`:
 
-- FIFO: the first homes out are the first restored. This gives the shortest plausible tail.
-- LIFO: the last homes out are the first restored. This gives the longest plausible tail.
+- **stay** (upper bound): the same homes stay dark while the county count is above them. The k-th
+  home is out whenever the count is at or above k. It has no tuning knob, keeps customer-hours
+  exactly, and never counts more homes than the peak.
+- **rotate** (lower bound): a first-out-first-restored queue on a 3-hour rolling median of the count,
+  so homes can take turns being dark, as in the February 2021 rolling blackouts.
 
-Both orderings give the same customer-hours, so the truth sits between them. We report both as a
-band and use LIFO wherever one number is needed (the 12-hour-plus rate and sizing), because it is
-the conservative choice for a backup product. The pair is [FIFO, LIFO], not [low, high]; for a few
-events (Beryl in Harris) the FIFO p90 is the longer one.
+We use **stay** wherever one number is needed (the 12-hour-plus rate and sizing), because it is the
+conservative choice for a backup product. During rolling blackouts it overstates continuous time in
+the dark.
 
-A noisy curve can replay the same homes going dark more than once, so an event's 12-hour-plus
-share is capped at its peak share of customers. Before the cap, Beryl counted as 1.3 long outages
-per Harris home.
+An earlier version replayed the raw 15-minute count as a FIFO/LIFO queue. EAGLE-I counts wiggle from
+one reading to the next, and the queue read every wiggle as different homes going dark and coming
+back. That meant 2-9 times more homes than the peak, and durations far too short. For Beryl in Harris
+it gave a median of 1.8 h and a p90 of 29-42 h. The band now gives a p50 of 31-73 h and a p90 of
+115-175 h, which matches CenterPoint taking about a week to restore roughly 90%. Alejandro's
+independent hand check (`docs/persona-check.md`) flagged the old numbers and passes 50 of 50 on
+these.
+
+An event's 12-hour-plus share is also capped at its peak share of customers.
 
 ## Outlook: long outages per typical home (`pipeline/outlook.py`)
 
 The metric is the expected number of 12-hour-plus outages per year for a typical home in the
-county, under LIFO durations. Each event contributes the share of the county's customers who were
+county, under stay-bound durations. Each event contributes the share of the county's customers who were
 out 12 hours or more, so counts can be fractional.
 
 Rates are shrunk with a gamma-Poisson empirical Bayes model. The prior is fit separately within
@@ -92,18 +99,18 @@ mean. The between-county variance is still floored at a coefficient of variation
 Levels come from fixed bands on "a 12-hour-plus outage about once every N years": 3 or fewer is
 Very high, 3-6 High, 6-10 Elevated, 10-15 Moderate, over 15 Low. Statewide quintiles were
 dropped because rates cluster within zones, and the middle cut points were only 0.005 a year
-apart. Statewide, 61 counties are High, 68 Elevated, 117 Moderate and 8 Low. None is Very high.
+apart. Statewide, 1 county is Very high, 61 High, 126 Elevated, 62 Moderate and 4 Low.
 
 Demo counties, 2018-2025:
 
 | County | Zone | 12h+ outages per year | 90% interval | About once every | Level |
 |---|---|---|---|---|---|
-| Collin (48085) | NCENT | 0.094 | 0.040-0.166 | 11 years | Moderate |
-| Harris (48201) | COAST | 0.230 | 0.151-0.322 | 4 years | High |
-| Travis (48453) | SCENT | 0.091 | 0.059-0.128 | 11 years | Moderate |
+| Collin (48085) | NCENT | 0.105 | 0.051-0.175 | 9.5 years | Elevated |
+| Harris (48201) | COAST | 0.221 | 0.145-0.310 | 4.5 years | High |
+| Travis (48453) | SCENT | 0.101 | 0.065-0.143 | 9.9 years | Elevated |
 
 Earlier builds showed Collin Low, Harris High (0.32) and Travis Elevated. The customer floor, the
-per-event cap and the quasi-Poisson prior account for the change.
+per-event cap, the quasi-Poisson prior and the stay-bound durations account for the change.
 
 ### Backtest (`data/processed/backtest.json`)
 
@@ -111,15 +118,15 @@ Fit on 2018-2022 and scored on 2023-2024, over the 254 counties with data in bot
 
 | Method | Poisson deviance (lower is better) | Spearman rank correlation |
 |---|---|---|
-| Empirical Bayes, weather-zone prior | **133** | **0.34** |
-| Weather-zone mean | 136 | 0.31 |
-| Statewide mean | 163 | n/a (one value) |
-| Raw county rate | infinite | 0.28 |
+| Empirical Bayes, weather-zone prior | **125** | **0.42** |
+| Weather-zone mean | 128 | 0.33 |
+| Statewide mean | 155 | n/a (one value) |
+| Raw county rate | infinite | 0.32 |
 
 The raw rate has infinite deviance because 5 counties had no long outages in training and at least
 one in testing. Most of the skill comes from the weather zone. The county-level shrinkage adds a
-little on top (133 against 136, and 0.34 against 0.31). A 0.34 rank correlation is modest: two
-test years is a short window, and one storm can move a county a lot. The UI shows the interval and
+little on top in deviance (125 against 128) and more in ranking (0.42 against 0.33). A 0.42 rank
+correlation is still modest: two test years is a short window, and one storm can move a county a lot. The UI shows the interval and
 says "estimate." Earlier builds reported 551 against 708. Those were on the inflated counts and are
 not comparable.
 
@@ -162,21 +169,20 @@ Sheets are matched by the dates they contain, and the fuller sheet wins.
 ## Sizing (`pipeline/sizing.py`)
 
 Recommend the smallest Core count that would have covered at least 90% of the county's
-12-hour-plus outage hours since 2018, using LIFO durations and each event's own replayed backup
+12-hour-plus outage hours since 2018, using stay-bound durations and each event's own replayed backup
 hours. If no option reaches 90%, recommend the largest option we model (two Cores) and say it falls
 short.
 
-| County | 1 Core (LIFO) | 2 Cores (LIFO) | 1 Core (FIFO) | 2 Cores (FIFO) | Recommendation |
+| County | 1 Core (stay) | 2 Cores (stay) | 1 Core (rotate) | 2 Cores (rotate) | Recommendation |
 |---|---|---|---|---|---|
-| Collin | 37% | 52% | 69% | 99% | 2 Cores |
-| Harris | 48% | 63% | 50% | 67% | 2 Cores |
-| Travis | 59% | 89% | 91% | 99% | 2 Cores |
+| Collin | 36% | 51% | 43% | 63% | 2 Cores |
+| Harris | 31% | 48% | 44% | 65% | 2 Cores |
+| Travis | 55% | 89% | 66% | 93% | 2 Cores |
 
-Shares are truncated, not rounded, to match the report sentence. No county reaches 90% under LIFO
-with two Cores, so all three get two Cores with the "most of the options we model" wording.
-
-The LIFO/FIFO gap is the ordering uncertainty described above. Under FIFO one Core would already
-reach 90% in Travis. The reason sentence always ends "Base confirms sizing at install."
+Shares are truncated, not rounded, to match the report sentence, so 89.8% never reads as meeting the
+90% target. No county reaches 90% under the stay bound with two Cores, so all three get two Cores
+with the "most of the options we model" wording. The rotate/stay gap is the duration uncertainty
+described above. The reason sentence always ends "Base confirms sizing at install."
 
 The eval fixtures (`evals/build_fixtures.py`) use an approximation. They size with each month's
 typical-day backup hours for the event's month rather than replaying the event's own week. That is
@@ -224,12 +230,12 @@ The eval set is 24 fixtures (8 counties × 3 homes):
 
 | Source | Passed |
 |---|---|
-| Grok, first reply | 24/24 (100%) in the latest run |
+| Grok, first reply | 21/24 (88%) in the latest run |
 | Grok, after one retry | 24/24 (100%) |
 | Template | 24/24 (100%) |
 
-Across runs at temperature 0 the first-reply pass rate has ranged from 92% to 100%. After the
-retry it has been 96-100%. Median model time is 2.2-2.7 seconds per report, against an 8-second
+Across runs at temperature 0 the first-reply pass rate has ranged from 88% to 100%. After the
+retry it has been 96-100%. Median model time is 2.2-3.2 seconds per report, against an 8-second
 timeout. The validators check that
 numbers are right, not tone. For example, "homes with electric heat need 2 Cores" passes, but it is
 stronger than the facts support.
@@ -243,4 +249,5 @@ stronger than the facts support.
   appliances, and no solar.
 - Specs we could not confirm (efficiency, backup power rating, storm mode) all push real
   backup hours down from what we show, except storm mode, which is a labeled reduction in load.
-- Persona numbers are awaiting a hand check with Alejandro (ticket A8).
+- Persona numbers are hand-checked against raw data by Alejandro's `pipeline/persona_check.py`
+  (50 checks, none flagged; `docs/persona-check.md`).
