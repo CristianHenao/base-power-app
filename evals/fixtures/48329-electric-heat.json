@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48329",
+    "name": "Midland",
+    "weather_zone": "FWEST"
+  },
+  "home": {
+    "label": "electric heat",
+    "profile_type": "RESHIWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "Low",
+    "long_outages_per_year": 0.0622,
+    "once_every_years": 16.09,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-14T01:00:00-06:00",
+      "peak_out_pct": 28.41,
+      "duration_h": {
+        "p50": [
+          12.53,
+          4.0
+        ],
+        "p90": [
+          20.0,
+          47.4
+        ]
+      }
+    },
+    {
+      "start": "2024-05-16T18:15:00-05:00",
+      "peak_out_pct": 6.81,
+      "duration_h": {
+        "p50": [
+          6.14,
+          5.55
+        ],
+        "p90": [
+          12.76,
+          15.9
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        18.5,
+        26.2,
+        35.0,
+        37.1,
+        30.1,
+        20.0,
+        21.2,
+        19.6,
+        27.3,
+        33.7,
+        31.3,
+        23.0
+      ],
+      "cores_2": [
+        33.9,
+        52.3,
+        69.5,
+        69.5,
+        58.7,
+        40.6,
+        42.8,
+        39.8,
+        54.9,
+        65.2,
+        63.0,
+        46.0
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9002
+  }
+}

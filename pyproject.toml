@@ -13,6 +13,7 @@ dependencies = [
     "openpyxl>=3.1",
     "pandas>=2.2",
     "pyarrow>=16",
+    "pyphen>=0.14",
     "scipy>=1.13",
 ]
 
