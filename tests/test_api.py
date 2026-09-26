@@ -51,7 +51,7 @@ def test_county_request_without_address_skips_census_and_nws(client):
     report = client.post("/v1/report", json={"county_fips": "48167"}).json()
     sources = {s["id"]: s["status"] for s in report["sources"]}
     assert sources["census"] == "not_connected" and sources["nws"] == "unavailable"
-    assert report["sizing"]["cores"] is None
+    assert report["sizing"]["cores"] in (1, 2)  # statewide replay covers every county
 
 
 def test_request_needs_a_place_and_texas():
