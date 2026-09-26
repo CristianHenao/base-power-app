@@ -24,7 +24,10 @@ Full plan: https://claude.ai/artifact/5uJY9qNnrtjKM9MfZRT9q3 (sheets A-02 contra
 ## Utility map (Base sales)
 A map of Texas utilities and counties colored by grid stress. Reps toggle evidence layers (outages,
 weather hazard, flood, grid scarcity, homes exposed), drill from utility to county, and see what a
-Base fleet would add. Specs: docs/utility-map-prd.md (v1) and docs/utility-map-prd-v2.md (v2).
+Base fleet would add. Current spec: docs/utility-map-prd-v3.md; tickets: docs/utility-map-roadmap.md
+(v1 and v2 PRDs kept for history).
+- Data build: `pipeline/utility_map/` (Alejandro). Raw downloads are read from `settings.RAW_DIR`; in a
+  worktree without `data/raw`, `export PORCHLIGHT_RAW_DIR=~/Desktop/base-power-app/data/raw`.
 - Route `src/app/utility-map/`; components `src/components/utility-map/`; pure scoring and fleet math
   `src/lib/utility-map/` (percentile ranks, equal weights, customer-weighted utility score, quintile levels).
 - Data contract: three precomputed files (`utility-map.json`, `counties.geojson`, `territories.geojson`).
