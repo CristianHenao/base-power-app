@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
 
 from api.app.adapters.ercot import SnapshotWorker
+from api.app.events import EventStore, FunnelEvent, event_store
 from api.app.metrics import Metrics
 from api.app.narrator.narrate import ModelCall
 from api.app.narrator.xai import KEY_ENV, xai_call
@@ -54,8 +55,10 @@ def narrative_stream(narrative: dict) -> Iterator[str]:
     yield sse("done", {"status": narrative["status"], "fact_ids": narrative["fact_ids"]})
 
 
-def create_app(service: ReportService | None = None, metrics: Metrics | None = None) -> FastAPI:
+def create_app(service: ReportService | None = None, metrics: Metrics | None = None,
+               events: EventStore | None = None) -> FastAPI:
     metrics = metrics or Metrics()
+    events = events or event_store(os.environ.get("DATABASE_URL"))
     service = service or ReportService(settings.FEATURES_DUCKDB, default_call(), metrics, grid=SnapshotWorker())
 
     @asynccontextmanager
@@ -98,6 +101,15 @@ def create_app(service: ReportService | None = None, metrics: Metrics | None = N
             raise HTTPException(status_code=422, detail=str(error)) from None
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from None
+
+    @app.post("/v1/events", status_code=202)
+    def record_event(body: FunnelEvent) -> dict:
+        events.add(body)
+        return {"accepted": True}
+
+    @app.get("/v1/events/summary")
+    def event_summary() -> dict:
+        return {"counts": events.counts(), "store": type(events).__name__}
 
     @app.get("/v1/grid/now")
     def grid_now() -> dict:
