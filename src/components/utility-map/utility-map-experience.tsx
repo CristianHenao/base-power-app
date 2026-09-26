@@ -18,6 +18,7 @@ import {
   setFloodZones,
   setGenerators,
   setHazardTracks,
+  setWarningCounties,
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
@@ -38,7 +39,7 @@ import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { LEVEL_COLORS, LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
 import { clickTarget, countyPaintState, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
-import type { LayerId, Preset } from "@/lib/utility-map/types";
+import type { LayerId, Preset, UtilityMapData } from "@/lib/utility-map/types";
 
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
   [-106.65, 25.84],
@@ -172,6 +173,34 @@ export function UtilityMapExperience() {
     [data],
   );
   const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
+
+  // Live NWS warnings every 60 s while the tab is visible (not in the dummy mockup).
+  useEffect(() => {
+    if (!loaded || loaded.data.data_mode === "mock") return;
+    let cancelled = false;
+    const poll = () => {
+      if (document.visibilityState !== "visible") return;
+      fetch("/api/utility-map/live")
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+        .then((body: { status: "ok" | "unavailable"; fetched_at: string; alerts: { fips: string; event: string }[] }) => {
+          if (!cancelled) setLive({ status: body.status, as_of: body.fetched_at, ercot: null, alerts: body.alerts });
+        })
+        .catch(() => {
+          if (!cancelled) setLive({ status: "unavailable", as_of: null, ercot: null, alerts: [] });
+        });
+    };
+    poll();
+    const timer = window.setInterval(poll, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [loaded]);
+  const viewData = useMemo(() => (data && live ? { ...data, live } : data), [data, live]);
+  useEffect(() => {
+    if (map && viewData) setWarningCounties(map, viewData.live.alerts.map((a) => a.fips));
+  }, [map, viewData, loaded]);
   const hazardPaint = useMemo(() => {
     if (data && mode === "grid") {
       // Grid mode: estimated summer peak demand, in Texas fifths.
@@ -605,7 +634,7 @@ export function UtilityMapExperience() {
             <DetailPanel
               key={selectedUtilityId ?? "all"}
               className="w-full"
-              data={data}
+              data={viewData ?? data}
               model={model}
               activeLayers={activeLayers}
               countiesByFips={countiesByFips}

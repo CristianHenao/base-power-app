@@ -332,6 +332,12 @@ export function setGenerators(map: Map, data: GeoJSON.FeatureCollection | null) 
   (map.getSource(SOURCE_GENERATORS) as GeoJSONSource).setData(data ?? empty);
 }
 
+/** Point the warning outlines at the counties currently under a warning. */
+export function setWarningCounties(map: Map, fips: string[]) {
+  if (!map.getLayer(LAYER_WARNING_LINE)) return;
+  map.setFilter(LAYER_WARNING_LINE, ["in", ["get", "fips"], ["literal", fips]]);
+}
+
 export function setWarningsVisible(map: Map, visible: boolean) {
   if (!map.getLayer(LAYER_WARNING_LINE)) return;
   map.setLayoutProperty(LAYER_WARNING_LINE, "visibility", visible ? "visible" : "none");

@@ -53,7 +53,8 @@ export function liveSummary(live: UtilityMapData["live"], fips: string[]): strin
   const alerts = live.alerts.filter((a) => fips.includes(a.fips));
   if (alerts.length === 0) return "No active NWS warnings";
   const events = [...new Set(alerts.map((a) => a.event))];
-  return `${alerts.length} ${alerts.length === 1 ? "county" : "counties"} under ${events.join(", ")}`;
+  const counties = new Set(alerts.map((a) => a.fips)).size;
+  return `${counties} ${counties === 1 ? "county" : "counties"} under ${events.join(", ")}`;
 }
 
 export function generationSummary(mix: Record<string, number> | undefined): string | null {

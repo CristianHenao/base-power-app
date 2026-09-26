@@ -55,3 +55,10 @@ test("generation mix reads as words, biggest first, zeros left out", () => {
   assert.equal(generationSummary({ solar: 0, wind: 0, gas: 0, coal: 0, nuclear: 0, storage: 0, other: 0 }), "No power plants");
   assert.equal(generationSummary(undefined), null);
 });
+
+test("two warnings in one county count as one county", () => {
+  assert.equal(
+    liveSummary({ status: "ok", as_of: "x", ercot: null,
+      alerts: [{ fips: "48371", event: "Flash Flood Warning" }, { fips: "48371", event: "Flash Flood Warning" }] }, ["48371"]),
+    "1 county under Flash Flood Warning");
+});
