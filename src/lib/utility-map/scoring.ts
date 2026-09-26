@@ -175,6 +175,9 @@ export function offerLabel(utility: UtilityRecord): string {
   return utility.base_offer ? BASE_OFFER_LABELS[utility.base_offer] : "Offer not verified";
 }
 
+/** Counts that add up across counties (a utility gets its share); the rest are averaged. */
+export const ADDITIVE_LAYERS: LayerId[] = ["homes", "peak_demand", "generation"];
+
 /** A utility's layer value and rank from its own estimated share of each county. */
 export function utilityLayerSummary(
   utility: UtilityRecord,
@@ -185,10 +188,10 @@ export function utilityLayerSummary(
     .map((w) => ({ w, c: counties.get(w.fips) }))
     .filter((x): x is { w: (typeof x)["w"]; c: CountyRecord } => x.c != null);
   const rank = weightedMean(mine.map(({ w, c }) => ({ value: c.ranks[layer], weight: w.customers_est })));
-  if (layer === "homes") {
-    const known = mine.filter(({ c }) => c.values.homes != null);
+  if (ADDITIVE_LAYERS.includes(layer)) {
+    const known = mine.filter(({ c }) => c.values[layer] != null);
     return {
-      value: known.length ? known.reduce((sum, { w, c }) => sum + (c.values.homes ?? 0) * w.share, 0) : null,
+      value: known.length ? known.reduce((sum, { w, c }) => sum + (c.values[layer] ?? 0) * w.share, 0) : null,
       rank,
     };
   }

@@ -168,3 +168,27 @@ def test_lens_adds_the_fema_stand_in_while_any_requested_hazard_is_missing() -> 
     assert lenses["all_hazards"]["layers"] == ["flood", "weather"]
     assert lenses["hurricane"]["layers"] == ["flood", "outages", "homes", "weather"]
     assert lenses["hurricane"]["requested"] == ["hurricane", "flood", "outages", "homes"]
+
+
+def test_extra_county_tables_become_available_ranked_layers() -> None:
+    tables = {"peak_demand": pd.Series({"48001": 500.0, "48003": 100.0})}
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS, tables=tables)
+    layers = {layer["id"]: layer for layer in release["layers"]}
+    assert layers["peak_demand"]["available"] is True
+    assert layers["peak_demand"]["unit"]
+    by_fips = {c["fips"]: c for c in release["counties"]}
+    assert by_fips["48001"]["values"]["peak_demand"] == 500.0
+    assert by_fips["48001"]["ranks"]["peak_demand"] == 1.0
+    assert by_fips["48003"]["ranks"]["peak_demand"] == 0.0
+    assert by_fips["48003"]["quality"]["peak_demand"] == "ok"
+    assert assemble.check(release, expected_counties=2) == []
+
+
+def test_utilities_carry_their_grid_numbers() -> None:
+    grid = pd.DataFrame({"utility_id": [1], "summer_peak_mw": [900.0], "winter_peak_mw": [800.0],
+                         "sales_mwh": [5e6], "residential_mwh": [2e6], "peak_source": ["eia861"]})
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS, utility_grid=grid)
+    alpha, beta = release["utilities"]
+    assert alpha["grid_stats"] == {"summer_peak_mw": 900.0, "winter_peak_mw": 800.0, "sales_mwh": 5e6,
+                                   "residential_mwh": 2e6, "peak_source": "eia861"}
+    assert beta["grid_stats"] is None

@@ -79,6 +79,14 @@ export type UtilityRecord = {
   eligible_homes: number | null;
   label_point: [number, number];
   core_coverage_hours: number | null;
+  /** EIA-861 sales and peak demand; peak_source says whether the peak is reported or estimated. */
+  grid_stats?: {
+    summer_peak_mw: number | null;
+    winter_peak_mw: number | null;
+    sales_mwh: number | null;
+    residential_mwh: number | null;
+    peak_source: "eia861" | "ercot_zone_estimate" | null;
+  } | null;
 };
 
 export type LiveAlert = { fips: string; event: string };

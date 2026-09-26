@@ -95,3 +95,12 @@ test("a utility's layer quality: ok if any county has data, not applicable only 
   assert.equal(utilityLayerQuality(west, onlyOutside, "price_spikes"), "not_applicable");
   assert.equal(utilityLayerQuality(alpha, mixed, "price_spikes"), "missing");
 });
+
+test("peak demand adds up across a utility's county shares like homes do", () => {
+  const withPeak = (c: CountyRecord, mw: number) =>
+    ({ ...c, values: { ...c.values, peak_demand: mw }, quality: { ...c.quality, peak_demand: "ok" } }) as CountyRecord;
+  const counties = new Map([withPeak(A, 1000), withPeak(B, 200)].map((c) => [c.fips, c]));
+  // Uneven splits, so a weighted average (600) and the additive total (75) differ.
+  const gamma = utility("gamma", [["48001", 50, 0.05], ["48003", 50, 0.125]], null);
+  assert.equal(utilityLayerSummary(gamma, counties, "peak_demand").value, 0.05 * 1000 + 0.125 * 200);
+});

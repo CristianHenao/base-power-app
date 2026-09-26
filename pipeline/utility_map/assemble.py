@@ -21,6 +21,7 @@ import pandas as pd
 import yaml
 
 from pipeline import settings
+from pipeline.map_layers import percentile_ranks
 
 V1_DIR = settings.REPO_ROOT / "public" / "utility-map" / "data"
 PUBLIC_DIR = settings.REPO_ROOT / "public" / "utility-map"
@@ -31,7 +32,12 @@ KNOWN_OFFERS = {"energy_plus_backup", "backup_program", "energy_only"}
 # Every layer in PRD v3 §5, plus the FEMA weather composite kept until the event
 # layers replace it. Available layers carry their unit, period and sources here.
 LAYERS: list[dict] = [
-    {"id": "peak_demand", "group": "grid", "label": "Peak demand", "pending": "EIA-861 peak demand (UM-1.1)"},
+    {"id": "peak_demand", "group": "grid", "label": "Peak demand", "pending": "EIA-861 peak demand (UM-1.1)",
+     "unit": "MW, estimated 2024 summer peak (each utility's peak split by its customers)",
+     "period_start": "2024-01-01", "period_end": "2024-12-31", "source_ids": ["eia861", "ercot_load"],
+     "method": "EIA-861 utility summer peak; wires companies without one get ERCOT weather-zone peak x their "
+               "share of zone customers. Split to counties by estimated customers. Non-coincident peaks.",
+     "table": "county_peak_demand.parquet"},
     {"id": "generation", "group": "grid", "label": "Local generation", "pending": "EIA-860 generators (UM-1.4)"},
     {"id": "price_spikes", "group": "grid", "label": "Price spikes",
      "unit": "hours per year at or above $1,000/MWh in the county's load zone (average)",
@@ -79,6 +85,7 @@ SOURCES = [
     {"id": "acs_5yr", "name": "Census ACS 5-year 2020-2024, table B25032", "url": "https://api.census.gov/data/2024/acs/acs5/groups/B25032.html"},
     {"id": "eia861", "name": "EIA-861 2024 utility service territories and customers", "url": "https://www.eia.gov/electricity/data/eia861/"},
     {"id": "base_offers", "name": "Base Power pricing and offer pages", "url": "https://www.basepowercompany.com/pricing"},
+    {"id": "ercot_load", "name": "ERCOT hourly native load by weather zone", "url": "https://www.ercot.com/gridinfo/load/load_hist"},
     {"id": "base_specs", "name": "Base Power Core specifications", "url": "https://www.basepowercompany.com/specs/core"},
 ]
 
@@ -114,9 +121,8 @@ def _grid_status(grids: set[str]) -> str:
     return "mixed" if "ERCOT" in grids else "non_ercot"
 
 
-def _layer_entry(meta: dict, counties: list[dict]) -> dict:
-    entry = {key: value for key, value in meta.items() if key != "pending"}
-    available = "pending" not in meta
+def _layer_entry(meta: dict, counties: list[dict], available: bool) -> dict:
+    entry = {key: value for key, value in meta.items() if key not in ("pending", "table")}
     entry["available"] = available
     if not available:
         entry.update(unit=None, period_start=None, period_end=None, source_ids=[], method=None,
@@ -135,8 +141,34 @@ def _lens(lens: dict, available: set[str]) -> dict:
     return {"id": lens["id"], "label": lens["label"], "layers": layers, "requested": lens["layers"]}
 
 
-def upgrade(v1: dict, crosswalk: pd.DataFrame, offers: dict[int, str]) -> dict:
-    """Turn the phase-0 contract into the PRD v3 shape. Pure: no files touched."""
+GRID_STATS = ("summer_peak_mw", "winter_peak_mw", "sales_mwh", "residential_mwh", "peak_source")
+
+
+def _grid_stats(grid: pd.DataFrame | None, eia_id: int | None) -> dict | None:
+    if grid is None or eia_id is None or eia_id not in set(grid["utility_id"]):
+        return None
+    row = grid.loc[grid["utility_id"] == eia_id].iloc[0]
+    return {key: (None if pd.isna(row[key]) else (row[key] if key == "peak_source" else float(row[key])))
+            for key in GRID_STATS}
+
+
+def upgrade(
+    v1: dict,
+    crosswalk: pd.DataFrame,
+    offers: dict[int, str],
+    tables: dict[str, pd.Series] | None = None,
+    utility_grid: pd.DataFrame | None = None,
+) -> dict:
+    """Turn the phase-0 contract into the PRD v3 shape. Pure: no files touched.
+
+    tables maps a layer id to a county value Series (index = FIPS) from a normalizer;
+    those layers become available and are ranked across Texas here.
+    """
+    tables = tables or {}
+    fips_index = [c["fips"] for c in v1["counties"]]
+    extra_ranks = {
+        layer: percentile_ranks(series.reindex(fips_index).astype(float)) for layer, series in tables.items()
+    }
     weights = county_weights(crosswalk)
     ranked = crosswalk.sort_values(["county_fips", "share"], ascending=[True, False])
     members = ranked.groupby("county_fips")["utility"].apply(list).to_dict()
@@ -150,6 +182,11 @@ def upgrade(v1: dict, crosswalk: pd.DataFrame, offers: dict[int, str]) -> dict:
         for v1_id, v3_id in V1_TO_V3.items():
             values[v3_id] = old["values"].get(v1_id)
             ranks[v3_id] = old["ranks"].get(v1_id)
+        for layer, series in tables.items():
+            value = series.get(fips)
+            values[layer] = None if value is None or pd.isna(value) else float(value)
+            rank = extra_ranks[layer].get(fips)
+            ranks[layer] = None if rank is None or pd.isna(rank) else float(rank)
         quality = {layer: _quality(layer, values[layer], old["load_zone"]) for layer in LAYER_IDS}
         utilities = members.get(fips, old["utilities"])
         counties.append({
@@ -177,9 +214,10 @@ def upgrade(v1: dict, crosswalk: pd.DataFrame, offers: dict[int, str]) -> dict:
             "counties": [w["fips"] for w in mine] or old["counties"],
             "county_weights": mine,
             "household_proxy_method": "County owner-occupied single-family homes x estimated customer share",
+            "grid_stats": _grid_stats(utility_grid, old.get("eia_utility_id")),
         })
 
-    available = {layer["id"] for layer in LAYERS if "pending" not in layer}
+    available = {layer["id"] for layer in LAYERS if "pending" not in layer} | set(tables)
     return {
         "schema_version": SCHEMA_VERSION,
         "release_id": None,
@@ -187,7 +225,7 @@ def upgrade(v1: dict, crosswalk: pd.DataFrame, offers: dict[int, str]) -> dict:
         "data_mode": "partial",
         "as_of": v1["as_of"],
         "note": v1["note"],
-        "layers": [_layer_entry(meta, counties) for meta in LAYERS],
+        "layers": [_layer_entry(meta, counties, meta["id"] in available) for meta in LAYERS],
         "presets": [_lens(lens, available) for lens in LENSES],
         "battery": {
             **v1["battery"],
@@ -281,7 +319,15 @@ def load_offers(path: Path = settings.BASE_AVAILABILITY_YAML) -> dict[int, str]:
 def main() -> int:
     v1 = json.loads((V1_DIR / "utility-map.json").read_text())
     crosswalk = pd.read_csv(settings.COUNTY_UTILITY_CSV, dtype={"county_fips": str})
-    release = upgrade(v1, crosswalk, load_offers())
+    tables = {}
+    for meta in LAYERS:
+        path = settings.UTILITY_MAP_DIR / meta.get("table", "")
+        if "table" in meta and path.exists():
+            frame = pd.read_parquet(path)
+            tables[meta["id"]] = frame.set_index("county_fips").iloc[:, 0]
+    grid_path = settings.UTILITY_MAP_DIR / "utility_grid.parquet"
+    utility_grid = pd.read_parquet(grid_path) if grid_path.exists() else None
+    release = upgrade(v1, crosswalk, load_offers(), tables=tables, utility_grid=utility_grid)
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
     rid = publish(release, V1_DIR, PUBLIC_DIR, today)
     unverified = sum(u["base_offer"] is None for u in release["utilities"])
