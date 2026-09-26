@@ -54,3 +54,7 @@ __pycache__/
 
 # raw inputs; derived parquet under data/processed is tracked
 data/raw/
+
+# Built by make data; several people write tables into it
+data/features.duckdb
+data/features.duckdb.wal
