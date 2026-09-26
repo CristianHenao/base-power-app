@@ -130,3 +130,11 @@ test("with price spikes on, utilities outside ERCOT are leveled among themselves
   assert.equal(model.utility.get("u4")?.level, 5); // best of the SPP five
   assert.equal(model.utility.get("u0")?.level, 1);
 });
+
+test("a utility off the ERCOT grid is 'not applicable' for price spikes even if a shared county has a value", () => {
+  const shared = { ...A, values: { ...A.values, price_spikes: 40 }, quality: { ...A.quality, price_spikes: "ok" } } as CountyRecord;
+  const counties = new Map([[shared.fips, shared]]);
+  const wecc = { ...utility("epe", [[A.fips, 0, 0]], "backup_program"), grids: ["WECC"] } as UtilityRecord;
+  assert.equal(utilityLayerQuality(wecc, counties, "price_spikes"), "not_applicable");
+  assert.equal(utilityLayerQuality({ ...wecc, grids: ["ERCOT"] }, counties, "price_spikes"), "ok");
+});

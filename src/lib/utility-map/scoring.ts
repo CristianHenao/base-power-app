@@ -225,6 +225,8 @@ export function utilityLayerQuality(
   counties: Map<string, CountyRecord>,
   layer: LayerId,
 ): Quality {
+  // Price spikes are ERCOT settlement prices: a utility on another grid has none of its own.
+  if (layer === "price_spikes" && !(utility.grids ?? [utility.grid]).includes("ERCOT")) return "not_applicable";
   const flags = utility.county_weights
     .map((w) => counties.get(w.fips)?.quality[layer])
     .filter((q): q is Quality => q != null);
