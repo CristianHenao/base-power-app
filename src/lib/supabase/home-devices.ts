@@ -13,6 +13,7 @@ import type {
   HomeDeviceRow,
   Json,
 } from "@/lib/supabase/database.types";
+import { HOME_DEVICES_BUCKET, homeDeviceStoragePath } from "@/lib/home/device-storage";
 
 type Client = SupabaseClient<Database>;
 
@@ -181,4 +182,22 @@ export async function upsertHomeDevice(
 
   if (error) throw error;
   return homeDeviceFromRow(data);
+}
+
+/** Delete by client_key; best-effort remove of Storage thumbnail. */
+export async function deleteHomeDevice(
+  client: Client,
+  userId: string,
+  clientKey: string,
+): Promise<void> {
+  const storagePath = homeDeviceStoragePath(userId, clientKey);
+  await client.storage.from(HOME_DEVICES_BUCKET).remove([storagePath]);
+
+  const { error } = await client
+    .from("home_devices")
+    .delete()
+    .eq("user_id", userId)
+    .eq("client_key", clientKey);
+
+  if (error) throw error;
 }

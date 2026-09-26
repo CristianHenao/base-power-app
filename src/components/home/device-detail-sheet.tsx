@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CircuitBoard, Cross, Fuel, ScanLine, Snowflake } from "lucide-react";
+import { CircuitBoard, Cross, Fuel, ScanLine, Snowflake, Zap } from "lucide-react";
 import { NameplateScanSheet } from "@/components/home/nameplate-scan-sheet";
 import { PanelScanSheet } from "@/components/home/panel-scan-sheet";
 import { buttonVariants } from "@/components/ui/button";
@@ -73,9 +73,9 @@ export function DeviceDetailSheet({
       <Sheet open={detailOpen} onOpenChange={handleDetailOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[min(88vh,40rem)] gap-0 overflow-y-auto rounded-t-3xl pb-[max(1rem,var(--sab))]"
+          className="flex max-h-[min(88vh,40rem)] flex-col gap-0 overflow-hidden rounded-t-3xl pb-[max(1rem,var(--sab))]"
         >
-          <SheetHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left">
+          <SheetHeader className="shrink-0 border-b border-border/60 px-4 pb-4 pt-4 text-left">
             <div className="flex items-start gap-3 pr-8">
               {device.thumbnailUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -127,19 +127,20 @@ export function DeviceDetailSheet({
             </div>
           </SheetHeader>
 
-          <div className="space-y-5 px-4 py-4">
+          <div
+            key={device.id}
+            className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4"
+          >
             {generatorExt ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
-                <p className="text-[10px] font-medium tracking-wide text-amber-900/70 uppercase">
-                  Extends Base Core backup
-                </p>
-                <p className="mt-1 text-2xl font-semibold tracking-tight text-amber-950">
-                  +{generatorExt.extensionHours} h
-                  <span className="ml-2 text-base font-medium text-amber-900/80">
-                    · +{generatorExt.extensionPercent}%
-                  </span>
-                </p>
-                <p className="mt-1.5 text-[12px] leading-relaxed text-amber-950/75">
+              <div className="flex items-start gap-3">
+                <div
+                  className="flex shrink-0 items-center -space-x-2.5 pt-0.5"
+                  aria-hidden
+                >
+                  <Zap className="size-6 fill-[#b2dd79] text-[#b2dd79]" />
+                  <Zap className="relative size-6 fill-[#f7c33c] text-[#f7c33c]" />
+                </div>
+                <p className="min-w-0 text-sm leading-snug text-foreground">
                   {formatGeneratorExtensionDetail(generatorExt)}
                 </p>
               </div>

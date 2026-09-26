@@ -38,6 +38,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import {
+  deleteHomeDevice,
   listHomeDevices,
   upsertHomeDevice,
 } from "@/lib/supabase/home-devices";
@@ -219,6 +220,21 @@ export function RiskAnalysisDashboard() {
     void persistHomeDevice(device);
   }
 
+  function handleDeleteHomeDevice(device: HomeDevice) {
+    setHomeDevices((prev) => prev.filter((item) => item.id !== device.id));
+    void (async () => {
+      if (!hasSupabaseConfig()) return;
+      try {
+        const supabase = createClient();
+        const user = await getCurrentUser(supabase);
+        if (!user) return;
+        await deleteHomeDevice(supabase, user.id, device.id);
+      } catch (error) {
+        console.error("Failed to delete home device", error);
+      }
+    })();
+  }
+
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
     setBatteryCapacityOpen(false);
@@ -334,6 +350,7 @@ export function RiskAnalysisDashboard() {
           devices={homeDevices}
           onAddDevice={handleAddHomeDevice}
           onUpdateDevice={handleUpdateHomeDevice}
+          onDeleteDevice={handleDeleteHomeDevice}
           scanOpen={deviceScanOpen}
           onScanOpenChange={setDeviceScanOpen}
           className="absolute inset-0 pt-[calc(3.5rem+var(--sat))]"

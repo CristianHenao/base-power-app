@@ -7,12 +7,32 @@ import {
   CircuitBoard,
   Cross,
   Fuel,
+  MoreVertical,
   PlugZap,
   ScanLine,
   Snowflake,
+  Trash2,
+  Zap,
 } from "lucide-react";
 import { DeviceDetailSheet } from "@/components/home/device-detail-sheet";
 import { DeviceScanSheet } from "@/components/home/device-scan-sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   groupDevicesByCategory,
   HOME_DEVICE_CATEGORY_META,
@@ -20,7 +40,7 @@ import {
   type HomeDeviceKind,
 } from "@/lib/home/devices";
 import {
-  formatGeneratorExtensionShort,
+  formatGeneratorExtensionDetail,
   generatorExtensionForDevice,
 } from "@/lib/home/generator-backup";
 import { cn } from "@/lib/utils";
@@ -29,6 +49,7 @@ type MyHomeScreenProps = {
   devices: HomeDevice[];
   onAddDevice: (device: HomeDevice) => void;
   onUpdateDevice: (device: HomeDevice) => void;
+  onDeleteDevice: (device: HomeDevice) => void;
   scanOpen: boolean;
   onScanOpenChange: (open: boolean) => void;
   className?: string;
@@ -46,11 +67,14 @@ export function MyHomeScreen({
   devices,
   onAddDevice,
   onUpdateDevice,
+  onDeleteDevice,
   scanOpen,
   onScanOpenChange,
   className,
 }: MyHomeScreenProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<HomeDevice | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const empty = devices.length === 0;
   const grouped = groupDevicesByCategory(devices);
   const criticalCount = devices.filter(
@@ -63,6 +87,18 @@ export function MyHomeScreen({
     .sort((a, b) => b.extensionHours - a.extensionHours)[0];
   const selectedDevice =
     devices.find((device) => device.id === selectedId) ?? null;
+
+  async function confirmDelete() {
+    if (!pendingDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await Promise.resolve(onDeleteDevice(pendingDelete));
+      if (selectedId === pendingDelete.id) setSelectedId(null);
+      setPendingDelete(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <>
@@ -85,9 +121,17 @@ export function MyHomeScreen({
 
         <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-[calc(7.5rem+var(--sab))] pt-5 sm:px-6">
           <header className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              My home
-            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                My home
+              </h1>
+              {bestGeneratorExt ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
+                  <Fuel className="size-3" aria-hidden />
+                  Core +{bestGeneratorExt.extensionHours} h est.
+                </span>
+              ) : null}
+            </div>
             <p className="text-sm text-muted-foreground">
               Devices by room — including medical gear, refrigerated medication,
               and generators that can recharge a Base Core.
@@ -109,61 +153,53 @@ export function MyHomeScreen({
             </div>
           ) : (
             <div className="mt-5 space-y-5">
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <p className="font-medium text-foreground">
-                  {devices.length} device{devices.length === 1 ? "" : "s"}
-                </p>
-                {criticalCount > 0 ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
-                    <Cross className="size-3" aria-hidden />
-                    {criticalCount} critical for health
-                  </span>
-                ) : null}
-                {bestGeneratorExt ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
-                    <Fuel className="size-3" aria-hidden />
-                    Core +{bestGeneratorExt.extensionHours} h est.
-                  </span>
-                ) : null}
-              </div>
-
-              {bestGeneratorExt ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-3.5 py-3">
-                  <p className="text-[10px] font-medium tracking-wide text-amber-900/70 uppercase">
-                    Generator + Base Core
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-amber-950">
-                    Your generator can extend Core backup by about{" "}
-                    {bestGeneratorExt.extensionHours} hours (
-                    {bestGeneratorExt.extensionPercent}% longer). Estimate.
-                  </p>
-                </div>
+              {criticalCount > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
+                  <Cross className="size-3" aria-hidden />
+                  {criticalCount} critical for health
+                </span>
               ) : null}
 
               {grouped.map((group) => (
                 <section key={group.category} className="space-y-2">
-                  <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <h2 className="text-sm font-semibold tracking-wide text-foreground">
                     {group.label}
                   </h2>
+                  {group.category === "generator" && bestGeneratorExt ? (
+                    <div className="flex items-start gap-3 pb-1">
+                      <div
+                        className="flex shrink-0 items-center -space-x-2.5 pt-0.5"
+                        aria-hidden
+                      >
+                        <Zap className="size-6 fill-[#b2dd79] text-[#b2dd79]" />
+                        <Zap className="relative size-6 fill-[#f7c33c] text-[#f7c33c]" />
+                      </div>
+                      <p className="min-w-0 text-sm leading-snug text-foreground">
+                        {formatGeneratorExtensionDetail(bestGeneratorExt)}
+                      </p>
+                    </div>
+                  ) : null}
                   <ul className="space-y-2">
                     {group.devices.map((device) => {
                       const Icon = kindIcon(device.kind);
                       const critical =
                         device.isMedical || device.needsRefrigeration;
-                      const isGenerator = device.kind === "generator";
-                      const genExt = generatorExtensionForDevice(device);
                       return (
-                        <li key={device.id}>
+                        <li
+                          key={device.id}
+                          className={cn(
+                            "flex items-stretch overflow-hidden rounded-2xl border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+                            critical
+                              ? "border-rose-200 bg-rose-50/60"
+                              : "border-black/8",
+                          )}
+                        >
                           <button
                             type="button"
                             onClick={() => setSelectedId(device.id)}
                             className={cn(
-                              "flex w-full items-center gap-3 rounded-2xl border bg-white px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors",
-                              critical
-                                ? "border-rose-200 bg-rose-50/60"
-                                : isGenerator
-                                  ? "border-amber-200 bg-amber-50/50"
-                                  : "border-black/8 hover:bg-black/[0.02]",
+                              "flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3 text-left transition-colors",
+                              !critical && "hover:bg-black/[0.02]",
                             )}
                           >
                             {device.thumbnailUrl ? (
@@ -175,9 +211,7 @@ export function MyHomeScreen({
                                   "size-12 shrink-0 rounded-xl object-cover ring-1",
                                   critical
                                     ? "ring-rose-200"
-                                    : isGenerator
-                                      ? "ring-amber-200"
-                                      : "ring-black/10",
+                                    : "ring-black/10",
                                 )}
                               />
                             ) : (
@@ -186,9 +220,7 @@ export function MyHomeScreen({
                                   "flex size-12 shrink-0 items-center justify-center rounded-xl",
                                   critical
                                     ? "bg-rose-500/15 text-rose-800"
-                                    : isGenerator
-                                      ? "bg-amber-500/15 text-amber-900"
-                                      : "bg-amber-400/15 text-amber-800",
+                                    : "bg-amber-400/15 text-amber-800",
                                 )}
                               >
                                 <Icon className="size-4.5" aria-hidden />
@@ -211,11 +243,6 @@ export function MyHomeScreen({
                                     ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
                                     : null}
                               </p>
-                              {genExt ? (
-                                <p className="mt-1 text-[11px] font-medium text-amber-900">
-                                  {formatGeneratorExtensionShort(genExt)}
-                                </p>
-                              ) : null}
                               {critical ? (
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   {device.isMedical ? (
@@ -240,6 +267,31 @@ export function MyHomeScreen({
                               ) : null}
                             </div>
                           </button>
+
+                          <div className="flex items-center pr-1.5">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    aria-label={`Options for ${device.name}`}
+                                  />
+                                }
+                              >
+                                <MoreVertical className="size-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" sideOffset={4}>
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setPendingDelete(device)}
+                                >
+                                  <Trash2 className="size-4" aria-hidden />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </li>
                       );
                     })}
@@ -266,6 +318,34 @@ export function MyHomeScreen({
         }}
         onDeviceUpdate={onUpdateDevice}
       />
+
+      <AlertDialog
+        open={pendingDelete != null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete device?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete
+                ? `Remove “${pendingDelete.name}” from My home. This can’t be undone.`
+                : "Remove this device from My home. This can’t be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleting}
+              onClick={() => void confirmDelete()}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
