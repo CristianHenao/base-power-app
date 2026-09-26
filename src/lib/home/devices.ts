@@ -4,6 +4,7 @@ export type HomeDeviceKind =
   | "appliance"
   | "panel"
   | "battery"
+  | "generator"
   | "medical"
   | "unknown";
 
@@ -18,6 +19,7 @@ export type HomeDeviceCategory =
   | "office"
   | "outdoor"
   | "panel"
+  | "generator"
   | "medical"
   | "other";
 
@@ -27,15 +29,16 @@ export const HOME_DEVICE_CATEGORY_META: Record<
 > = {
   medical: { label: "Medical & medication", sortOrder: 0 },
   panel: { label: "Panel", sortOrder: 1 },
-  kitchen: { label: "Kitchen", sortOrder: 2 },
-  living_room: { label: "Living room", sortOrder: 3 },
-  bedroom: { label: "Bedroom", sortOrder: 4 },
-  bathroom: { label: "Bathroom", sortOrder: 5 },
-  laundry: { label: "Laundry", sortOrder: 6 },
-  garage: { label: "Garage", sortOrder: 7 },
-  office: { label: "Office", sortOrder: 8 },
-  outdoor: { label: "Outdoor", sortOrder: 9 },
-  other: { label: "Other", sortOrder: 10 },
+  generator: { label: "Generator", sortOrder: 2 },
+  kitchen: { label: "Kitchen", sortOrder: 3 },
+  living_room: { label: "Living room", sortOrder: 4 },
+  bedroom: { label: "Bedroom", sortOrder: 5 },
+  bathroom: { label: "Bathroom", sortOrder: 6 },
+  laundry: { label: "Laundry", sortOrder: 7 },
+  garage: { label: "Garage", sortOrder: 8 },
+  office: { label: "Office", sortOrder: 9 },
+  outdoor: { label: "Outdoor", sortOrder: 10 },
+  other: { label: "Other", sortOrder: 11 },
 };
 
 export const HOME_DEVICE_CATEGORIES = Object.keys(
@@ -134,6 +137,7 @@ const WATT_LOOKUP: Array<{ match: RegExp; watts: number }> = [
   { match: /hvac|air\s*conditioner|a\/c|ac\s*unit|heat\s*pump/i, watts: 3500 },
   { match: /furnace/i, watts: 600 },
   { match: /water\s*heater/i, watts: 4500 },
+  { match: /generator|standby\s*gen|inverter\s*generator/i, watts: 3500 },
   { match: /base\s*core|home\s*battery|powerwall/i, watts: 0 },
   { match: /panel|breaker|load\s*center/i, watts: 0 },
 ];
@@ -150,6 +154,7 @@ export function estimateWattsForDevice(
   for (const entry of WATT_LOOKUP) {
     if (entry.match.test(name)) return entry.watts;
   }
+  if (kind === "generator") return 3500;
   return 100;
 }
 
@@ -177,22 +182,32 @@ export function createScannedDevice(
   thumbnailUrl: string | null = null,
 ): HomeDevice {
   const isMedical = result.isMedical || result.kind === "medical";
-  const category =
-    result.category === "other" && isMedical ? "medical" : result.category;
+  const isGenerator =
+    result.kind === "generator" ||
+    /\bgenerator\b/i.test(result.name) ||
+    result.category === "generator";
+
+  let category = result.category;
+  if (isGenerator) category = "generator";
+  else if (result.category === "other" && isMedical) category = "medical";
+
+  let kind = result.kind;
+  if (isGenerator) kind = "generator";
+  else if (isMedical && kind === "appliance") kind = "medical";
 
   return {
     id: `device-${Date.now()}-${index}`,
     name: result.name,
-    kind: isMedical && result.kind === "appliance" ? "medical" : result.kind,
+    kind,
     category,
     brand: result.brand,
     model: result.model,
-    watts: estimateWattsForDevice(result.name, result.kind, result.watts),
+    watts: estimateWattsForDevice(result.name, kind, result.watts),
     wattsExact: false,
     confidence: result.confidence,
     notes: result.notes,
-    isMedical,
-    needsRefrigeration: result.needsRefrigeration,
+    isMedical: isGenerator ? false : isMedical,
+    needsRefrigeration: isGenerator ? false : result.needsRefrigeration,
     thumbnailUrl,
     specs: [],
     nameplateScannedAt: null,
@@ -206,10 +221,16 @@ export function applyNameplateToDevice(
   device: HomeDevice,
   plate: DeviceNameplateResult,
 ): HomeDevice {
-  const inputWatts =
-    typeof plate.inputWatts === "number" && plate.inputWatts > 0
-      ? Math.round(plate.inputWatts)
-      : null;
+  const ratedFromPlate =
+    device.kind === "generator"
+      ? typeof plate.outputWatts === "number" && plate.outputWatts > 0
+        ? Math.round(plate.outputWatts)
+        : typeof plate.inputWatts === "number" && plate.inputWatts > 0
+          ? Math.round(plate.inputWatts)
+          : null
+      : typeof plate.inputWatts === "number" && plate.inputWatts > 0
+        ? Math.round(plate.inputWatts)
+        : null;
 
   const nextSpecs = mergeSpecFields(device.specs, plate.fields);
 
@@ -221,8 +242,8 @@ export function applyNameplateToDevice(
       plate.description && !device.name.toLowerCase().includes("microwave")
         ? device.name
         : device.name,
-    watts: inputWatts ?? device.watts,
-    wattsExact: inputWatts != null ? true : device.wattsExact,
+    watts: ratedFromPlate ?? device.watts,
+    wattsExact: ratedFromPlate != null ? true : device.wattsExact,
     notes: plate.notes ?? device.notes,
     specs: nextSpecs,
     nameplateScannedAt: new Date().toISOString(),
@@ -245,6 +266,15 @@ function mergeSpecFields(
 
 /** Rows for the detail sheet grid — core identity + nameplate specs. */
 export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
+  const powerLabel =
+    device.kind === "generator"
+      ? device.wattsExact
+        ? "Rated output"
+        : "Rated output (estimate)"
+      : device.wattsExact
+        ? "Input power"
+        : "Power (estimate)";
+
   const core: DeviceSpecField[] = [
     {
       key: "category",
@@ -263,10 +293,18 @@ export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
     },
     {
       key: "watts",
-      label: device.wattsExact ? "Input power" : "Power (estimate)",
+      label: powerLabel,
       value: device.watts > 0 ? `${device.watts} W` : "—",
     },
   ];
+
+  if (device.kind === "generator") {
+    core.push({
+      key: "core_port",
+      label: "Core generator port",
+      value: "NEMA L14-30R · up to 4 kW charge",
+    });
+  }
 
   if (device.isMedical) {
     core.push({ key: "medical", label: "Medical load", value: "Yes" });
@@ -322,14 +360,19 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
   if (!name) return null;
 
   const kindRaw = typeof obj.kind === "string" ? obj.kind : "unknown";
-  const kind: HomeDeviceKind =
+  let kind: HomeDeviceKind =
     kindRaw === "appliance" ||
     kindRaw === "panel" ||
     kindRaw === "battery" ||
+    kindRaw === "generator" ||
     kindRaw === "medical" ||
     kindRaw === "unknown"
       ? kindRaw
       : "unknown";
+
+  if (kind !== "generator" && /\bgenerator\b/i.test(name)) {
+    kind = "generator";
+  }
 
   const brand = asNullableString(obj.brand);
   const model = asNullableString(obj.model);
@@ -341,11 +384,14 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
   }
 
   const notes = asNullableString(obj.notes);
-  const isMedical = Boolean(obj.isMedical) || kind === "medical";
-  const needsRefrigeration = Boolean(obj.needsRefrigeration);
+  const isMedical =
+    kind !== "generator" && (Boolean(obj.isMedical) || kind === "medical");
+  const needsRefrigeration =
+    kind !== "generator" && Boolean(obj.needsRefrigeration);
 
   let category = parseCategory(obj.category);
   if (kind === "panel") category = "panel";
+  if (kind === "generator") category = "generator";
   if (isMedical && (category === "other" || !obj.category)) category = "medical";
 
   let bbox: DeviceScanResult["bbox"] = null;

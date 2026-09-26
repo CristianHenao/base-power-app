@@ -32,7 +32,8 @@ Return ONLY a single JSON object (no markdown, no prose) with this shape:
 Rules:
 - Prefer exact text from the label (OCR). Do not invent values.
 - Put input rated power in inputWatts as a number when the label shows watts (e.g. 1350W → 1350).
-- Use fields[] for any extra useful pairs not covered above (date code, access code, certifications, etc.).
+- For generators / inverters, put continuous / rated running output in outputWatts (prefer running watts over starting/surge watts).
+- Use fields[] for any extra useful pairs not covered above (date code, access code, certifications, fuel type, starting watts, etc.).
 - confidence should reflect how readable the plate is.
 - If the photo is not a nameplate, return mostly nulls with low confidence and a short notes explanation.`;
 
