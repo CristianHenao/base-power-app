@@ -8,7 +8,8 @@
     "load_zone": "LZ_AEN",
     "utility": {
       "name": "Austin Energy",
-      "detected_from": "persona",
+      "eia_utility_id": 1015,
+      "detected_from": "county",
       "confirmed": false
     }
   },
@@ -16,7 +17,10 @@
     "profile_type": "RESLOWR",
     "label": "gas heat"
   },
-  "base_offer": null,
+  "base_offer": {
+    "product": "backup_program",
+    "url": "https://www.basepowercompany.com/austinenergy#pricing"
+  },
   "outlook": {
     "level": 3,
     "label": "Elevated",
@@ -27,13 +31,16 @@
     ],
     "once_every_years": 9.9,
     "years_of_data": 8.0,
-    "since": 2018
+    "since": 2018,
+    "customers_floored": false
   },
   "events": [
     {
       "id": "48453-2021-02-14-2",
-      "label": "February 2021 winter storm (Uri)",
+      "label": "Winter Storm Uri",
+      "storm": "Winter Storm Uri",
       "start": "2021-02-14T12:30:00-06:00",
+      "peak_out": 273849,
       "peak_out_pct": 42.7,
       "duration_h": {
         "p50": [
@@ -63,8 +70,10 @@
     },
     {
       "id": "48453-2023-02-01",
-      "label": "February 2023 ice storm",
+      "label": "Winter Storm Mara (ice storm)",
+      "storm": "Winter Storm Mara (ice storm)",
       "start": "2023-02-01T02:15:00-06:00",
+      "peak_out": 185025,
       "peak_out_pct": 28.8,
       "duration_h": {
         "p50": [
@@ -95,7 +104,9 @@
     {
       "id": "48453-2025-05-28-2",
       "label": "May 2025 outage",
+      "storm": null,
       "start": "2025-05-28T18:45:00-05:00",
+      "peak_out": 73455,
       "peak_out_pct": 11.4,
       "duration_h": {
         "p50": [
@@ -125,8 +136,10 @@
     },
     {
       "id": "48453-2021-02-11",
-      "label": "February 2021 winter storm (Uri)",
+      "label": "Winter Storm Uri",
+      "storm": "Winter Storm Uri",
       "start": "2021-02-11T10:45:00-06:00",
+      "peak_out": 32104,
       "peak_out_pct": 5.0,
       "duration_h": {
         "p50": [
@@ -157,7 +170,9 @@
     {
       "id": "48453-2021-05-28",
       "label": "May 2021 outage",
+      "storm": null,
       "start": "2021-05-28T19:00:00-05:00",
+      "peak_out": 44840,
       "peak_out_pct": 7.0,
       "duration_h": {
         "p50": [
@@ -269,8 +284,8 @@
   },
   "narrative": {
     "status": "ok",
-    "headline": "Travis County Home Backup Report",
-    "summary": "Homes in Travis County face an elevated risk. A long outage of 12 hours or more happens about once every 10 years based on 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth waited about 96 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth waited about 132 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores are suggested. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "headline": "Backup Report for Travis County Homes",
+    "summary": "Travis County has an elevated risk of long power outages. Records from the past 8 years since 2018 show a long outage about once every 10 years. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth waited about 96 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth waited about 132 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores are suggested. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
       "outlook.label",
@@ -303,12 +318,9 @@
       "status": "ok"
     },
     {
-      "id": "nws",
-      "status": "not_connected"
-    },
-    {
       "id": "base_offer",
-      "status": "not_connected"
+      "as_of": "2026-09-26",
+      "status": "ok"
     },
     {
       "id": "llm",

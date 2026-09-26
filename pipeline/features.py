@@ -3,9 +3,12 @@
 Run: python -m pipeline.features   (after pipeline.sources.eaglei and pipeline.backtest)
 
 Tables
-  outlook         one row per Texas county
-  events          demo-county events with replayed backup hours and coverage
-  backup_monthly  hours by month for 1 and 2 Cores, normal and storm mode
+  outlook              one row per Texas county
+  events               demo-county events with replayed backup hours and coverage
+  events_texas         every county's events with ids and marquee storm names (no replay)
+  backup_monthly       demo-county hours by month for 1 and 2 Cores, normal, storm and surprise mode
+  backup_zone_monthly  the same by weather zone and profile type, for any county
+  county_info          county name, weather zone, primary utility, grid and load zone
   sizing          recommended Core count and its sentence
   assumptions     battery and simulator constants the numbers depend on
   grid_value      per load zone and year, when pipeline.grid_value has run
@@ -30,7 +33,10 @@ from pipeline.sizing import (
     sizing_reason,
 )
 from pipeline.sources.eaglei import demo_series
-from pipeline.sources.ercot_profiles import typical_day
+from pipeline.insights import month_hours
+from pipeline.sources.eia861 import load_zone
+from pipeline.sources.ercot_profiles import cached_days_by_month, profile_code, typical_day
+from pipeline.storms import label_events, load_storms
 
 BACKUP_YEAR = 2024
 CORES = (1, 2)
@@ -88,8 +94,7 @@ def backup_monthly(profiles: dict[str, ProfileYears], year: int = BACKUP_YEAR) -
     for fips, source in profiles.items():
         typical = [typical_day(source.month_traces(year, month)) for month in range(1, 13)]
         annual = source.annual_kwh(year)
-        # "surprise" is an outage nobody forecast: normal use from Base's 20% reserve.
-        for mode, factor, soc in (("normal", 1.0, 1.0), ("storm", STORM_LOAD_FACTOR, 1.0), ("surprise", 1.0, RESERVE_SOC)):
+        for mode, factor, soc in BACKUP_MODES:
             table = hours_by_month(typical, profile_annual_kwh=annual, home_annual_kwh=annual,
                                    storm_factor=factor, start_soc=soc)
             for cores in CORES:
@@ -136,6 +141,46 @@ def assumptions_table() -> pd.DataFrame:
     ])
 
 
+# (mode, load factor, starting charge). "surprise" is an outage nobody forecast: normal use from Base's 20% reserve.
+BACKUP_MODES = (("normal", 1.0, 1.0), ("storm", STORM_LOAD_FACTOR, 1.0), ("surprise", 1.0, RESERVE_SOC))
+
+
+def statewide_events(texas: pd.DataFrame, zones: pd.Series) -> pd.DataFrame:
+    """Every county's events with report ids and Alejandro's marquee storm names."""
+    events = texas.reset_index(drop=True).copy()
+    events.insert(0, "id", event_ids(events))
+    events["storm"] = label_events(events, zones, load_storms())
+    return events
+
+
+def backup_zone_monthly(year: int = BACKUP_YEAR) -> pd.DataFrame:
+    """Hours by month for every weather zone and profile type, from the profile cache."""
+    rows = []
+    every = tuple(profile_code(p, z) for p in settings.PROFILE_TYPES for z in settings.WEATHER_ZONES)
+    for profile_type in settings.PROFILE_TYPES:
+        for zone in settings.WEATHER_ZONES:
+            days = cached_days_by_month(year, profile_type, zone, also=every)
+            for mode, factor, soc in BACKUP_MODES:
+                table = month_hours(days, storm_factor=factor, start_soc=soc)
+                for cores in CORES:
+                    for month, hours in enumerate(table[f"cores_{cores}"], start=1):
+                        rows.append({"weather_zone": zone, "profile_type": profile_type, "profile_year": year,
+                                     "mode": mode, "cores": cores, "month": month, "hours": hours})
+    return pd.DataFrame(rows)
+
+
+def county_info(crosswalk: pd.DataFrame, county_utility: pd.DataFrame) -> pd.DataFrame:
+    """One row per county: name, weather zone, primary wires utility, grid and load zone."""
+    primary = county_utility.loc[county_utility["primary"].astype(str) == "True",
+                                 ["county_fips", "utility_id", "utility_name", "grid"]]
+    info = crosswalk[["county_fips", "county", "weather_zone"]].merge(primary, on="county_fips", how="left")
+    info["load_zone"] = [
+        None if pd.isna(uid) else load_zone(int(uid), grid, zone)
+        for uid, grid, zone in zip(info["utility_id"], info["grid"], info["weather_zone"], strict=True)
+    ]
+    return info
+
+
 def write_features(tables: dict[str, pd.DataFrame], path=settings.FEATURES_DUCKDB) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with duckdb.connect(str(path)) as con:
@@ -156,12 +201,20 @@ def main() -> int:
     replayed, long_parts = replay_events(events, series, profiles)
     events = events.join(replayed)
     events.insert(0, "id", event_ids(events))
+    crosswalk = pd.read_csv(settings.COUNTY_WEATHER_ZONE_CSV, dtype={"county_fips": "string"})
+    crosswalk["county_fips"] = crosswalk["county_fips"].str.zfill(5)
+    zones = crosswalk.set_index("county_fips")["weather_zone"]
+    events["storm"] = label_events(events, zones, load_storms())
     monthly = backup_monthly(profiles)
     sizing = sizing_table(long_parts)
+    county_utility = pd.read_csv(settings.COUNTY_UTILITY_CSV, dtype={"county_fips": "string"})
     tables = {
         "outlook": outlook,
         "events": events,
+        "events_texas": statewide_events(pd.read_parquet(settings.TEXAS_EVENTS_PARQUET), zones),
         "backup_monthly": monthly,
+        "backup_zone_monthly": backup_zone_monthly(),
+        "county_info": county_info(crosswalk, county_utility),
         "sizing": sizing,
         "assumptions": assumptions_table(),
     }

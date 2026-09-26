@@ -66,11 +66,12 @@ def tail_summary(table: pd.DataFrame, names: pd.Series, demo: tuple[str, ...]) -
     }
 
 
-def month_hours(days: DaysByMonth, storm_factor: float = 1.0) -> dict[str, list[float]]:
+def month_hours(days: DaysByMonth, storm_factor: float = 1.0, start_soc: float = 1.0) -> dict[str, list[float]]:
     """Backup hours by month for the profile's typical customer, one and two Cores."""
     typical = [typical_day([trace for _, trace in days[month]]) for month in range(1, 13)]
     total = annual_kwh(days)
-    return hours_by_month(typical, profile_annual_kwh=total, home_annual_kwh=total, storm_factor=storm_factor)
+    return hours_by_month(typical, profile_annual_kwh=total, home_annual_kwh=total,
+                          storm_factor=storm_factor, start_soc=start_soc)
 
 
 def storm_week_hours(days: DaysByMonth, start: date, n_days: int = STORM_DAYS) -> dict[int, float]:

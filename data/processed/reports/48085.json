@@ -7,8 +7,9 @@
     "weather_zone": "NCENT",
     "load_zone": "LZ_NORTH",
     "utility": {
-      "name": "Oncor",
-      "detected_from": "persona",
+      "name": "Oncor Electric Delivery Company LLC",
+      "eia_utility_id": 44372,
+      "detected_from": "county",
       "confirmed": false
     }
   },
@@ -16,7 +17,10 @@
     "profile_type": "RESHIWR",
     "label": "electric heat"
   },
-  "base_offer": null,
+  "base_offer": {
+    "product": "energy_plus_backup",
+    "url": "https://www.basepowercompany.com/oncor#pricing"
+  },
   "outlook": {
     "level": 3,
     "label": "Elevated",
@@ -27,13 +31,16 @@
     ],
     "once_every_years": 9.5,
     "years_of_data": 8.0,
-    "since": 2018
+    "since": 2018,
+    "customers_floored": false
   },
   "events": [
     {
       "id": "48085-2021-02-14",
-      "label": "February 2021 winter storm (Uri)",
+      "label": "Winter Storm Uri",
+      "storm": "Winter Storm Uri",
       "start": "2021-02-14T09:15:00-06:00",
+      "peak_out": 143803,
       "peak_out_pct": 34.5,
       "duration_h": {
         "p50": [
@@ -63,8 +70,10 @@
     },
     {
       "id": "48085-2024-05-28",
-      "label": "May 2024 North Texas storms",
+      "label": "Memorial Day storms (Dallas derecho)",
+      "storm": "Memorial Day storms (Dallas derecho)",
       "start": "2024-05-28T06:00:00-05:00",
+      "peak_out": 94090,
       "peak_out_pct": 22.6,
       "duration_h": {
         "p50": [
@@ -95,7 +104,9 @@
     {
       "id": "48085-2025-03-04",
       "label": "March 2025 outage",
+      "storm": null,
       "start": "2025-03-04T05:15:00-06:00",
+      "peak_out": 89766,
       "peak_out_pct": 21.5,
       "duration_h": {
         "p50": [
@@ -126,7 +137,9 @@
     {
       "id": "48085-2022-02-02",
       "label": "February 2022 outage",
+      "storm": null,
       "start": "2022-02-02T21:00:00-06:00",
+      "peak_out": 15727,
       "peak_out_pct": 3.8,
       "duration_h": {
         "p50": [
@@ -157,7 +170,9 @@
     {
       "id": "48085-2023-03-02",
       "label": "March 2023 outage",
+      "storm": null,
       "start": "2023-03-02T18:30:00-06:00",
+      "peak_out": 55216,
       "peak_out_pct": 13.2,
       "duration_h": {
         "p50": [
@@ -270,7 +285,7 @@
   "narrative": {
     "status": "ok",
     "headline": "Collin County Power Backup Report",
-    "summary": "Homes in Collin County face an elevated risk of long power outages. Records from the past 8 years since 2018 show a long outage about once every 10 years. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 73 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 51 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores are suggested. Two Cores last about 32 hours in January. The 2 Cores cover 51% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "summary": "Homes in Collin County face an elevated risk of long power outages. Records from 2018 show a long outage about once every 10 years. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 73 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 51 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 51% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
       "outlook.label",
@@ -286,7 +301,6 @@
       "backup.short_month",
       "backup.long_month",
       "backup.short_month_two_cores",
-      "sizing.cores",
       "sizing.share",
       "threshold.hours"
     ],
@@ -304,12 +318,9 @@
       "status": "ok"
     },
     {
-      "id": "nws",
-      "status": "not_connected"
-    },
-    {
       "id": "base_offer",
-      "status": "not_connected"
+      "as_of": "2026-09-26",
+      "status": "ok"
     },
     {
       "id": "llm",

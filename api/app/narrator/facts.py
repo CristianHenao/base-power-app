@@ -76,10 +76,11 @@ def build_facts(report: dict) -> list[Fact]:
     for rank, event in enumerate(report["events"][:2], start=1):
         date, date_numbers = _date_text(event["start"])
         key = f"event.{rank}"
+        facts.append(Fact(f"{key}.start", date, date_numbers))
+        if event.get("peak_out_pct") is not None:
+            facts.append(Fact(f"{key}.peak_out_pct", f"{_whole(event['peak_out_pct'])}% of homes in the county",
+                              allowed(event["peak_out_pct"]), unit=PERCENT))
         facts += [
-            Fact(f"{key}.start", date, date_numbers),
-            Fact(f"{key}.peak_out_pct", f"{_whole(event['peak_out_pct'])}% of homes in the county",
-                 allowed(event["peak_out_pct"]), unit=PERCENT),
             Fact(f"{key}.p90_hours", f"about {_whole(event['duration_h']['p90'][1])} hours for the longest-waiting tenth",
                  allowed(event["duration_h"]["p90"][1]), unit=HOURS),
         ]
@@ -97,14 +98,15 @@ def build_facts(report: dict) -> list[Fact]:
              allowed(hours["cores_2"][short]), context=(MONTHS[short].lower(),), cores=2, unit=HOURS),
     ]
 
-    sizing = report["sizing"]
-    facts += [
-        Fact("sizing.cores", f"{sizing['cores']} Core" + ("" if sizing["cores"] == 1 else "s"),
-             (float(sizing["cores"]),), unit=("core",)),
-        Fact("sizing.share", f"{int(_percent(sizing['share']) + 1e-9)}% of past 12-hour-plus outage hours",
-             allowed(_percent(sizing["share"])), context=LONG_WORDS, unit=PERCENT),
-        Fact("threshold.hours", "12 hours or longer", (12.0,), unit=HOURS),
-    ]
+    sizing = report.get("sizing") or {}
+    if sizing.get("cores") is not None:
+        facts += [
+            Fact("sizing.cores", f"{sizing['cores']} Core" + ("" if sizing["cores"] == 1 else "s"),
+                 (float(sizing["cores"]),), unit=("core",)),
+            Fact("sizing.share", f"{int(_percent(sizing['share']) + 1e-9)}% of past 12-hour-plus outage hours",
+                 allowed(_percent(sizing["share"])), context=LONG_WORDS, unit=PERCENT),
+        ]
+    facts.append(Fact("threshold.hours", "12 hours or longer", (12.0,), unit=HOURS))
     return facts
 
 

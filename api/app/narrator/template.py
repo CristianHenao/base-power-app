@@ -20,9 +20,15 @@ def template_narrative(report: dict) -> dict:
     one = report["backup"]["hours_by_month"]["cores_1"]
     short = min(range(12), key=lambda m: one[m])
     long = max(range(12), key=lambda m: one[m])
-    cores = int(report["sizing"]["cores"])
-    share = int(report["sizing"]["share"] * 100 + 1e-9)
-    core_words = _CORE_WORDS.get(cores, f"{cores} Cores")
+    sizing = report.get("sizing") or {}
+    sized = sizing.get("cores") is not None
+    if sized:
+        cores = int(sizing["cores"])
+        share = int(sizing["share"] * 100 + 1e-9)
+        core_words = _CORE_WORDS.get(cores, f"{cores} Cores")
+        suggestion = [f"We suggest {core_words}.", f"That would have covered {share}% of past long outage hours."]
+    else:
+        suggestion = []
 
     headline = f"{outlook['label']} outlook for long outages in {county} County"
     summary = " ".join([
@@ -30,11 +36,11 @@ def template_narrative(report: dict) -> dict:
         f"{_whole(outlook['once_every_years'])} years.",
         f"That comes from {_whole(outlook['years_of_data'])} years of records since {outlook['since']}.",
         f"The largest outage here began on {MONTHS[start.month - 1]} {start.day}, {start.year}.",
-        f"At its peak, {_whole(event['peak_out_pct'])}% of homes in the county were dark.",
+        *([f"At its peak, {_whole(event['peak_out_pct'])}% of homes in the county were dark."]
+          if event.get("peak_out_pct") is not None else []),
         f"For a home with {report['home']['label']}, one Core lasts about {_whole(one[short])} hours "
         f"in {MONTHS[short]} and about {_whole(one[long])} hours in {MONTHS[long]}.",
-        f"We suggest {core_words}.",
-        f"That would have covered {share}% of past long outage hours.",
+        *suggestion,
         "Base confirms sizing at install.",
     ])
     return {
@@ -43,7 +49,8 @@ def template_narrative(report: dict) -> dict:
         "fact_ids": [
             "county.name", "home.label", "outlook.label", "threshold.hours",
             "outlook.once_every_years", "outlook.years_of_data", "outlook.since",
-            "event.1.start", "event.1.peak_out_pct", "backup.short_month",
-            "backup.long_month", "sizing.cores", "sizing.share",
+            "event.1.start", *(["event.1.peak_out_pct"] if event.get("peak_out_pct") is not None else []),
+            "backup.short_month",
+            "backup.long_month", *(["sizing.cores", "sizing.share"] if sized else []),
         ],
     }

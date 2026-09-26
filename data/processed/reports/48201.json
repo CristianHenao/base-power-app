@@ -7,8 +7,9 @@
     "weather_zone": "COAST",
     "load_zone": "LZ_HOUSTON",
     "utility": {
-      "name": "CenterPoint",
-      "detected_from": "persona",
+      "name": "CenterPoint Energy",
+      "eia_utility_id": 8901,
+      "detected_from": "county",
       "confirmed": false
     }
   },
@@ -16,7 +17,10 @@
     "profile_type": "RESLOWR",
     "label": "gas heat"
   },
-  "base_offer": null,
+  "base_offer": {
+    "product": "energy_plus_backup",
+    "url": "https://www.basepowercompany.com/centerpoint#pricing"
+  },
   "outlook": {
     "level": 4,
     "label": "High",
@@ -27,13 +31,16 @@
     ],
     "once_every_years": 4.5,
     "years_of_data": 8.0,
-    "since": 2018
+    "since": 2018,
+    "customers_floored": false
   },
   "events": [
     {
       "id": "48201-2024-07-08",
       "label": "Hurricane Beryl",
+      "storm": "Hurricane Beryl",
       "start": "2024-07-08T09:15:00-05:00",
+      "peak_out": 1660703,
       "peak_out_pct": 90.9,
       "duration_h": {
         "p50": [
@@ -63,8 +70,10 @@
     },
     {
       "id": "48201-2024-05-18",
-      "label": "May 2024 outage",
+      "label": "Houston derecho",
+      "storm": "Houston derecho",
       "start": "2024-05-18T01:45:00-05:00",
+      "peak_out": 291108,
       "peak_out_pct": 15.9,
       "duration_h": {
         "p50": [
@@ -94,8 +103,10 @@
     },
     {
       "id": "48201-2021-02-14-3",
-      "label": "February 2021 winter storm (Uri)",
+      "label": "Winter Storm Uri",
+      "storm": "Winter Storm Uri",
       "start": "2021-02-14T23:15:00-06:00",
+      "peak_out": 455986,
       "peak_out_pct": 24.9,
       "duration_h": {
         "p50": [
@@ -125,8 +136,10 @@
     },
     {
       "id": "48201-2024-05-16",
-      "label": "May 2024 Houston derecho",
+      "label": "Houston derecho",
+      "storm": "Houston derecho",
       "start": "2024-05-16T18:00:00-05:00",
+      "peak_out": 502077,
       "peak_out_pct": 27.5,
       "duration_h": {
         "p50": [
@@ -157,7 +170,9 @@
     {
       "id": "48201-2021-09-13-2",
       "label": "Hurricane Nicholas",
+      "storm": "Hurricane Nicholas",
       "start": "2021-09-13T21:30:00-05:00",
+      "peak_out": 118851,
       "peak_out_pct": 6.5,
       "duration_h": {
         "p50": [
@@ -302,12 +317,9 @@
       "status": "ok"
     },
     {
-      "id": "nws",
-      "status": "not_connected"
-    },
-    {
       "id": "base_offer",
-      "status": "not_connected"
+      "as_of": "2026-09-26",
+      "status": "ok"
     },
     {
       "id": "llm",

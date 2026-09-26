@@ -16,6 +16,10 @@ FEATURES_DUCKDB = REPO_ROOT / "data" / "features.duckdb"
 # Alejandro's crosswalk (pipeline/sources/crosswalk.py). Without it the
 # empirical-Bayes prior is fit statewide.
 COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zone.csv"
+# Alejandro's EIA-861 crosswalks and Base's offer by utility.
+COUNTY_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "county_utility.csv"
+ZIP_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "zip_utility.csv"
+BASE_AVAILABILITY_YAML = REPO_ROOT / "data" / "reference" / "base_availability.yaml"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
 RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
@@ -62,17 +66,6 @@ DEMO_WEATHER_ZONE: dict[str, str] = {
     "48201": "COAST",
     "48453": "SCENT",
 }
-# ERCOT load zone and main utility for the demo counties. Travis is mostly Austin Energy.
-DEMO_LOAD_ZONE: dict[str, str] = {
-    "48085": "LZ_NORTH",
-    "48201": "LZ_HOUSTON",
-    "48453": "LZ_AEN",
-}
-DEMO_UTILITY: dict[str, str] = {
-    "48085": "Oncor",
-    "48201": "CenterPoint",
-    "48453": "Austin Energy",
-}
 # Sally in Collin heats with electricity. The other two personas use the non-heat profile.
 DEMO_PROFILE: dict[str, str] = {
     "48085": "RESHIWR",
@@ -101,12 +94,3 @@ STORM_WEEKS: dict[str, str] = {
 TAIL_EVENTS = 5
 HOME_LABELS: dict[str, str] = {"RESHIWR": "electric heat", "RESLOWR": "gas heat"}
 REPORT_EVENTS = 5
-# Named storms by Central start date, inclusive. Other events are labeled by month.
-STORM_LABELS: tuple[tuple[str, str, str], ...] = (
-    ("2021-02-10", "2021-02-20", "February 2021 winter storm (Uri)"),
-    ("2021-09-13", "2021-09-15", "Hurricane Nicholas"),
-    ("2023-01-30", "2023-02-03", "February 2023 ice storm"),
-    ("2024-05-16", "2024-05-17", "May 2024 Houston derecho"),
-    ("2024-05-28", "2024-05-29", "May 2024 North Texas storms"),
-    ("2024-07-08", "2024-07-10", "Hurricane Beryl"),
-)
