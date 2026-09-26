@@ -81,6 +81,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Safe-area tokens — fallbacks cover iOS standalone env()=0 regressions */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --scene-root: #ffffff;
 }
 
 .dark {
@@ -125,13 +132,46 @@
     @apply font-sans;
     height: 100%;
     height: 100dvh;
+    background-color: var(--scene-root);
   }
   body {
     @apply bg-background text-foreground;
     min-height: 100%;
     min-height: 100dvh;
     overscroll-behavior: none;
+    background-color: var(--scene-root);
   }
+}
+
+/* Standalone Home Screen web app — defensive insets when env() lies */
+@media (display-mode: standalone) {
+  :root {
+    --sat: max(env(safe-area-inset-top, 0px), 47px);
+    --sab: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    :root {
+      /* Dynamic Island / notch devices often need ~59px when env() is 0 */
+      --sat: max(env(safe-area-inset-top, 0px), 59px);
+    }
+  }
+}
+
+/* Scene roots — Liquid Glass / status bar sample these colors */
+html[data-scene="map"],
+html[data-scene="map"] body {
+  --scene-root: #0a0a0c;
+  --background: #0a0a0c;
+  color-scheme: dark;
+}
+
+html[data-scene="light"],
+html[data-scene="light"] body {
+  --scene-root: #ffffff;
+  color-scheme: light;
 }
 
 /* Full-bleed map shell for iOS standalone PWAs */
@@ -141,12 +181,45 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--background);
+  background: #0a0a0c;
 }
 
 .app-shell-map .mapboxgl-ctrl-bottom-left,
 .app-shell-map .mapboxgl-ctrl-bottom-right {
-  margin-bottom: env(safe-area-inset-bottom);
+  margin-bottom: var(--sab);
+}
+
+/* Frost glass layers — used on absolute children so fixed shells stay transparent */
+.frost-glass {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+
+.frost-wash {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.7),
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0.4)
+  );
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .frost-glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(10, 10, 12, 0.92);
+  }
+
+  .frost-wash {
+    background: rgba(10, 10, 12, 0.88);
+  }
 }
 
 /* Mapbox home marker (DOM element, outside React tree) */

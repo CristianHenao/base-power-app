@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { frostControlClassName } from "@/components/risk/frost-panel";
+import { FrostControl } from "@/components/risk/frost-panel";
 import { cn } from "@/lib/utils";
 
 type AnalysisCloseButtonProps = {
@@ -14,17 +14,12 @@ export function AnalysisCloseButton({
   className,
 }: AnalysisCloseButtonProps) {
   return (
-    <button
-      type="button"
+    <FrostControl
       onClick={onClose}
       aria-label="Close analysis"
-      className={cn(
-        "pointer-events-auto inline-flex size-10 items-center justify-center rounded-full transition-colors",
-        frostControlClassName,
-        className,
-      )}
+      className={cn("pointer-events-auto", className)}
     >
       <X className="size-5" aria-hidden />
-    </button>
+    </FrostControl>
   );
 }

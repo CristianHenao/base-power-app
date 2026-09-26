@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { LayoutDashboard, Users } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { SiteHeader } from "@/components/layout/site-header";
+import { useAppScene } from "@/components/layout/use-app-scene";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const NAV = [
 
 export function CrmShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  useAppScene("light");
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -48,7 +50,7 @@ export function CrmShell({ children }: { children: ReactNode }) {
           <SignOutButton />
         </div>
       </SiteHeader>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 pb-[max(1.5rem,var(--sab))]">
         {children}
       </div>
     </div>

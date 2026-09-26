@@ -4,11 +4,13 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { UserAvatarLink } from "@/components/auth/user-avatar-link";
 import { SiteHeader } from "@/components/layout/site-header";
+import { useAppScene } from "@/components/layout/use-app-scene";
 import { cn } from "@/lib/utils";
 
 export function ConsumerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isMapExperience = pathname.startsWith("/risk");
+  useAppScene(isMapExperience ? "map" : "light");
 
   if (isMapExperience) {
     return (
@@ -29,7 +31,7 @@ export function ConsumerShell({ children }: { children: ReactNode }) {
       <div
         className={cn(
           "mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8",
-          "pb-[max(2rem,env(safe-area-inset-bottom))]",
+          "pb-[max(2rem,var(--sab))]",
         )}
       >
         {children}

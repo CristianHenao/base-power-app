@@ -151,7 +151,7 @@ export function OutageTimelineSlider({
       ref={shellRef}
       className={cn(
         "pointer-events-auto relative w-full select-none",
-        "pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+        "pt-3 pb-[max(0.5rem,var(--sab))]",
         className,
       )}
       role="slider"
@@ -174,7 +174,7 @@ export function OutageTimelineSlider({
       {/* Bottom-up frosted glass — fades clear toward the map */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 backdrop-blur-xl backdrop-saturate-150"
+        className="frost-glass"
         style={{
           WebkitMaskImage:
             "linear-gradient(to top, #000 0%, #000 42%, transparent 100%)",
@@ -184,7 +184,7 @@ export function OutageTimelineSlider({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent"
+        className="frost-wash !bg-gradient-to-t from-black/75 via-black/40 to-transparent"
       />
 
       <div className="relative mb-1 px-4 text-center">
