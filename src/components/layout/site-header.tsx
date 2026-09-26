@@ -6,17 +6,24 @@ type SiteHeaderProps = {
   children?: ReactNode;
   className?: string;
   homeHref?: string;
+  /** When true, header floats over content (map) with a translucent bar. */
+  overlay?: boolean;
 };
 
 export function SiteHeader({
   children,
   className,
   homeHref = "/",
+  overlay = false,
 }: SiteHeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md",
+        "z-40 border-b bg-background/80 backdrop-blur-md",
+        "pt-[env(safe-area-inset-top)]",
+        overlay
+          ? "absolute inset-x-0 top-0 border-transparent bg-background/70 shadow-sm"
+          : "sticky top-0",
         className,
       )}
     >
