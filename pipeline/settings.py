@@ -20,6 +20,8 @@ RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
 ERCOT_CACHE_DIR = RAW_ERCOT_DIR / "cache"
 RAW_PRICES_DIR = REPO_ROOT / "data" / "raw" / "ercot_prices"
 GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
+TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
+INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 PRICE_YEARS = tuple(range(2019, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
@@ -59,3 +61,13 @@ EAGLEI_FIPS_COL = "fips_code"
 EAGLEI_STATE_COL = "state"
 EAGLEI_CUSTOMERS_OUT_COL = "customers_out"
 EAGLEI_TIMESTAMP_COL = "run_start_time"
+
+# ERCOT weather zones and residential profile types in the backcasted workbooks.
+WEATHER_ZONES: tuple[str, ...] = ("COAST", "EAST", "FWEST", "NCENT", "NORTH", "SCENT", "SOUTH", "WEST")
+PROFILE_TYPES: tuple[str, ...] = ("RESLOWR", "RESHIWR")
+# Storm weeks replayed for every zone, as Central start dates.
+STORM_WEEKS: dict[str, str] = {
+    "Winter Storm Uri": "2021-02-14",
+    "Hurricane Beryl": "2024-07-08",
+}
+TAIL_EVENTS = 5
