@@ -5,7 +5,7 @@ import yaml
 from pipeline import settings
 
 PATH = settings.REPO_ROOT / "data" / "reference" / "base_availability.yaml"
-OFFERS = {"energy_plus_backup", "energy_only", "backup_only", "unconfirmed"}
+OFFERS = {"energy_plus_backup", "energy_only", "backup_program", "unconfirmed"}
 
 
 def _doc() -> dict:
@@ -31,3 +31,9 @@ def test_file_names_its_source_and_date() -> None:
     doc = _doc()
     assert doc["source"].startswith("https://www.basepowercompany.com/")
     assert str(doc["as_of"])
+
+
+def test_texas_utilities_carry_an_eia_id() -> None:
+    for row in _doc()["utilities"]:
+        if row["state"] == "TX":
+            assert isinstance(row["eia_utility_id"], int), row["key"]
