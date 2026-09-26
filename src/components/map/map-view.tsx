@@ -5,7 +5,8 @@ import mapboxgl, { type LngLatLike, type Map, type Marker } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPinned } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getMapboxToken, MAP_DEFAULTS } from "@/lib/map/config";
+import { MAP_DEFAULTS } from "@/lib/map/config";
+import { fetchMapboxTokenClient } from "@/lib/map/geocode-client";
 import { createThreeLayer } from "@/lib/map/create-three-layer";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -61,12 +62,38 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
-  const token = getMapboxToken();
+  const [token, setToken] = useState<string | null>(null);
+  const [tokenStatus, setTokenStatus] = useState<"loading" | "ready" | "missing">(
+    "loading",
+  );
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token || !containerRef.current || mapRef.current) return;
+    const controller = new AbortController();
+
+    void fetchMapboxTokenClient(controller.signal)
+      .then((value) => {
+        if (!value) {
+          setTokenStatus("missing");
+          return;
+        }
+        setToken(value);
+        setTokenStatus("ready");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setTokenStatus("missing");
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (tokenStatus !== "ready" || !token || !containerRef.current || mapRef.current) {
+      return;
+    }
 
     mapboxgl.accessToken = token;
 
@@ -100,7 +127,6 @@ export function MapView({
     const onLoad = () => {
       if (cancelled) return;
 
-      // Ensure Mapbox measures the laid-out container size.
       map.resize();
 
       if (enableThreeLayer && !map.getLayer("three-layer")) {
@@ -145,9 +171,9 @@ export function MapView({
       map.remove();
       mapRef.current = null;
     };
-    // Mount once; center/marker updates handled below.
+    // Mount once token is ready; center/marker updates handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, tokenStatus]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -187,7 +213,7 @@ export function MapView({
       .addTo(map);
   }, [status, marker]);
 
-  if (!token) {
+  if (tokenStatus === "missing") {
     return (
       <div
         className={cn(
@@ -203,12 +229,10 @@ export function MapView({
           <p className="max-w-sm text-sm text-muted-foreground">
             Add{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+              NEXT_MAPBOX_ACCESS_TOKEN
             </code>{" "}
             to{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              .env.local
-            </code>{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">.env</code>{" "}
             and restart the dev server.
           </p>
         </div>
@@ -223,7 +247,7 @@ export function MapView({
         className,
       )}
     >
-      {status === "loading" ? (
+      {tokenStatus === "loading" || status === "loading" ? (
         <Skeleton className="absolute inset-0 z-10 rounded-none" />
       ) : null}
       {status === "error" ? (

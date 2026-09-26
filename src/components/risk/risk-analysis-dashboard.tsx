@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { MapViewClient } from "@/components/map/map-view-client";
 import type { MapMarker } from "@/components/map/map-view";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
-import { Badge } from "@/components/ui/badge";
+import {
+  RiskBottomMenu,
+  type RiskMenuItemId,
+} from "@/components/risk/risk-bottom-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAP_DEFAULTS } from "@/lib/map/config";
-import { geocodeAddress } from "@/lib/map/geocode";
+import { geocodeAddressClient } from "@/lib/map/geocode-client";
 import {
   formatAddressLine,
   hasHomeCoordinates,
@@ -26,6 +29,7 @@ import { cn } from "@/lib/utils";
 
 export function RiskAnalysisDashboard() {
   const { draft, updateDraft } = useOnboarding();
+  const [activeMenu, setActiveMenu] = useState<RiskMenuItemId>("weather");
   const address = draft.address;
   const addressKey = useMemo(
     () =>
@@ -62,7 +66,7 @@ export function RiskAnalysisDashboard() {
 
     const controller = new AbortController();
 
-    void geocodeAddress(address as Address, controller.signal)
+    void geocodeAddressClient(address as Address, controller.signal)
       .then((location) => {
         if (!location) {
           setGeocodeError({
@@ -106,13 +110,11 @@ export function RiskAnalysisDashboard() {
     };
   }, [address, center]);
 
-  const addressLabel = formatAddressLine(address);
   const errorMessage =
     geocodeError.key === addressKey ? geocodeError.message : null;
 
   return (
     <main className="relative h-full w-full">
-      {/* Full-bleed map layer */}
       <div className="absolute inset-0">
         {hasAddress && hasCoords && center && marker ? (
           <MapViewClient
@@ -129,45 +131,36 @@ export function RiskAnalysisDashboard() {
         )}
       </div>
 
-      {/* Floating UI overlays — leave room for header (h-14) */}
-      <div className="pointer-events-none absolute inset-0 z-10 p-4 pt-[4.5rem] sm:p-6 sm:pt-20">
-        <div className="pointer-events-auto w-full max-w-md">
-          <Card className="border-border/60 bg-background/85 shadow-lg backdrop-blur-md">
-            <CardHeader className="gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-xl">Risk analysis</CardTitle>
-                <Badge variant="secondary">Your home</Badge>
-              </div>
-              <CardDescription>
-                {addressLabel
-                  ? `Showing risk context for ${addressLabel}.`
-                  : "Complete onboarding so we can place your home on the map."}
-              </CardDescription>
-            </CardHeader>
-
-            {!hasAddress ? (
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 pt-[4.5rem] sm:p-6 sm:pt-20">
+        {!hasAddress || errorMessage ? (
+          <div className="pointer-events-auto w-full max-w-sm">
+            <Card className="border-border/60 bg-background/85 shadow-lg backdrop-blur-md">
+              <CardHeader className="gap-1.5">
+                <CardTitle className="text-base">
+                  {!hasAddress ? "Home address needed" : "Couldn’t place home"}
+                </CardTitle>
+                <CardDescription>
+                  {!hasAddress
+                    ? "Add your address in onboarding to center the map."
+                    : errorMessage}
+                </CardDescription>
+              </CardHeader>
               <CardContent>
                 <Link
                   href="/onboarding/address"
                   className={cn(buttonVariants({ size: "sm" }))}
                 >
-                  Add your address
+                  {!hasAddress ? "Add your address" : "Update address"}
                 </Link>
               </CardContent>
-            ) : null}
+            </Card>
+          </div>
+        ) : (
+          <div />
+        )}
 
-            {hasAddress && errorMessage ? (
-              <CardContent className="space-y-3">
-                <p className="text-sm text-destructive">{errorMessage}</p>
-                <Link
-                  href="/onboarding/address"
-                  className={cn(buttonVariants({ size: "sm" }))}
-                >
-                  Update address
-                </Link>
-              </CardContent>
-            ) : null}
-          </Card>
+        <div className="pointer-events-none flex w-full justify-center pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+          <RiskBottomMenu activeId={activeMenu} onChange={setActiveMenu} />
         </div>
       </div>
     </main>

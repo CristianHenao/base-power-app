@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
-import { geocodeAddress } from "@/lib/map/geocode";
+import { geocodeAddressClient } from "@/lib/map/geocode-client";
 import { US_STATES } from "@/lib/onboarding/constants";
 import type { Address } from "@/lib/types/domain";
 
@@ -60,7 +60,7 @@ export function AddressStepForm() {
     setError(null);
 
     try {
-      const location = await geocodeAddress(address);
+      const location = await geocodeAddressClient(address);
       if (!location) {
         setError(
           "We couldn’t find that address. Check the street, city, and ZIP, then try again.",
