@@ -49,6 +49,30 @@ The full list, with where each starts in the code: [docs/NEXT.md](docs/NEXT.md).
 
 ---
 
+## Run everything
+
+The committed data (`data/features.duckdb`, `data/processed/`) is enough to run the whole system; no
+downloads needed.
+
+**In containers** (web on :3000, API on :4000, Postgres, Redis):
+```bash
+cp .env.example .env.local          # Mapbox and Supabase keys for the web app
+echo "XAI_API_KEY=..." > .env       # optional: without it the narrator uses its template, and says so
+docker compose up --build --wait
+```
+
+**Locally:**
+```bash
+uv venv -p 3.11 .venv && uv pip install -p .venv -e ".[dev,api,data]"
+make api                            # FastAPI on :8000 (reads XAI_API_KEY from .env; fault switch on)
+npm install && npm run dev          # web on :3000; sign in, then open /report
+make test                           # Python tests (the web app: npx tsc --noEmit and npx eslint src)
+```
+
+Try the three demo homes from [docs/run-through.md](docs/run-through.md), for example
+`4400 Cypress Bend Dr, Houston, TX 77084`. If the API is not running, those three addresses fall
+back to their saved reports. `make data` rebuilds everything from public sources (large downloads).
+
 ## Running the web app
 
 Progressive web app with two experiences:
