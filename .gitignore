@@ -62,3 +62,6 @@ public/home/scans/*
 data/processed/eaglei_tx.parquet
 # Large observation extracts and ingest diagnostics are generated locally.
 data/processed/outage_observations*/
+
+# Utility map: rebuildable hourly tables (python -m pipeline.utility_map.ercot_load)
+data/processed/utility_map/zone_load.parquet

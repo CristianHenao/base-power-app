@@ -25,6 +25,57 @@
       "period_end": "2024-12-31",
       "retrieved_at_utc": "2026-09-26T20:35:28Z",
       "note": "Summer/winter peak demand, bundled sales and delivery-company energy by utility."
+    },
+    {
+      "source_id": "ercot_native_load",
+      "url": "https://www.ercot.com/gridinfo/load/load_hist",
+      "files": [
+        {
+          "name": "native_load_2018.zip",
+          "sha256": "c57da4b5927a920eb8e160cf8927ec0e8f6a11f5e02962f4c9850787f13e2474",
+          "bytes": 1093121
+        },
+        {
+          "name": "Native_Load_2019.zip",
+          "sha256": "f99a5a9ed299523c23935487761f5e446ec4dddf0be0e1da931487be09681654",
+          "bytes": 1092646
+        },
+        {
+          "name": "Native_Load_2020.zip",
+          "sha256": "a02195b9a8b79540d78362039cca30c95922e485828908dcd25c50c2dae4489a",
+          "bytes": 1099986
+        },
+        {
+          "name": "Native_Load_2021.zip",
+          "sha256": "63d77e711fbcf838aff1666df475cd86a1fa939ad8aecd60a1bfe5039c4e5b91",
+          "bytes": 1094567
+        },
+        {
+          "name": "Native_Load_2022.zip",
+          "sha256": "a90335ab621a5ad719bc885b27d7fd7ed0c90de0ad3f72736c30c26ada89a2ce",
+          "bytes": 1093481
+        },
+        {
+          "name": "Native_Load_2023.zip",
+          "sha256": "34e7067d3273f56be42ce469e23747cff0db736d668519070ad63674c3ddecd4",
+          "bytes": 1091030
+        },
+        {
+          "name": "Native_Load_2024.zip",
+          "sha256": "fe6dacd721ae66bdef63f9d755c4219ab6bc06361ef2044627fb45424c427198",
+          "bytes": 1088476
+        },
+        {
+          "name": "Native_Load_2025.zip",
+          "sha256": "20f6699f4d1f577561e9581ce370a39b0b7af339c2c263c99c7b7fd605580854",
+          "bytes": 1085085
+        }
+      ],
+      "rows": 561024,
+      "period_start": "2018-01-01",
+      "period_end": "2025-12-31",
+      "retrieved_at_utc": "2026-09-26T20:37:26Z",
+      "note": "Hourly native load by weather zone; hour-ending Central converted to UTC hour start."
     }
   ]
 }
