@@ -204,9 +204,12 @@ export function MyHomeScreen({
                                     .label
                                 }
                                 {device.brand ? ` · ${device.brand}` : null}
-                                {device.watts > 0
-                                  ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
-                                  : null}
+                                {device.kind === "panel" &&
+                                device.breakers.length > 0
+                                  ? ` · ${device.breakers.length} circuits`
+                                  : device.watts > 0
+                                    ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
+                                    : null}
                               </p>
                               {genExt ? (
                                 <p className="mt-1 text-[11px] font-medium text-amber-900">

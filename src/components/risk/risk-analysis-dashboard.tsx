@@ -35,6 +35,13 @@ import {
   generateSyntheticWeatherHazards,
   hazardsToHeatmapGeoJSON,
 } from "@/lib/risk/synthetic-weather";
+import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseConfig } from "@/lib/supabase/env";
+import {
+  listHomeDevices,
+  upsertHomeDevice,
+} from "@/lib/supabase/home-devices";
+import { getCurrentUser } from "@/lib/supabase/profile";
 import type { Address } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +60,46 @@ export function RiskAnalysisDashboard() {
   const address = draft.address;
 
   useAppScene(primaryTab === "home" ? "light" : "map");
-  const addressKey = useMemo(
+
+  useEffect(() => {
+    if (!hasSupabaseConfig()) return;
+
+    let cancelled = false;
+
+    async function loadDevices() {
+      try {
+        const supabase = createClient();
+        const user = await getCurrentUser(supabase);
+        if (!user || cancelled) return;
+        const devices = await listHomeDevices(supabase, user.id);
+        if (!cancelled) setHomeDevices(devices);
+      } catch (error) {
+        console.error("Failed to load home devices", error);
+      }
+    }
+
+    void loadDevices();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function persistHomeDevice(device: HomeDevice) {
+    if (!hasSupabaseConfig()) return;
+    try {
+      const supabase = createClient();
+      const user = await getCurrentUser(supabase);
+      if (!user) return;
+      const saved = await upsertHomeDevice(supabase, user.id, device);
+      setHomeDevices((prev) => {
+        const exists = prev.some((item) => item.id === saved.id);
+        if (!exists) return [...prev, saved];
+        return prev.map((item) => (item.id === saved.id ? saved : item));
+      });
+    } catch (error) {
+      console.error("Failed to save home device", error);
+    }
+  }  const addressKey = useMemo(
     () =>
       JSON.stringify({
         line1: address.line1,
@@ -163,12 +209,14 @@ export function RiskAnalysisDashboard() {
 
   function handleAddHomeDevice(device: HomeDevice) {
     setHomeDevices((prev) => [...prev, device]);
+    void persistHomeDevice(device);
   }
 
   function handleUpdateHomeDevice(device: HomeDevice) {
     setHomeDevices((prev) =>
       prev.map((item) => (item.id === device.id ? device : item)),
     );
+    void persistHomeDevice(device);
   }
 
   function handleOutageIndexChange(index: number) {
