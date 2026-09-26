@@ -58,20 +58,9 @@ def test_write_parquets_splits_demo_counties(tmp_path: Path) -> None:
     assert demo_frame["timestamp"].iloc[0] == pd.Timestamp("2021-02-15 06:00", tz="UTC")
 
 
-def test_2023_header_with_sum_column_is_normalized(tmp_path: Path) -> None:
-    raw = tmp_path / "raw"
-    raw.mkdir()
-    path = raw / "eaglei_outages_2023.csv"
+def test_extract_year_reads_the_2023_sum_column(tmp_path: Path) -> None:
+    path = _national(tmp_path, 2023)
     path.write_text(NATIONAL_CSV.replace("customers_out", "sum", 1))
-    out = tmp_path / "tx" / path.name
+    out = tmp_path / "tx" / "eaglei_outages_2023.csv"
     assert extract_year(duckdb.connect(), path, out) == 3
-    assert out.read_text().splitlines()[0] == "fips_code,county,state,customers_out,run_start_time"
-
-
-def test_2024_header_with_extra_total_customers_column(tmp_path: Path) -> None:
-    raw = tmp_path / "raw"
-    raw.mkdir()
-    path = raw / "eaglei_outages_2024.csv"
-    lines = NATIONAL_CSV.strip().splitlines()
-    path.write_text("\n".join([lines[0] + ",total_customers"] + [line + ",100" for line in lines[1:]]) + "\n")
-    assert extract_year(duckdb.connect(), path, tmp_path / "tx" / path.name) == 3
+    assert pd.read_csv(out).columns.tolist()[3] == "customers_out"

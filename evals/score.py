@@ -55,6 +55,7 @@ def score_folder(folder: Path, cases: dict[str, dict]) -> dict:
 
 _KINDS = (
     ("number ", "number not in cited facts"),
+    ("out of context", "number out of context"),
     ("banned phrase", "banned phrase"),
     ("reading grade", "reading grade above 7"),
     ("headline has", "headline too long"),

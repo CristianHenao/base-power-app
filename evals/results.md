@@ -4,4 +4,6 @@
 
 | Source | Cases | Passed | Pass rate | Most common failure |
 |---|---|---|---|---|
+| grok-4.20-0309-non-reasoning | 24 | 23 | 96% | number out of context (1) |
+| grok-4.20-0309-non-reasoning+retry | 24 | 24 | 100% | none |
 | template | 24 | 24 | 100% | none |

@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ScanLine, X } from "lucide-react";
+import { Check, Loader2, ScanLine, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  SCAN_DEVICE_CATALOG,
   createScannedDevice,
+  type DeviceScanResult,
   type HomeDevice,
 } from "@/lib/home/devices";
 import { cn } from "@/lib/utils";
 
-type ScanPhase = "starting" | "scanning" | "locked" | "error";
+type ScanPhase =
+  | "starting"
+  | "ready"
+  | "identifying"
+  | "locked"
+  | "error";
 
 type DeviceScanSheetProps = {
   open: boolean;
@@ -18,6 +23,27 @@ type DeviceScanSheetProps = {
   onDeviceFound: (device: HomeDevice) => void;
   existingCount: number;
 };
+
+function captureFrame(video: HTMLVideoElement): {
+  imageBase64: string;
+  mediaType: "image/jpeg";
+} | null {
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+  if (!width || !height) return null;
+
+  const maxWidth = 1024;
+  const scale = Math.min(1, maxWidth / width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+  const imageBase64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  return { imageBase64, mediaType: "image/jpeg" };
+}
 
 export function DeviceScanSheet({
   open,
@@ -30,6 +56,7 @@ export function DeviceScanSheet({
   const [phase, setPhase] = useState<ScanPhase>("starting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingDevice, setPendingDevice] = useState<HomeDevice | null>(null);
+  const [scanMeta, setScanMeta] = useState<DeviceScanResult | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -38,6 +65,7 @@ export function DeviceScanSheet({
     setPhase("starting");
     setErrorMessage(null);
     setPendingDevice(null);
+    setScanMeta(null);
 
     async function startCamera() {
       try {
@@ -59,7 +87,7 @@ export function DeviceScanSheet({
           video.srcObject = stream;
           await video.play();
         }
-        setPhase("scanning");
+        setPhase("ready");
       } catch {
         if (cancelled) return;
         setPhase("error");
@@ -78,20 +106,49 @@ export function DeviceScanSheet({
     };
   }, [open]);
 
-  useEffect(() => {
-    if (!open || phase !== "scanning") return;
-
-    const timer = window.setTimeout(() => {
-      const template =
-        SCAN_DEVICE_CATALOG[existingCount % SCAN_DEVICE_CATALOG.length]!;
-      setPendingDevice(createScannedDevice(template, existingCount));
-      setPhase("locked");
-    }, 2200);
-
-    return () => window.clearTimeout(timer);
-  }, [open, phase, existingCount]);
-
   if (!open) return null;
+
+  async function handleIdentify() {
+    const video = videoRef.current;
+    if (!video || phase === "identifying") return;
+
+    const frame = captureFrame(video);
+    if (!frame) {
+      setPhase("error");
+      setErrorMessage("Couldn’t capture a frame. Try again.");
+      return;
+    }
+
+    setPhase("identifying");
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch("/api/home/scan-device", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(frame),
+      });
+      const payload = (await response.json()) as {
+        device?: DeviceScanResult;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.device) {
+        throw new Error(payload.error || "Scan failed.");
+      }
+
+      setScanMeta(payload.device);
+      setPendingDevice(createScannedDevice(payload.device, existingCount));
+      setPhase("locked");
+    } catch (error) {
+      setPhase("error");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Couldn’t identify that device. Try again.",
+      );
+    }
+  }
 
   function handleAdd() {
     if (!pendingDevice) return;
@@ -101,8 +158,12 @@ export function DeviceScanSheet({
 
   function handleRescan() {
     setPendingDevice(null);
-    setPhase("scanning");
+    setScanMeta(null);
+    setErrorMessage(null);
+    setPhase("ready");
   }
+
+  const bbox = scanMeta?.bbox;
 
   return (
     <div
@@ -150,25 +211,49 @@ export function DeviceScanSheet({
             <span className="absolute -bottom-0.5 -left-0.5 size-6 rounded-bl-2xl border-b-[3px] border-l-[3px] border-white" />
             <span className="absolute -bottom-0.5 -right-0.5 size-6 rounded-br-2xl border-b-[3px] border-r-[3px] border-white" />
 
-            {phase === "scanning" ? (
-              <div className="absolute inset-x-3 top-1/4 h-0.5 animate-pulse bg-cyan-300/90 shadow-[0_0_12px_rgba(103,232,249,0.9)]" />
+            {bbox ? (
+              <div
+                aria-hidden
+                className="absolute rounded-xl border-2 border-cyan-300/90 shadow-[0_0_16px_rgba(103,232,249,0.55)]"
+                style={{
+                  left: `${bbox[0] * 100}%`,
+                  top: `${bbox[1] * 100}%`,
+                  width: `${bbox[2] * 100}%`,
+                  height: `${bbox[3] * 100}%`,
+                }}
+              />
+            ) : null}
+
+            {phase === "identifying" ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                <Loader2
+                  className="size-8 animate-spin text-amber-300"
+                  aria-hidden
+                />
+              </div>
             ) : null}
 
             {phase === "locked" && pendingDevice ? (
               <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-black/70 px-3 py-2.5 backdrop-blur-md">
                 <p className="flex items-center gap-1.5 text-xs font-medium text-amber-300">
                   <Check className="size-3.5" aria-hidden />
-                  Device outline locked
+                  Identified · {Math.round(pendingDevice.confidence * 100)}%
+                  confidence
                 </p>
                 <p className="mt-0.5 text-sm font-semibold text-white">
                   {pendingDevice.name}
                 </p>
                 <p className="text-[11px] text-white/70">
+                  {[pendingDevice.brand, pendingDevice.model]
+                    .filter(Boolean)
+                    .join(" · ") || null}
                   {pendingDevice.watts > 0
-                    ? `${pendingDevice.watts} W estimate`
+                    ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}${pendingDevice.watts} W estimate`
                     : pendingDevice.kind === "panel"
-                      ? "Service panel"
-                      : "Backup storage"}
+                      ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}Service panel`
+                      : pendingDevice.kind === "battery"
+                        ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}Backup storage`
+                        : null}
                 </p>
               </div>
             ) : null}
@@ -182,17 +267,27 @@ export function DeviceScanSheet({
             <p className="text-center text-sm text-white/80">{errorMessage}</p>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleRescan}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "w-full bg-white text-black hover:bg-white/90",
               )}
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
             >
               Close
             </button>
           </>
         ) : phase === "locked" ? (
           <>
+            {scanMeta?.notes ? (
+              <p className="text-center text-xs text-white/65">{scanMeta.notes}</p>
+            ) : null}
             <button
               type="button"
               onClick={handleAdd}
@@ -212,12 +307,37 @@ export function DeviceScanSheet({
             </button>
           </>
         ) : (
-          <p className="flex items-center justify-center gap-2 text-sm text-white/80">
-            <ScanLine className="size-4 shrink-0 animate-pulse" aria-hidden />
-            {phase === "starting"
-              ? "Starting camera…"
-              : "Point at a device or your panel"}
-          </p>
+          <>
+            <p className="flex items-center justify-center gap-2 text-sm text-white/80">
+              {phase === "identifying" ? (
+                <>
+                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                  Claude is identifying the device…
+                </>
+              ) : phase === "starting" ? (
+                <>
+                  <ScanLine className="size-4 shrink-0 animate-pulse" aria-hidden />
+                  Starting camera…
+                </>
+              ) : (
+                <>
+                  <ScanLine className="size-4 shrink-0" aria-hidden />
+                  Point at a device or your panel, then identify
+                </>
+              )}
+            </p>
+            <button
+              type="button"
+              disabled={phase !== "ready"}
+              onClick={() => void handleIdentify()}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "w-full bg-amber-400 text-amber-950 hover:bg-amber-300 disabled:opacity-50",
+              )}
+            >
+              Identify with Claude
+            </button>
+          </>
         )}
       </div>
     </div>

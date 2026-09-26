@@ -24,6 +24,7 @@ function kindIcon(kind: HomeDeviceKind) {
 function kindLabel(kind: HomeDeviceKind) {
   if (kind === "panel") return "Panel";
   if (kind === "battery") return "Battery";
+  if (kind === "unknown") return "Device";
   return "Appliance";
 }
 
@@ -122,7 +123,11 @@ export function MyHomeScreen({
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {kindLabel(device.kind)}
-                          {device.watts > 0 ? ` · ${device.watts} W` : null}
+                          {device.brand ? ` · ${device.brand}` : null}
+                          {device.watts > 0 ? ` · ${device.watts} W est.` : null}
+                          {device.confidence > 0
+                            ? ` · ${Math.round(device.confidence * 100)}%`
+                            : null}
                         </p>
                       </div>
                     </li>

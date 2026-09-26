@@ -54,6 +54,5 @@ __pycache__/
 
 # raw inputs; derived parquet under data/processed is tracked
 data/raw/
-
-# 139 MB; rebuild with python -m pipeline.sources.eaglei_texas (the demo subset is tracked)
+# Full Texas EAGLE-I cut is 139 MB; rebuild with python -m pipeline.sources.eaglei_texas
 data/processed/eaglei_tx.parquet
