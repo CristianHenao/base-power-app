@@ -1,6 +1,11 @@
 /** Shared types + helpers for Claude-powered home device scanning. */
 
-export type HomeDeviceKind = "appliance" | "panel" | "battery" | "medical" | "unknown";
+export type HomeDeviceKind =
+  | "appliance"
+  | "panel"
+  | "battery"
+  | "medical"
+  | "unknown";
 
 /** Where the load typically lives in the home. */
 export type HomeDeviceCategory =
@@ -37,6 +42,13 @@ export const HOME_DEVICE_CATEGORIES = Object.keys(
   HOME_DEVICE_CATEGORY_META,
 ) as HomeDeviceCategory[];
 
+/** One row in the device detail grid (label above value). */
+export type DeviceSpecField = {
+  key: string;
+  label: string;
+  value: string;
+};
+
 export type DeviceScanResult = {
   name: string;
   kind: HomeDeviceKind;
@@ -55,6 +67,27 @@ export type DeviceScanResult = {
   bbox: [number, number, number, number] | null;
 };
 
+/** Structured OCR result from a device nameplate / rating label. */
+export type DeviceNameplateResult = {
+  brand: string | null;
+  model: string | null;
+  description: string | null;
+  inputVoltage: string | null;
+  inputFrequency: string | null;
+  inputPhase: string | null;
+  inputWatts: number | null;
+  outputWatts: number | null;
+  microwaveFrequency: string | null;
+  manufactureDate: string | null;
+  origin: string | null;
+  manufacturer: string | null;
+  fccId: string | null;
+  circuitRequirement: string | null;
+  fields: DeviceSpecField[];
+  confidence: number;
+  notes: string | null;
+};
+
 export type HomeDevice = {
   id: string;
   name: string;
@@ -62,14 +95,19 @@ export type HomeDevice = {
   category: HomeDeviceCategory;
   brand: string | null;
   model: string | null;
-  /** Continuous draw estimate; 0 for panel / storage when unknown */
+  /** Continuous / nameplate draw for backup estimates */
   watts: number;
+  /** True when watts came from a nameplate scan (not an estimate) */
+  wattsExact: boolean;
   confidence: number;
   notes: string | null;
   isMedical: boolean;
   needsRefrigeration: boolean;
   /** Cropped device outline PNG — data URL or /home/scans/*.png */
   thumbnailUrl: string | null;
+  /** Extra nameplate fields shown in the detail grid */
+  specs: DeviceSpecField[];
+  nameplateScannedAt: string | null;
   scannedAt: string;
   source: "scan" | "manual";
 };
@@ -122,6 +160,17 @@ function parseCategory(raw: unknown): HomeDeviceCategory {
     : "other";
 }
 
+function asNullableString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function asNullableNumber(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value;
+}
+
 export function createScannedDevice(
   result: DeviceScanResult,
   index = 0,
@@ -139,19 +188,112 @@ export function createScannedDevice(
     brand: result.brand,
     model: result.model,
     watts: estimateWattsForDevice(result.name, result.kind, result.watts),
+    wattsExact: false,
     confidence: result.confidence,
     notes: result.notes,
     isMedical,
     needsRefrigeration: result.needsRefrigeration,
     thumbnailUrl,
+    specs: [],
+    nameplateScannedAt: null,
     scannedAt: new Date().toISOString(),
     source: "scan",
   };
 }
 
+/** Merge nameplate OCR into an existing device (prefer plate values). */
+export function applyNameplateToDevice(
+  device: HomeDevice,
+  plate: DeviceNameplateResult,
+): HomeDevice {
+  const inputWatts =
+    typeof plate.inputWatts === "number" && plate.inputWatts > 0
+      ? Math.round(plate.inputWatts)
+      : null;
+
+  const nextSpecs = mergeSpecFields(device.specs, plate.fields);
+
+  return {
+    ...device,
+    brand: plate.brand ?? device.brand,
+    model: plate.model ?? device.model,
+    name:
+      plate.description && !device.name.toLowerCase().includes("microwave")
+        ? device.name
+        : device.name,
+    watts: inputWatts ?? device.watts,
+    wattsExact: inputWatts != null ? true : device.wattsExact,
+    notes: plate.notes ?? device.notes,
+    specs: nextSpecs,
+    nameplateScannedAt: new Date().toISOString(),
+    confidence: Math.max(device.confidence, plate.confidence),
+  };
+}
+
+function mergeSpecFields(
+  existing: DeviceSpecField[],
+  incoming: DeviceSpecField[],
+): DeviceSpecField[] {
+  const byKey = new Map<string, DeviceSpecField>();
+  for (const field of existing) byKey.set(field.key, field);
+  for (const field of incoming) {
+    if (!field.value.trim()) continue;
+    byKey.set(field.key, field);
+  }
+  return [...byKey.values()];
+}
+
+/** Rows for the detail sheet grid — core identity + nameplate specs. */
+export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
+  const core: DeviceSpecField[] = [
+    {
+      key: "category",
+      label: "Category",
+      value: HOME_DEVICE_CATEGORY_META[device.category].label,
+    },
+    {
+      key: "brand",
+      label: "Brand",
+      value: device.brand ?? "—",
+    },
+    {
+      key: "model",
+      label: "Model",
+      value: device.model ?? "—",
+    },
+    {
+      key: "watts",
+      label: device.wattsExact ? "Input power" : "Power (estimate)",
+      value: device.watts > 0 ? `${device.watts} W` : "—",
+    },
+  ];
+
+  if (device.isMedical) {
+    core.push({ key: "medical", label: "Medical load", value: "Yes" });
+  }
+  if (device.needsRefrigeration) {
+    core.push({
+      key: "refrigeration",
+      label: "Needs refrigeration",
+      value: "Yes",
+    });
+  }
+
+  const coreKeys = new Set(core.map((row) => row.key));
+  const extras = device.specs.filter(
+    (row) => row.value && row.value !== "—" && !coreKeys.has(row.key),
+  );
+
+  return [...core, ...extras];
+}
+
 export function groupDevicesByCategory(
   devices: HomeDevice[],
-): Array<{ category: HomeDeviceCategory; label: string; devices: HomeDevice[] }> {
+): Array<{
+  category: HomeDeviceCategory;
+  label: string;
+  devices: HomeDevice[];
+}> {
   const buckets = new Map<HomeDeviceCategory, HomeDevice[]>();
   for (const device of devices) {
     const list = buckets.get(device.category) ?? [];
@@ -189,32 +331,16 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
       ? kindRaw
       : "unknown";
 
-  const brand =
-    typeof obj.brand === "string" && obj.brand.trim()
-      ? obj.brand.trim()
-      : null;
-  const model =
-    typeof obj.model === "string" && obj.model.trim()
-      ? obj.model.trim()
-      : null;
-
-  let watts: number | null = null;
-  if (typeof obj.watts === "number" && Number.isFinite(obj.watts)) {
-    watts = Math.max(0, obj.watts);
-  } else if (obj.watts === null) {
-    watts = null;
-  }
+  const brand = asNullableString(obj.brand);
+  const model = asNullableString(obj.model);
+  const watts = asNullableNumber(obj.watts);
 
   let confidence = 0.5;
   if (typeof obj.confidence === "number" && Number.isFinite(obj.confidence)) {
     confidence = Math.min(1, Math.max(0, obj.confidence));
   }
 
-  const notes =
-    typeof obj.notes === "string" && obj.notes.trim()
-      ? obj.notes.trim()
-      : null;
-
+  const notes = asNullableString(obj.notes);
   const isMedical = Boolean(obj.isMedical) || kind === "medical";
   const needsRefrigeration = Boolean(obj.needsRefrigeration);
 
@@ -244,5 +370,105 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
     isMedical,
     needsRefrigeration,
     bbox,
+  };
+}
+
+function fieldFrom(
+  key: string,
+  label: string,
+  value: string | null,
+): DeviceSpecField | null {
+  if (!value) return null;
+  return { key, label, value };
+}
+
+export function parseDeviceNameplateResult(
+  raw: unknown,
+): DeviceNameplateResult | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+
+  const brand = asNullableString(obj.brand);
+  const model = asNullableString(obj.model);
+  const description = asNullableString(obj.description);
+  const inputVoltage = asNullableString(obj.inputVoltage);
+  const inputFrequency = asNullableString(obj.inputFrequency);
+  const inputPhase = asNullableString(obj.inputPhase);
+  const inputWatts = asNullableNumber(obj.inputWatts);
+  const outputWatts = asNullableNumber(obj.outputWatts);
+  const microwaveFrequency = asNullableString(obj.microwaveFrequency);
+  const manufactureDate = asNullableString(obj.manufactureDate);
+  const origin = asNullableString(obj.origin);
+  const manufacturer = asNullableString(obj.manufacturer);
+  const fccId = asNullableString(obj.fccId);
+  const circuitRequirement = asNullableString(obj.circuitRequirement);
+  const notes = asNullableString(obj.notes);
+
+  let confidence = 0.5;
+  if (typeof obj.confidence === "number" && Number.isFinite(obj.confidence)) {
+    confidence = Math.min(1, Math.max(0, obj.confidence));
+  }
+
+  const builtIn: DeviceSpecField[] = [
+    fieldFrom("brand", "Brand", brand),
+    fieldFrom("model", "Model", model),
+    fieldFrom("description", "Description", description),
+    fieldFrom("inputVoltage", "Input voltage", inputVoltage),
+    fieldFrom("inputFrequency", "Input frequency", inputFrequency),
+    fieldFrom("inputPhase", "Phase", inputPhase),
+    fieldFrom(
+      "inputWatts",
+      "Input power",
+      inputWatts != null ? `${Math.round(inputWatts)} W` : null,
+    ),
+    fieldFrom(
+      "outputWatts",
+      "Output power",
+      outputWatts != null ? `${Math.round(outputWatts)} W` : null,
+    ),
+    fieldFrom("microwaveFrequency", "Frequency", microwaveFrequency),
+    fieldFrom("manufactureDate", "Manufacture date", manufactureDate),
+    fieldFrom("origin", "Origin", origin),
+    fieldFrom("manufacturer", "Manufacturer", manufacturer),
+    fieldFrom("fccId", "FCC ID", fccId),
+    fieldFrom("circuitRequirement", "Circuit", circuitRequirement),
+  ].filter((field): field is DeviceSpecField => Boolean(field));
+
+  const extraFields: DeviceSpecField[] = [];
+  if (Array.isArray(obj.fields)) {
+    for (const item of obj.fields) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      const label = asNullableString(row.label);
+      const value = asNullableString(row.value);
+      const key =
+        asNullableString(row.key) ??
+        (label ? label.toLowerCase().replace(/\s+/g, "_") : null);
+      if (!key || !label || !value) continue;
+      extraFields.push({ key, label, value });
+    }
+  }
+
+  const fields = mergeSpecFields(builtIn, extraFields);
+  if (!brand && !model && fields.length === 0) return null;
+
+  return {
+    brand,
+    model,
+    description,
+    inputVoltage,
+    inputFrequency,
+    inputPhase,
+    inputWatts,
+    outputWatts,
+    microwaveFrequency,
+    manufactureDate,
+    origin,
+    manufacturer,
+    fccId,
+    circuitRequirement,
+    fields,
+    confidence,
+    notes,
   };
 }

@@ -173,6 +173,12 @@ export function RiskAnalysisDashboard() {
     setHomeDevices((prev) => [...prev, device]);
   }
 
+  function handleUpdateHomeDevice(device: HomeDevice) {
+    setHomeDevices((prev) =>
+      prev.map((item) => (item.id === device.id ? device : item)),
+    );
+  }
+
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
     setBatteryCapacityOpen(false);
@@ -287,6 +293,7 @@ export function RiskAnalysisDashboard() {
         <MyHomeScreen
           devices={homeDevices}
           onAddDevice={handleAddHomeDevice}
+          onUpdateDevice={handleUpdateHomeDevice}
           scanOpen={deviceScanOpen}
           onScanOpenChange={setDeviceScanOpen}
           className="absolute inset-0 pt-[calc(3.5rem+var(--sat))]"
