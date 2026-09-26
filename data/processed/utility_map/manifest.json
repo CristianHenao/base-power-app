@@ -13,7 +13,7 @@
       "rows": 19563842,
       "period_start": "2018-01-01",
       "period_end": "2025-12-31",
-      "retrieved_at_utc": "2026-09-26T20:43:01Z",
+      "retrieved_at_utc": "2026-09-26T21:13:46Z",
       "note": "County 15-minute customers-out series (data/processed/eaglei_tx.parquet), EAGLE-I 2018-2025."
     },
     {
@@ -39,7 +39,7 @@
       "rows": 238,
       "period_start": "2024-01-01",
       "period_end": "2024-12-31",
-      "retrieved_at_utc": "2026-09-26T20:35:28Z",
+      "retrieved_at_utc": "2026-09-26T21:12:49Z",
       "note": "Summer/winter peak demand, bundled sales and delivery-company energy by utility."
     },
     {
@@ -90,7 +90,7 @@
       "rows": 561024,
       "period_start": "2018-01-01",
       "period_end": "2025-12-31",
-      "retrieved_at_utc": "2026-09-26T20:37:26Z",
+      "retrieved_at_utc": "2026-09-26T21:12:53Z",
       "note": "Hourly native load by weather zone; hour-ending Central converted to UTC hour start."
     },
     {
@@ -206,7 +206,7 @@
       "rows": 36325,
       "period_start": null,
       "period_end": null,
-      "retrieved_at_utc": "2026-09-26T20:58:19Z",
+      "retrieved_at_utc": "2026-09-26T21:15:54Z",
       "note": "Flood Hazard Zones (S_FLD_HAZ_AR) for 48201, 48167, 48453, 48085, 48355; effective maps as served."
     },
     {
@@ -222,7 +222,7 @@
       "rows": 21335,
       "period_start": "1980-01-01",
       "period_end": "2025-12-31",
-      "retrieved_at_utc": "2026-09-26T21:07:16Z",
+      "retrieved_at_utc": "2026-09-26T21:15:58Z",
       "note": "Atlantic best tracks; hourly interpolation; 34 kt within 100 km."
     },
     {
@@ -368,7 +368,7 @@
       "rows": 114535,
       "period_start": "2000-01-01",
       "period_end": "2025-12-31",
-      "retrieved_at_utc": "2026-09-26T20:59:24Z",
+      "retrieved_at_utc": "2026-09-26T21:13:56Z",
       "note": "Texas rows; zone events expanded to counties with NWS zone-county file bp16ap26; 1535 of 41036 zone events use retired zone codes and are left out."
     },
     {
@@ -384,7 +384,7 @@
       "rows": 3244,
       "period_start": "2000-01-01",
       "period_end": "2025-12-31",
-      "retrieved_at_utc": "2026-09-26T21:05:59Z",
+      "retrieved_at_utc": "2026-09-26T21:15:55Z",
       "note": "Texas tracks and Texas segments of multi-state tracks."
     }
   ]

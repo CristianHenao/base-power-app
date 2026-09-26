@@ -3,7 +3,7 @@
 
 PY ?= .venv/bin/python
 
-.PHONY: data download build check test api demo loadtest
+.PHONY: data download build check test api demo loadtest map-download export-map
 
 data: download build
 
@@ -48,3 +48,24 @@ demo:
 # Latency table against a running API (make api in another terminal).
 loadtest:
 	$(PY) -m api.loadtest --url http://localhost:8000 --requests 300 --concurrency 20
+
+# Utility map (PRD v3). Downloads land in PORCHLIGHT_RAW_DIR (default data/raw); FEMA flood
+# zones are fetched page by page for the five demo counties.
+map-download:
+	$(PY) -m pipeline.utility_map.ercot_load download
+	$(PY) -m pipeline.utility_map.storm_events download
+	$(PY) -m pipeline.utility_map.nfhl fetch
+
+# Rebuild every utility-map table and publish a release when all gates pass (needs `make build` outputs).
+export-map:
+	$(PY) -m pipeline.utility_map.eia_grid
+	$(PY) -m pipeline.utility_map.ercot_load
+	$(PY) -m pipeline.utility_map.county_peak
+	$(PY) -m pipeline.utility_map.outages
+	$(PY) -m pipeline.utility_map.storm_events
+	$(PY) -m pipeline.utility_map.hazard_layers
+	$(PY) -m pipeline.utility_map.nfhl
+	$(PY) -m pipeline.utility_map.tornado
+	$(PY) -m pipeline.utility_map.hurricane
+	$(PY) -m pipeline.utility_map.validate_hazards
+	$(PY) -m pipeline.utility_map.assemble

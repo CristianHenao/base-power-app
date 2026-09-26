@@ -245,3 +245,29 @@ def test_outage_links_are_attached_to_their_layers() -> None:
     layers = {layer["id"]: layer for layer in release["layers"]}
     assert layers["flood"]["outage_link"] == {"rho": 0.12, "n": 254, "weak": False}
     assert layers["homes"]["outage_link"] is None
+
+
+def test_check_requires_period_and_sources_on_every_available_layer() -> None:
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS)
+    layer = next(l for l in release["layers"] if l["id"] == "outages")
+    layer["source_ids"] = []
+    layer["period_end"] = None
+    problems = assemble.check(release, expected_counties=2)
+    assert any("outages" in p and "source" in p for p in problems)
+    assert any("outages" in p and "period" in p for p in problems)
+
+
+def test_publish_writes_a_gate_report_and_refuses_oversized_files(tmp_path: Path) -> None:
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS)
+    geo = tmp_path / "src"
+    geo.mkdir()
+    (geo / "counties.geojson").write_text('{"type":"FeatureCollection","features":[]}')
+    (geo / "territories.geojson").write_text("x" * 2000)
+    with pytest.raises(ValueError, match="territories.geojson"):
+        assemble.publish(release, geo, tmp_path / "public", today="2026-09-26", expected_counties=2, max_file_bytes=1000)
+    (geo / "territories.geojson").write_text('{"type":"FeatureCollection","features":[]}')
+    rid = assemble.publish(release, geo, tmp_path / "public", today="2026-09-26", expected_counties=2)
+    report = json.loads((tmp_path / "public" / "releases" / rid / "gate-report.json").read_text())
+    assert report["passed"] is True
+    assert report["counties"] == 2
+    assert "outages" in report["layers_available"]

@@ -327,6 +327,13 @@ def check(release: dict, expected_counties: int = TEXAS_COUNTIES) -> list[str]:
             share_sum[weight["fips"]] = share_sum.get(weight["fips"], 0.0) + weight["share"]
     problems += [f"{f}: utility shares sum to {total:.4f}, not 1"
                  for f, total in sorted(share_sum.items()) if abs(total - 1) > 1e-3]
+    for layer in release["layers"]:
+        if not layer["available"]:
+            continue
+        if not layer.get("source_ids"):
+            problems.append(f"layer {layer['id']}: no source listed")
+        if not layer.get("period_end"):
+            problems.append(f"layer {layer['id']}: no period recorded (period_end is its as-of date)")
     return problems
 
 
@@ -337,10 +344,20 @@ def _file_names(geometry: dict) -> list[str]:
     return names
 
 
+MAX_FILE_BYTES = 5_000_000
+
+
 def publish(release: dict, geometry_dir: Path, public_dir: Path, today: str,
-            expected_counties: int = TEXAS_COUNTIES, extra_files: dict[str, Path] | None = None) -> str:
+            expected_counties: int = TEXAS_COUNTIES, extra_files: dict[str, Path] | None = None,
+            max_file_bytes: int = MAX_FILE_BYTES) -> str:
     """Write releases/<id>/ and point current.json at it, only if every check passes."""
     problems = check(release, expected_counties)
+    for name in _file_names(release["geometry"]):
+        source = (extra_files or {}).get(name, geometry_dir / name)
+        if not source.exists():
+            problems.append(f"{name}: file missing")
+        elif source.stat().st_size > max_file_bytes:
+            problems.append(f"{name}: {source.stat().st_size:,} bytes is over the {max_file_bytes:,} byte cap")
     if problems:
         raise ValueError("release failed checks: " + "; ".join(problems[:20]))
     release = copy.deepcopy(release)
@@ -353,6 +370,17 @@ def publish(release: dict, geometry_dir: Path, public_dir: Path, today: str,
         target = folder / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile((extra_files or {}).get(name, geometry_dir / name), target)
+    report = {
+        "release_id": rid,
+        "passed": True,
+        "checked_at": pd.Timestamp.now(tz="UTC").isoformat(),
+        "counties": len(release["counties"]),
+        "utilities": len(release["utilities"]),
+        "layers_available": [l["id"] for l in release["layers"] if l["available"]],
+        "layers_pending": [l["id"] for l in release["layers"] if not l["available"]],
+        "files": {name: (folder / name).stat().st_size for name in _file_names(release["geometry"])},
+    }
+    (folder / "gate-report.json").write_text(json.dumps(report, indent=2) + "\n")
     pointer = {"release_id": rid, "path": f"releases/{rid}", "schema_version": SCHEMA_VERSION}
     (public_dir / "current.json").write_text(json.dumps(pointer, indent=2) + "\n")
     return rid
