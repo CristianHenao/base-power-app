@@ -1,0 +1,37 @@
+{
+  "flood": {
+    "rho": 0.12,
+    "n": 254,
+    "weak": false
+  },
+  "tornado": {
+    "rho": 0.209,
+    "n": 254,
+    "weak": false
+  },
+  "hurricane": {
+    "rho": 0.402,
+    "n": 254,
+    "weak": false
+  },
+  "severe_storm": {
+    "rho": -0.015,
+    "n": 254,
+    "weak": true
+  },
+  "winter": {
+    "rho": -0.229,
+    "n": 254,
+    "weak": true
+  },
+  "heat": {
+    "rho": 0.311,
+    "n": 254,
+    "weak": false
+  },
+  "peak_demand": {
+    "rho": 0.07,
+    "n": 254,
+    "weak": true
+  }
+}

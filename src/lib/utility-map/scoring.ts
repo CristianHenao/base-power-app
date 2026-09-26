@@ -2,14 +2,16 @@ import type {
   BaseOffer,
   CountyRecord,
   LayerId,
+  Quality,
   UtilityMapData,
   UtilityRecord,
-} from "@/lib/utility-map/types";
+} from "./types.ts";
 
 /**
  * Scores per P-04: each toggled layer is a 0-1 rank against Texas, a county's
  * score is the mean of its toggled ranks, and a utility's score is the
- * customer-weighted mean of its counties. Levels are quintiles of the peer set.
+ * mean of its counties weighted by its own estimated customers in each county
+ * (county_weights), never the county's full count. Levels are quintiles.
  */
 
 export type Level = 1 | 2 | 3 | 4 | 5;
@@ -90,22 +92,39 @@ export function buildScoreModel(
 ): ScoreModel {
   const countyScores = new Map<string, number | null>();
   for (const c of data.counties) countyScores.set(c.fips, countyScore(c, layers));
-  const countyLevels = quintileLevels(countyScores);
+  // Price spikes only exist inside ERCOT. With that layer on, counties outside ERCOT are
+  // scored on fewer layers, so they are leveled among themselves (PRD v3 §7).
+  const outsideErcot = (c: CountyRecord) =>
+    layers.includes("price_spikes") && c.quality?.price_spikes === "not_applicable";
+  const countyLevels = new Map<string, Level | null>();
+  for (const group of [false, true]) {
+    const members = new Map(
+      data.counties.filter((c) => outsideErcot(c) === group).map((c) => [c.fips, countyScores.get(c.fips) ?? null]),
+    );
+    for (const [fips, level] of quintileLevels(members)) countyLevels.set(fips, level);
+  }
 
-  const byFips = new Map(data.counties.map((c) => [c.fips, c]));
   const utilityScores = new Map<string, number | null>();
   for (const u of data.utilities) {
     utilityScores.set(
       u.id,
       weightedMean(
-        u.counties.map((fips) => ({
-          value: countyScores.get(fips) ?? null,
-          weight: byFips.get(fips)?.customers ?? 0,
+        u.county_weights.map((w) => ({
+          value: countyScores.get(w.fips) ?? null,
+          weight: w.customers_est,
         })),
       ),
     );
   }
-  const utilityLevels = quintileLevels(utilityScores);
+  const utilityOutsideErcot = (u: UtilityRecord) =>
+    layers.includes("price_spikes") && !(u.grids ?? [u.grid]).includes("ERCOT");
+  const utilityLevels = new Map<string, Level | null>();
+  for (const group of [false, true]) {
+    const members = new Map(
+      data.utilities.filter((u) => utilityOutsideErcot(u) === group).map((u) => [u.id, utilityScores.get(u.id) ?? null]),
+    );
+    for (const [id, level] of quintileLevels(members)) utilityLevels.set(id, level);
+  }
 
   const ranked = data.utilities
     .filter((u) => utilityScores.get(u.id) != null)
@@ -135,7 +154,7 @@ export function buildScoreModel(
   };
 }
 
-export type RankGroupId = "expansion" | "grow" | "monitor";
+export type RankGroupId = "expansion" | "grow" | "unverified" | "monitor";
 
 export const RANK_GROUPS: { id: RankGroupId; label: string; hint: string }[] = [
   {
@@ -148,6 +167,11 @@ export const RANK_GROUPS: { id: RankGroupId; label: string; hint: string }[] = [
     label: "Grow",
     hint: "High stress, and Base already offers backup here",
   },
+  {
+    id: "unverified",
+    label: "Offer not verified",
+    hint: "High stress; check Base's offer for this area before the meeting",
+  },
   { id: "monitor", label: "Monitor", hint: "Lower stress for the layers on" },
 ];
 
@@ -155,6 +179,7 @@ const SELLS_BACKUP: BaseOffer[] = ["energy_plus_backup", "backup_program"];
 
 export function rankGroup(utility: UtilityRecord, level: Level | null): RankGroupId {
   if (level == null || level <= 2) return "monitor";
+  if (utility.base_offer == null) return "unverified";
   return SELLS_BACKUP.includes(utility.base_offer) ? "grow" : "expansion";
 }
 
@@ -162,50 +187,59 @@ export const BASE_OFFER_LABELS: Record<BaseOffer, string> = {
   energy_plus_backup: "Energy + Backup",
   backup_program: "Backup program",
   energy_only: "Energy only",
-  none: "Not served",
 };
 
-/** Customer-weighted layer value and rank for a utility's breakdown bars. */
+export function offerLabel(utility: UtilityRecord): string {
+  return utility.base_offer ? BASE_OFFER_LABELS[utility.base_offer] : "Offer not verified";
+}
+
+/** Counts that add up across counties (a utility gets its share); the rest are averaged. */
+export const ADDITIVE_LAYERS: LayerId[] = ["homes", "peak_demand", "generation"];
+
+/** A utility's layer value and rank from its own estimated share of each county. */
 export function utilityLayerSummary(
   utility: UtilityRecord,
   counties: Map<string, CountyRecord>,
   layer: LayerId,
 ): { value: number | null; rank: number | null } {
-  const mine = utility.counties
-    .map((fips) => counties.get(fips))
-    .filter((c): c is CountyRecord => c != null);
-  if (layer === "homes") {
+  const mine = utility.county_weights
+    .map((w) => ({ w, c: counties.get(w.fips) }))
+    .filter((x): x is { w: (typeof x)["w"]; c: CountyRecord } => x.c != null);
+  const rank = weightedMean(mine.map(({ w, c }) => ({ value: c.ranks[layer], weight: w.customers_est })));
+  // The utility's own peak (reported to EIA, or estimated from ERCOT zone load), never a
+  // re-split of county peaks that already mix several utilities.
+  if (layer === "peak_demand" && utility.grid_stats?.summer_peak_mw != null) {
+    return { value: utility.grid_stats.summer_peak_mw, rank };
+  }
+  // Plants sit in counties, not in customer shares: count every plant in the utility's counties.
+  if (layer === "generation") {
+    const known = mine.filter(({ c }) => c.values.generation != null);
+    return { value: known.length ? known.reduce((sum, { c }) => sum + (c.values.generation ?? 0), 0) : null, rank };
+  }
+  if (ADDITIVE_LAYERS.includes(layer)) {
+    const known = mine.filter(({ c }) => c.values[layer] != null);
     return {
-      value: mine.reduce((sum, c) => sum + (c.values.homes ?? 0), 0),
-      rank: weightedMean(mine.map((c) => ({ value: c.ranks.homes, weight: c.customers }))),
+      value: known.length ? known.reduce((sum, { w, c }) => sum + (c.values[layer] ?? 0) * w.share, 0) : null,
+      rank,
     };
   }
   return {
-    value: weightedMean(mine.map((c) => ({ value: c.values[layer], weight: c.customers }))),
-    rank: weightedMean(mine.map((c) => ({ value: c.ranks[layer], weight: c.customers }))),
+    value: weightedMean(mine.map(({ w, c }) => ({ value: c.values[layer], weight: w.customers_est }))),
+    rank,
   };
 }
 
-export type FleetEstimate = {
-  homes: number;
-  storageMwh: number;
-  peakMw: number;
-  outageHoursCovered: number;
-};
-
-/** "What if Base were here": linear in fleet share, as agreed in P-04. */
-export function fleetEstimate(
+/** Whether a utility has data for a layer: ok if any of its counties do. */
+export function utilityLayerQuality(
   utility: UtilityRecord,
   counties: Map<string, CountyRecord>,
-  share: number,
-  battery: { kwh_per_core: number; kw_per_core: number },
-): FleetEstimate {
-  const homes = Math.round(utility.eligible_homes * share);
-  const outageHours = utilityLayerSummary(utility, counties, "outages").value ?? 0;
-  return {
-    homes,
-    storageMwh: (homes * battery.kwh_per_core) / 1000,
-    peakMw: (homes * battery.kw_per_core) / 1000,
-    outageHoursCovered: homes * outageHours * utility.core_coverage_hours,
-  };
+  layer: LayerId,
+): Quality {
+  // Price spikes are ERCOT settlement prices: a utility on another grid has none of its own.
+  if (layer === "price_spikes" && !(utility.grids ?? [utility.grid]).includes("ERCOT")) return "not_applicable";
+  const flags = utility.county_weights
+    .map((w) => counties.get(w.fips)?.quality[layer])
+    .filter((q): q is Quality => q != null);
+  if (flags.includes("ok")) return "ok";
+  return flags.length > 0 && flags.every((q) => q === "not_applicable") ? "not_applicable" : "missing";
 }

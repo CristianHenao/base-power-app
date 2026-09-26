@@ -53,3 +53,17 @@ upper end or say "up to". Sizing percentages truncate on purpose, so 89.8% never
 - Record in segments at 1080p with a real microphone; pre-fill the inputs so there's no typing lag; add captions.
 - Pull any statistic in the voiceover from `docs/persona-check.md`, not from memory.
 - Safety video by 10:30 PM Saturday, uploaded unlisted.
+
+## Utility map (Base sales), 60 seconds
+
+Open `/utility-map` at laptop width. Everything on screen is from public data; the stamp says "Partial release · estimates".
+
+| Time | On screen | Say |
+|---|---|---|
+| 0:00-0:10 | Risk mode, Winter freeze lens, 3D on | "Every Texas county, scored on real outage history, hazards and grid stress. Taller is worse." |
+| 0:10-0:25 | Hazards mode, Tornadoes + Hurricanes | "Tornado tracks from NOAA, hurricane tracks since 1980. The dark corner is where both run high: East Texas and the upper coast." |
+| 0:25-0:35 | Storm spotlight: Hurricane Beryl | "Beryl put 1.66 million Harris County customers in the dark, 91% of them. That's EAGLE-I, county by county." |
+| 0:35-0:45 | Risk mode, Hurricane season, open CenterPoint, Flood on | "FEMA flood zones for Harris and Galveston; 60% of Galveston is in the 100-year floodplain." |
+| 0:45-0:60 | Base fleet mode, Oncor at 10% | "One Core in 10% of Oncor's homes: about 2,400 MW for two hours, 7.9% of its summer peak. And every number has its source one tap away." |
+
+Checks before recording: `make export-map` gate report passes; `npm run test:web`, `python -m pytest -q`, `npm run build` pass.

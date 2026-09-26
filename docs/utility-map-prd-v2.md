@@ -1,6 +1,6 @@
 # Utility Map PRD 2.0
 
-**Status:** implementation specification; recommendations are identified below, not claims that integration is complete.  
+**Status:** superseded where they differ by [PRD v3](utility-map-prd-v3.md) (September 26, 2026). Implementation specification; recommendations are identified below, not claims that integration is complete.  
 **Owner:** Alejandro owns the Utility Map implementation and assembly of its final dataset, confirmed September 26, 2026.  
 **Audience:** Base sales and partnerships; prospective customers are utilities and co-ops. County governments are not the buyers.  
 **Related:** [PRD v1](utility-map-prd.md), [battery facts](battery-tech-specs.md), [data tickets](alejandro-tickets.md), [Nolan model specification](nolan-spec.md), playbook P-04.  

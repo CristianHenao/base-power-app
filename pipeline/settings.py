@@ -1,11 +1,16 @@
 """Paths and demo constants. This is the only module that names directories."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 # Local secrets such as XAI_API_KEY. Gitignored.
 ENV_FILE = REPO_ROOT / ".env"
+# Raw downloads (gitignored). A worktree can point this at the main checkout's data/raw.
+RAW_DIR = Path(os.environ.get("PORCHLIGHT_RAW_DIR", REPO_ROOT / "data" / "raw"))
+# Normalized tables and the source manifest for the utility map.
+UTILITY_MAP_DIR = REPO_ROOT / "data" / "processed" / "utility_map"
 
 RAW_EAGLEI_DIR = REPO_ROOT / "data" / "raw" / "eaglei"
 EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events.parquet"
