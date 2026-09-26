@@ -22,7 +22,7 @@ export function OutageBatteryCallout({
 }: OutageBatteryCalloutProps) {
   if (!event.impactedHome) {
     return (
-      <FrostPanel className={cn("pointer-events-auto w-full max-w-xs", className)}>
+      <FrostPanel className={cn("pointer-events-auto w-full", className)}>
         <div className="px-3.5 py-3">
           <p className="text-sm font-semibold">Neighborhood event</p>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -34,7 +34,7 @@ export function OutageBatteryCallout({
   }
 
   return (
-    <FrostPanel className={cn("pointer-events-auto w-full max-w-xs", className)}>
+    <FrostPanel className={cn("pointer-events-auto w-full", className)}>
       <div className="space-y-2.5 px-3.5 py-3">
         <div className="flex items-start gap-2.5">
           <span

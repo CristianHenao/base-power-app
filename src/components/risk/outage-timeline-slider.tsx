@@ -6,10 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import {
-  formatDurationHours,
-  type HomeOutageEvent,
-} from "@/lib/risk/synthetic-outages";
+import type { HomeOutageEvent } from "@/lib/risk/synthetic-outages";
 import { WEATHER_HAZARD_META } from "@/lib/risk/synthetic-weather";
 import { cn } from "@/lib/utils";
 
@@ -157,33 +154,17 @@ export function OutageTimelineSlider({
       {/* Soft vignette above the bar */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-10 bottom-0"
+        className="pointer-events-none absolute inset-x-0 -top-16 bottom-0"
         style={{
           background:
             "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)",
         }}
       />
 
-      <div className="relative mb-2 px-1 text-center">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-white/70 drop-shadow-sm">
-          Outage timeline
-        </p>
-        <p
-          className="truncate text-base font-semibold tabular-nums drop-shadow-sm"
-          style={{ color: accent }}
-        >
-          {shortMonth(active.startedAt)} {shortDay(active.startedAt)} ·{" "}
-          {formatDurationHours(active.durationHours)}
-        </p>
-        <p className="truncate text-xs text-white/75 drop-shadow-sm">
-          {active.title}
-        </p>
-      </div>
-
       {/* Horizontal glass rectangle */}
       <div
         className="relative overflow-hidden rounded-2xl border border-white/40 shadow-[0_10px_28px_rgba(0,0,0,0.22)] touch-none"
-        style={{ height: 88 }}
+        style={{ height: 72 }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -195,10 +176,10 @@ export function OutageTimelineSlider({
         {/* Center caret */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1.5 z-20 -translate-x-1/2"
+          className="pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2"
         >
           <div
-            className="h-0 w-0 border-x-[6px] border-x-transparent border-t-[9px]"
+            className="h-0 w-0 border-x-[5px] border-x-transparent border-t-[7px]"
             style={{ borderTopColor: accent }}
           />
         </div>
@@ -206,7 +187,7 @@ export function OutageTimelineSlider({
         {/* Center guide line */}
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-3 left-1/2 top-3 z-10 w-px -translate-x-1/2"
+          className="pointer-events-none absolute bottom-1.5 left-1/2 top-2 z-10 w-px -translate-x-1/2"
           style={{ backgroundColor: accent, opacity: 0.35 }}
         />
 
@@ -236,7 +217,7 @@ export function OutageTimelineSlider({
                         <span
                           key={`${event.id}-m${frac}`}
                           aria-hidden
-                          className="absolute top-4 h-2 w-px -translate-x-1/2 bg-black/20"
+                          className="absolute top-3 h-1.5 w-px -translate-x-1/2 bg-black/20"
                           style={{ left: mx }}
                         />
                       );
@@ -252,13 +233,13 @@ export function OutageTimelineSlider({
                     setOffset(offsetForIndex(index));
                     emitIndex(index);
                   }}
-                  className="absolute top-2.5 flex w-[4.5rem] -translate-x-1/2 flex-col items-center"
+                  className="absolute top-1.5 flex w-[4.5rem] -translate-x-1/2 flex-col items-center"
                   style={{ left: x }}
                 >
                   <span
                     className={cn(
-                      "mb-1 block w-px rounded-full",
-                      isActive ? "h-4" : "h-2.5",
+                      "mb-0.5 block w-px rounded-full",
+                      isActive ? "h-3.5" : "h-2",
                     )}
                     style={{
                       backgroundColor: isActive ? accent : tickColor,
