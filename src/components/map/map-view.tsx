@@ -256,15 +256,15 @@ export function MapView({
     if (!map || status !== "ready") return;
 
     if (cameraBounds) {
-      // Slight pullback so the outage radius reads, while pitch keeps 3D buildings
+      // Frame the active outage ring, biased close so card switches feel zoomed in
       map.fitBounds(cameraBounds, {
-        padding: { top: 72, bottom: 200, left: 40, right: 40 },
+        padding: { top: 64, bottom: 180, left: 28, right: 28 },
         pitch,
         bearing,
         duration: 850,
         essential: true,
-        maxZoom: 16.15,
-        minZoom: 15.35,
+        maxZoom: MAP_DEFAULTS.cardScrubMaxZoom,
+        minZoom: MAP_DEFAULTS.cardScrubMinZoom,
       });
       return;
     }
