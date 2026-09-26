@@ -44,7 +44,11 @@ Central day (the Travis 2021 freeze is `48453-2021-02-14-2`).
   outage hours are therefore lost, which biases durations and rates low.
 - EAGLE-I counts are scraped from utility outage maps. Utilities differ in how they report, and a
   county served by several utilities can be partly covered.
-- Customers per county are the 2022 modeled counts for every year.
+- Customers per county are the 2022 modeled counts (MCC.csv) for every year. Some are far too low
+  (Jeff Davis County has 44), and EAGLE-I sometimes books a utility's outage to one county, so 112
+  counties once showed more than 100% of customers out. A county's customer count is now at least
+  the most customers ever out there at once. 113 counties use that floor, and the outlook table
+  flags them in `customers_floored`.
 - The 2023 EAGLE-I file names the count column `sum` instead of `customers_out`. The reader
   accepts both.
 - Years before 2018 are left out because coverage is thin. A county's years of data start at its
@@ -64,7 +68,12 @@ restored, under two orderings:
 
 Both orderings give the same customer-hours, so the truth sits between them. We report both as a
 band and use LIFO wherever one number is needed (the 12-hour-plus rate and sizing), because it is
-the conservative choice for a backup product.
+the conservative choice for a backup product. The pair is [FIFO, LIFO], not [low, high]; for a few
+events (Beryl in Harris) the FIFO p90 is the longer one.
+
+A noisy curve can replay the same homes going dark more than once, so an event's 12-hour-plus
+share is capped at its peak share of customers. Before the cap, Beryl counted as 1.3 long outages
+per Harris home.
 
 ## Outlook: long outages per typical home (`pipeline/outlook.py`)
 
@@ -74,17 +83,27 @@ out 12 hours or more, so counts can be fractional.
 
 Rates are shrunk with a gamma-Poisson empirical Bayes model. The prior is fit separately within
 each ERCOT weather zone (county to zone from Alejandro's crosswalk), and the posterior gives a
-90% interval. The between-county variance is floored at a coefficient of variation of 0.25, so a
-zone with little spread cannot collapse every county onto its mean. Levels (Low to Very high) are
-statewide quintiles of the posterior mean.
+90% interval. Counts are sums of fractional shares, which are less noisy than counts of whole
+events, so the model is quasi-Poisson. Within each zone, counts and years are divided by
+phi = sum(s^2) / sum(s) over the per-event shares s. Phi is 0.30-0.54 by zone. Without it, the
+prior treated nearly all spread between counties as noise and every county collapsed onto its zone
+mean. The between-county variance is still floored at a coefficient of variation of 0.25.
+
+Levels come from fixed bands on "a 12-hour-plus outage about once every N years": 3 or fewer is
+Very high, 3-6 High, 6-10 Elevated, 10-15 Moderate, over 15 Low. Statewide quintiles were
+dropped because rates cluster within zones, and the middle cut points were only 0.005 a year
+apart. Statewide, 61 counties are High, 68 Elevated, 117 Moderate and 8 Low. None is Very high.
 
 Demo counties, 2018-2025:
 
-| County | Zone | 12h+ outages per year | 90% interval | Level |
-|---|---|---|---|---|
-| Collin (48085) | NCENT | 0.11 | 0.02-0.25 | Low |
-| Harris (48201) | COAST | 0.32 | 0.08-0.69 | High |
-| Travis (48453) | SCENT | 0.13 | 0.02-0.33 | Elevated |
+| County | Zone | 12h+ outages per year | 90% interval | About once every | Level |
+|---|---|---|---|---|---|
+| Collin (48085) | NCENT | 0.094 | 0.040-0.166 | 11 years | Moderate |
+| Harris (48201) | COAST | 0.230 | 0.151-0.322 | 4 years | High |
+| Travis (48453) | SCENT | 0.091 | 0.059-0.128 | 11 years | Moderate |
+
+Earlier builds showed Collin Low, Harris High (0.32) and Travis Elevated. The customer floor, the
+per-event cap and the quasi-Poisson prior account for the change.
 
 ### Backtest (`data/processed/backtest.json`)
 
@@ -92,14 +111,17 @@ Fit on 2018-2022 and scored on 2023-2024, over the 254 counties with data in bot
 
 | Method | Poisson deviance (lower is better) | Spearman rank correlation |
 |---|---|---|
-| Empirical Bayes, weather-zone prior | **551** | **0.38** |
-| Statewide mean | 708 | n/a (one value) |
-| Raw county rate | infinite | 0.30 |
+| Empirical Bayes, weather-zone prior | **133** | **0.34** |
+| Weather-zone mean | 136 | 0.31 |
+| Statewide mean | 163 | n/a (one value) |
+| Raw county rate | infinite | 0.28 |
 
 The raw rate has infinite deviance because 5 counties had no long outages in training and at least
-one in testing. A 0.38 rank correlation is modest. The outlook separates high-risk from low-risk
-counties better than the alternatives, but two test years is a short window and one storm can move
-a county a lot. The UI shows the interval and says "estimate."
+one in testing. Most of the skill comes from the weather zone. The county-level shrinkage adds a
+little on top (133 against 136, and 0.34 against 0.31). A 0.34 rank correlation is modest: two
+test years is a short window, and one storm can move a county a lot. The UI shows the interval and
+says "estimate." Earlier builds reported 551 against 708. Those were on the inflated counts and are
+not comparable.
 
 ## Backup simulator (`api/app/sim/backup.py`, `pipeline/simulate.py`)
 
@@ -166,9 +188,15 @@ empty start each day. The count of 15-minute intervals above $1,000/MWh is repor
 
 This is an **upper bound, not a forecast**. It assumes perfect foresight of every price, no
 backup reserve held back, no degradation cost, no fees, and wholesale prices passed straight
-through. A homeowner does not receive this. Results run from about $1,300 to $7,200 a year per
-load zone (2019-2025). Winter Storm Uri shows as about 1,300 scarcity intervals in 2021, and 2023
-is the highest-value year in every zone. The pays-twice map still needs Alejandro's county to load-zone mapping.
+through. A homeowner does not receive this. Results run from about $900 to $4,900 a year per
+load zone (2018-2025). Winter Storm Uri shows as about 650 intervals above $1,000/MWh in each zone
+in 2021, and 2023 is the highest-value year in every zone. The pays-twice map still needs a county
+to load-zone mapping.
+
+Prices are the plain load-zone settlement prices (LZ). ERCOT's annual file also lists an
+energy-weighted series (LZEW) under the same names, and gridstatus labels both as "Load Zone".
+Earlier builds mixed the two, which doubled the scarcity counts and overstated the arbitrage bound.
+The fetcher now fails if any interval and location appear twice.
 
 ## Narrator (`api/app/narrator/`, `evals/`)
 
@@ -194,11 +222,13 @@ The eval set is 24 fixtures (8 counties × 3 homes):
 
 | Source | Passed |
 |---|---|
-| Grok, first reply | 23/24 (96%) |
+| Grok, first reply | 24/24 (100%) in the latest run |
 | Grok, after one retry | 24/24 (100%) |
 | Template | 24/24 (100%) |
 
-Median model time is 2.2 seconds per report, against an 8-second timeout. The validators check that
+Across runs at temperature 0 the first-reply pass rate has ranged from 92% to 100%. After the
+retry it has been 96-100%. Median model time is 2.2-2.7 seconds per report, against an 8-second
+timeout. The validators check that
 numbers are right, not tone. For example, "homes with electric heat need 2 Cores" passes, but it is
 stronger than the facts support.
 

@@ -1,8 +1,9 @@
 {
   "headline": "Wichita County Home Backup Report",
-  "summary": "Homes in Wichita County face a long outage about once every 9 years based on 8 years of records since 2018. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth faced about 44 hours for the longest-waiting tenth. In August 2023, 12% of homes in the county lost power. The longest-waiting tenth faced about 36 hours for the longest-waiting tenth. One Core lasts about 18 hours in August. One Core lasts about 50 hours in November. Two Cores last about 37 hours in August. Two Cores cover 98% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "summary": "Wichita County has a moderate outlook. Homes see a long outage of 12 hours or more about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth waited about 44 hours. In August 2023, 12% of homes in the county lost power. The longest-waiting tenth waited about 36 hours. One Core lasts about 18 hours in August. One Core lasts about 50 hours in November. Two Cores last about 37 hours in August. 2 Cores cover 98% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
+    "outlook.label",
     "outlook.once_every_years",
     "outlook.years_of_data",
     "outlook.since",

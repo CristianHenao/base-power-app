@@ -5,9 +5,14 @@ import { Check, Loader2, ScanLine, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   createScannedDevice,
+  HOME_DEVICE_CATEGORY_META,
   type DeviceScanResult,
   type HomeDevice,
 } from "@/lib/home/devices";
+import {
+  cropDeviceOutlinePng,
+  dataUrlToBase64,
+} from "@/lib/home/device-thumbnail";
 import { cn } from "@/lib/utils";
 
 type ScanPhase =
@@ -137,8 +142,42 @@ export function DeviceScanSheet({
         throw new Error(payload.error || "Scan failed.");
       }
 
+      const outlineDataUrl = await cropDeviceOutlinePng({
+        imageBase64: frame.imageBase64,
+        mediaType: frame.mediaType,
+        bbox: payload.device.bbox,
+      });
+
+      let device = createScannedDevice(
+        payload.device,
+        existingCount,
+        outlineDataUrl,
+      );
+
+      try {
+        const { imageBase64 } = dataUrlToBase64(outlineDataUrl);
+        const saveResponse = await fetch("/api/home/save-device-thumbnail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deviceId: device.id,
+            imageBase64,
+          }),
+        });
+        if (saveResponse.ok) {
+          const saved = (await saveResponse.json()) as {
+            thumbnailUrl?: string;
+          };
+          if (saved.thumbnailUrl) {
+            device = { ...device, thumbnailUrl: saved.thumbnailUrl };
+          }
+        }
+      } catch {
+        // Keep data-URL thumbnail if disk save fails (e.g. serverless).
+      }
+
       setScanMeta(payload.device);
-      setPendingDevice(createScannedDevice(payload.device, existingCount));
+      setPendingDevice(device);
       setPhase("locked");
     } catch (error) {
       setPhase("error");
@@ -235,26 +274,48 @@ export function DeviceScanSheet({
 
             {phase === "locked" && pendingDevice ? (
               <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-black/70 px-3 py-2.5 backdrop-blur-md">
-                <p className="flex items-center gap-1.5 text-xs font-medium text-amber-300">
-                  <Check className="size-3.5" aria-hidden />
-                  Identified · {Math.round(pendingDevice.confidence * 100)}%
-                  confidence
-                </p>
-                <p className="mt-0.5 text-sm font-semibold text-white">
-                  {pendingDevice.name}
-                </p>
-                <p className="text-[11px] text-white/70">
-                  {[pendingDevice.brand, pendingDevice.model]
-                    .filter(Boolean)
-                    .join(" · ") || null}
-                  {pendingDevice.watts > 0
-                    ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}${pendingDevice.watts} W estimate`
-                    : pendingDevice.kind === "panel"
-                      ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}Service panel`
-                      : pendingDevice.kind === "battery"
-                        ? `${pendingDevice.brand || pendingDevice.model ? " · " : ""}Backup storage`
+                <div className="flex items-start gap-3">
+                  {pendingDevice.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pendingDevice.thumbnailUrl}
+                      alt=""
+                      className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-white/25"
+                    />
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-amber-300">
+                      <Check className="size-3.5" aria-hidden />
+                      Outline saved ·{" "}
+                      {Math.round(pendingDevice.confidence * 100)}% confidence
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-white">
+                      {pendingDevice.name}
+                    </p>
+                    <p className="text-[11px] text-white/70">
+                      {HOME_DEVICE_CATEGORY_META[pendingDevice.category].label}
+                      {pendingDevice.brand
+                        ? ` · ${pendingDevice.brand}`
                         : null}
-                </p>
+                      {pendingDevice.watts > 0
+                        ? ` · ${pendingDevice.watts} W estimate`
+                        : null}
+                    </p>
+                    {pendingDevice.isMedical ||
+                    pendingDevice.needsRefrigeration ? (
+                      <p className="mt-1 text-[11px] font-medium text-rose-200">
+                        {[
+                          pendingDevice.isMedical ? "Medical load" : null,
+                          pendingDevice.needsRefrigeration
+                            ? "Needs refrigeration"
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
@@ -322,7 +383,8 @@ export function DeviceScanSheet({
               ) : (
                 <>
                   <ScanLine className="size-4 shrink-0" aria-hidden />
-                  Point at a device or your panel, then identify
+                  Point at a device, panel, or medical / medication load, then
+                  identify
                 </>
               )}
             </p>

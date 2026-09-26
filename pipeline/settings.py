@@ -25,7 +25,9 @@ GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
 TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
 INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
-PRICE_YEARS = tuple(range(2019, 2026))
+# Exported charts land where the web app serves static files.
+INSIGHTS_CHART_DIR = REPO_ROOT / "public" / "insights"
+PRICE_YEARS = tuple(range(2018, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
 RATES_START = "2018-01-01"

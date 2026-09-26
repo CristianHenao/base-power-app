@@ -140,7 +140,7 @@ def test_one_core_hours_written_as_two_cores_fail():
     bad = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
                               "Two Cores last about 15 hours in August. Base confirms sizing at install."}
     problems = validate(bad, build_facts(_report()))
-    assert problems == ['out of context: 15 should read like "about 15 hours on one Core in August"']
+    assert problems == ['out of context: 15 should read like "about 15 hours on one Core in August", or cite the fact this number comes from']
 
 
 def test_hours_named_after_the_number_count_as_context():
@@ -164,7 +164,8 @@ def test_a_clause_naming_two_core_counts_fails():
                               "Base confirms sizing at install.",
            "fact_ids": GOOD["fact_ids"] + ["sizing.cores"]}
     assert validate(bad, build_facts(_report())) == [
-        'out of context: 15 should read like "about 15 hours on one Core in August"'
+        'out of context: 15 should read like "about 15 hours on one Core in August", '
+        'or cite the fact this number comes from'
     ]
 
 
@@ -172,4 +173,4 @@ def test_a_number_needs_its_fact_unit():
     facts = build_facts(_report())
     shaky = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
                                 "One Core lasts about 15% in August. Base confirms sizing at install."}
-    assert validate(shaky, facts) == ['out of context: 15 should read like "about 15 hours on one Core in August"']
+    assert validate(shaky, facts) == ['out of context: 15 should read like "about 15 hours on one Core in August", or cite the fact this number comes from']

@@ -1,4 +1,49 @@
-# Base Power
+# Porchlight
+
+**Will my lights stay on?** Type a Texas address and Porchlight answers from real public grid data:
+how often homes in your county lose power and for how long, what a Base Core would have done in the
+storms that actually hit, how many hours of backup you'd get in each month, and whether one Core or two
+fits. A second screen shows Base's sales team which utilities and counties are under the most stress.
+
+Built for the Base Power x AITX hackathon by Christian, Victor, Nolan and Alejandro.
+
+<!-- TODO: 60-second GIF of Sally's report -->
+
+## In 60 seconds
+
+- **Real outage history.** Every 15-minute county outage reading in Texas, 2018-2025 (ORNL EAGLE-I), turned into events with a duration band per home.
+- **Real storms, replayed.** Uri, Beryl, the 2023 ice storm and the 2024 derechos, run against a 39.2 kWh Core on ERCOT's measured household load for those exact days.
+- **An honest outlook.** 12-hour-plus outages per typical home, fit per county with empirical Bayes and backtested against simpler forecasts.
+- **A guarded narrator.** The LLM writes the summary but never calculates; a validator rejects any number it can't trace to a fact.
+- **Where a Core pays twice.** Utility and county stress map built from EIA-861, FEMA NRI, ACS and ERCOT prices.
+
+## Results
+
+<!-- TODO: fill from the pipeline before submitting -->
+
+| | |
+|---|---|
+| Outlook backtest | see `data/processed/backtest.json` and [MODEL_CARD.md](MODEL_CARD.md) |
+| Narrator eval pass rate | 96% first reply, 100% after one retry, 24 fixtures ([Narrator evals](#narrator-evals)) |
+| Report latency (p95) and load test | TODO (Victor) |
+| Persona numbers hand-checked against raw data | [docs/persona-check.md](docs/persona-check.md) |
+
+## Data
+
+`make data` downloads every public source and rebuilds everything derived. Sources, licenses, as-of
+dates and known limits are in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). Outage data is county-level, so the
+app says "homes in your county", never "your home". Every number on screen is labeled an estimate.
+
+## What we'd do in week two
+
+<!-- TODO: from docs/NEXT.md -->
+- A Smart Meter Texas upload so the home's own 15-minute usage replaces the profile.
+- The sales map's fleet overlay and storm replay; detailed flood outlines and wildfire.
+- Utility-level outage feeds to replace the county-level EAGLE-I archive.
+
+---
+
+## Running the web app
 
 Progressive web app with two experiences:
 
@@ -116,16 +161,31 @@ rate must say it is for 12-hour-plus outages. Banned phrases, a reading grade of
 length caps are also checked. A failing reply gets one retry with the reasons, then a deterministic
 template. Details are in [MODEL_CARD.md](MODEL_CARD.md).
 
-24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 2.2 s per report.
+24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 2.6 s per report.
+Latest recorded run:
 
 | Source | Cases | Passed | Pass rate |
 |---|---|---|---|
-| Grok, first reply | 24 | 23 | 96% |
+| Grok, first reply | 24 | 24 | 100% |
 | Grok, after one retry | 24 | 24 | 100% |
 | Template fallback | 24 | 24 | 100% |
+
+Across runs the first reply has passed 92-100% and the retried reply 96-100%. Whatever fails
+both tries falls back to the template, so the page never shows unvalidated text.
 
 ```
 echo "XAI_API_KEY=..." > .env     # gitignored
 python -m evals.record            # records evals/recorded/<model>/ and <model>+retry/
 python -m evals.score             # writes evals/results.md
 ```
+
+## Insights
+
+Exported by `python -m pipeline.charts` into `public/insights/`. The numbers behind them are in
+`data/processed/backtest.json`, `insights.json` and `data/features.duckdb`.
+
+![Outlook backtest](public/insights/backtest.svg)
+
+![Same Core, different month](public/insights/backup_by_month.svg)
+
+![Tail share](public/insights/tail_share.svg)

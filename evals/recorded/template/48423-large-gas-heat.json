@@ -1,6 +1,6 @@
 {
   "headline": "High outlook for long outages in Smith County",
-  "summary": "Homes in Smith County lose power for 12 hours or more about once every 3 years. That comes from 8 years of records since 2018. The largest outage here began on June 2, 2024. At its peak, 56% of homes in the county were dark. For a home with gas heat and a larger footprint, one Core lasts about 13 hours in August and about 29 hours in February. We suggest two Cores. That would have covered 81% of past long outage hours. Base confirms sizing at install.",
+  "summary": "Homes in Smith County lose power for 12 hours or more about once every 4 years. That comes from 8 years of records since 2018. The largest outage here began on June 2, 2024. At its peak, 56% of homes in the county were dark. For a home with gas heat and a larger footprint, one Core lasts about 13 hours in August and about 29 hours in February. We suggest two Cores. That would have covered 81% of past long outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "home.label",

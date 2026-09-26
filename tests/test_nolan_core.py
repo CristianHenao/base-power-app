@@ -86,3 +86,21 @@ def test_county_outlook_shapes_and_levels():
     out = county_outlook(events, years, zone)
     assert set(out.index) == set(fips)
     assert out["level"].between(1, 5).all()
+
+
+def test_customers_floor_never_below_the_peak_out():
+    from pipeline.events import customers_floor
+
+    assert customers_floor(44.0, pd.Series([10.0, 2358.0])) == 2358.0
+    assert customers_floor(1000.0, pd.Series([10.0, 20.0])) == 1000.0
+
+
+def test_long_share_is_capped_at_the_event_peak_share():
+    from pipeline.events import extract_events
+
+    idx = pd.date_range("2024-07-08", periods=200, freq="15min", tz="UTC")
+    # A jittery curve: 100 homes out for ~50 h, with 20 blinking every step.
+    values = np.where(np.arange(200) % 2 == 0, 100.0, 80.0)
+    events = extract_events(pd.Series(values, index=idx), customers_total=100.0)
+    assert len(events) == 1
+    assert events[0]["share_12h_lifo"] <= events[0]["peak_out"] / 100.0 + 1e-12

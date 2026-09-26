@@ -4,7 +4,7 @@ import pytest
 
 from api.app.sim.backup import KWH_PER_CORE
 from pipeline.grid_value import ROUND_TRIP, daily_arbitrage, zone_year_value
-from pipeline.sources.ercot_prices import load_zone_prices
+from pipeline.sources.ercot_prices import load_zone_prices, zone_and_hub_prices
 
 
 def test_cheap_then_expensive_day_fills_once_and_empties():
@@ -50,3 +50,24 @@ def test_zone_year_value_counts_scarcity_intervals():
     assert row["year"] == 2024 and row["days"] == 1
     assert row["scarcity_intervals"] == 2
     assert row["arbitrage_usd_upper_bound"] > 0
+
+
+def _raw(types: list[str], locations: list[str]) -> pd.DataFrame:
+    return pd.DataFrame({
+        "Interval Start": pd.to_datetime(["2025-01-01 00:00"] * len(types)).tz_localize("US/Central"),
+        "Location": locations,
+        "Location Type": types,
+        "SPP": [17.9 + i for i in range(len(types))],
+    })
+
+
+def test_energy_weighted_load_zones_are_dropped():
+    raw = _raw(["Load Zone", "Load Zone Energy Weighted", "Trading Hub"], ["LZ_NORTH", "LZ_NORTH", "HB_NORTH"])
+    out = zone_and_hub_prices(raw)
+    assert out[["location", "location_type"]].values.tolist() == [["HB_NORTH", "hub"], ["LZ_NORTH", "load_zone"]]
+
+
+def test_two_prices_for_one_interval_fail_fast():
+    raw = _raw(["Load Zone", "Load Zone"], ["LZ_NORTH", "LZ_NORTH"])
+    with pytest.raises(ValueError, match="repeated interval-location"):
+        zone_and_hub_prices(raw)

@@ -18,14 +18,14 @@
   },
   "base_offer": null,
   "outlook": {
-    "level": 3,
-    "label": "Elevated",
-    "long_outages_per_year": 0.132,
+    "level": 2,
+    "label": "Moderate",
+    "long_outages_per_year": 0.091,
     "interval_90": [
-      0.019,
-      0.326
+      0.059,
+      0.128
     ],
-    "once_every_years": 7.6,
+    "once_every_years": 11.0,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -237,10 +237,9 @@
   "narrative": {
     "status": "ok",
     "headline": "Travis County Home Backup Report",
-    "summary": "Homes in Travis County face an elevated risk. A long outage of 12 hours or more happens about once every 8 years based on 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth faced about 74 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth faced about 106 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores last about 34 hours in August. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "summary": "Homes in Travis County face a long outage about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth faced about 74 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth faced about 106 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores last about 34 hours in August. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
-      "outlook.label",
       "outlook.once_every_years",
       "outlook.years_of_data",
       "outlook.since",
@@ -254,8 +253,7 @@
       "backup.long_month",
       "backup.short_month_two_cores",
       "sizing.share",
-      "threshold.hours",
-      "sizing.cores"
+      "threshold.hours"
     ],
     "url": null
   },

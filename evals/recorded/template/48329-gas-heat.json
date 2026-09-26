@@ -1,6 +1,6 @@
 {
-  "headline": "Low outlook for long outages in Midland County",
-  "summary": "Homes in Midland County lose power for 12 hours or more about once every 16 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 28% of homes in the county were dark. For a home with gas heat, one Core lasts about 20 hours in August and about 50 hours in November. We suggest two Cores. That would have covered 99% of past long outage hours. Base confirms sizing at install.",
+  "headline": "Moderate outlook for long outages in Midland County",
+  "summary": "Homes in Midland County lose power for 12 hours or more about once every 15 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 28% of homes in the county were dark. For a home with gas heat, one Core lasts about 20 hours in August and about 50 hours in November. We suggest two Cores. That would have covered 99% of past long outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "home.label",

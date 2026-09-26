@@ -1,16 +1,56 @@
 /** Shared types + helpers for Claude-powered home device scanning. */
 
-export type HomeDeviceKind = "appliance" | "panel" | "battery" | "unknown";
+export type HomeDeviceKind = "appliance" | "panel" | "battery" | "medical" | "unknown";
+
+/** Where the load typically lives in the home. */
+export type HomeDeviceCategory =
+  | "kitchen"
+  | "living_room"
+  | "bedroom"
+  | "bathroom"
+  | "garage"
+  | "laundry"
+  | "office"
+  | "outdoor"
+  | "panel"
+  | "medical"
+  | "other";
+
+export const HOME_DEVICE_CATEGORY_META: Record<
+  HomeDeviceCategory,
+  { label: string; sortOrder: number }
+> = {
+  medical: { label: "Medical & medication", sortOrder: 0 },
+  panel: { label: "Panel", sortOrder: 1 },
+  kitchen: { label: "Kitchen", sortOrder: 2 },
+  living_room: { label: "Living room", sortOrder: 3 },
+  bedroom: { label: "Bedroom", sortOrder: 4 },
+  bathroom: { label: "Bathroom", sortOrder: 5 },
+  laundry: { label: "Laundry", sortOrder: 6 },
+  garage: { label: "Garage", sortOrder: 7 },
+  office: { label: "Office", sortOrder: 8 },
+  outdoor: { label: "Outdoor", sortOrder: 9 },
+  other: { label: "Other", sortOrder: 10 },
+};
+
+export const HOME_DEVICE_CATEGORIES = Object.keys(
+  HOME_DEVICE_CATEGORY_META,
+) as HomeDeviceCategory[];
 
 export type DeviceScanResult = {
   name: string;
   kind: HomeDeviceKind;
+  category: HomeDeviceCategory;
   brand: string | null;
   model: string | null;
   /** Continuous draw estimate in watts; null when unknown / not applicable */
   watts: number | null;
   confidence: number;
   notes: string | null;
+  /** True for CPAP, oxygen, dialysis, powered medical equipment, etc. */
+  isMedical: boolean;
+  /** True when the load must stay powered to keep medication cold */
+  needsRefrigeration: boolean;
   /** Normalized bbox relative to image: [x, y, width, height] in 0–1 */
   bbox: [number, number, number, number] | null;
 };
@@ -19,18 +59,28 @@ export type HomeDevice = {
   id: string;
   name: string;
   kind: HomeDeviceKind;
+  category: HomeDeviceCategory;
   brand: string | null;
   model: string | null;
   /** Continuous draw estimate; 0 for panel / storage when unknown */
   watts: number;
   confidence: number;
   notes: string | null;
+  isMedical: boolean;
+  needsRefrigeration: boolean;
+  /** Cropped device outline PNG — data URL or /home/scans/*.png */
+  thumbnailUrl: string | null;
   scannedAt: string;
   source: "scan" | "manual";
 };
 
 /** Typical continuous-draw estimates (labeled as estimates in UI). */
 const WATT_LOOKUP: Array<{ match: RegExp; watts: number }> = [
+  { match: /insulin|medication\s*fridge|pharmacy\s*fridge|mini\s*fridge/i, watts: 60 },
+  { match: /cpap|bipap|ventilator/i, watts: 90 },
+  { match: /oxygen\s*concentrator/i, watts: 350 },
+  { match: /nebulizer/i, watts: 50 },
+  { match: /dialysis/i, watts: 1500 },
   { match: /refrigerator|fridge/i, watts: 150 },
   { match: /freezer/i, watts: 100 },
   { match: /wifi|wi-?fi|router|modem/i, watts: 12 },
@@ -65,22 +115,61 @@ export function estimateWattsForDevice(
   return 100;
 }
 
+function parseCategory(raw: unknown): HomeDeviceCategory {
+  if (typeof raw !== "string") return "other";
+  return (HOME_DEVICE_CATEGORIES as string[]).includes(raw)
+    ? (raw as HomeDeviceCategory)
+    : "other";
+}
+
 export function createScannedDevice(
   result: DeviceScanResult,
   index = 0,
+  thumbnailUrl: string | null = null,
 ): HomeDevice {
+  const isMedical = result.isMedical || result.kind === "medical";
+  const category =
+    result.category === "other" && isMedical ? "medical" : result.category;
+
   return {
     id: `device-${Date.now()}-${index}`,
     name: result.name,
-    kind: result.kind,
+    kind: isMedical && result.kind === "appliance" ? "medical" : result.kind,
+    category,
     brand: result.brand,
     model: result.model,
     watts: estimateWattsForDevice(result.name, result.kind, result.watts),
     confidence: result.confidence,
     notes: result.notes,
+    isMedical,
+    needsRefrigeration: result.needsRefrigeration,
+    thumbnailUrl,
     scannedAt: new Date().toISOString(),
     source: "scan",
   };
+}
+
+export function groupDevicesByCategory(
+  devices: HomeDevice[],
+): Array<{ category: HomeDeviceCategory; label: string; devices: HomeDevice[] }> {
+  const buckets = new Map<HomeDeviceCategory, HomeDevice[]>();
+  for (const device of devices) {
+    const list = buckets.get(device.category) ?? [];
+    list.push(device);
+    buckets.set(device.category, list);
+  }
+
+  return [...buckets.entries()]
+    .map(([category, items]) => ({
+      category,
+      label: HOME_DEVICE_CATEGORY_META[category].label,
+      devices: items,
+    }))
+    .sort(
+      (a, b) =>
+        HOME_DEVICE_CATEGORY_META[a.category].sortOrder -
+        HOME_DEVICE_CATEGORY_META[b.category].sortOrder,
+    );
 }
 
 export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
@@ -95,6 +184,7 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
     kindRaw === "appliance" ||
     kindRaw === "panel" ||
     kindRaw === "battery" ||
+    kindRaw === "medical" ||
     kindRaw === "unknown"
       ? kindRaw
       : "unknown";
@@ -125,6 +215,13 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
       ? obj.notes.trim()
       : null;
 
+  const isMedical = Boolean(obj.isMedical) || kind === "medical";
+  const needsRefrigeration = Boolean(obj.needsRefrigeration);
+
+  let category = parseCategory(obj.category);
+  if (kind === "panel") category = "panel";
+  if (isMedical && (category === "other" || !obj.category)) category = "medical";
+
   let bbox: DeviceScanResult["bbox"] = null;
   if (Array.isArray(obj.bbox) && obj.bbox.length === 4) {
     const nums = obj.bbox.map((n) =>
@@ -135,5 +232,17 @@ export function parseDeviceScanResult(raw: unknown): DeviceScanResult | null {
     }
   }
 
-  return { name, kind, brand, model, watts, confidence, notes, bbox };
+  return {
+    name,
+    kind,
+    category,
+    brand,
+    model,
+    watts,
+    confidence,
+    notes,
+    isMedical,
+    needsRefrigeration,
+    bbox,
+  };
 }
