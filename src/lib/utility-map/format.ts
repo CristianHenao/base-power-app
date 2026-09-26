@@ -82,7 +82,8 @@ export type PaintContext =
   | { kind: "hazard"; label: string }
   | { kind: "bivariate"; first: string; second: string }
   | { kind: "overlap"; of: number }
-  | { kind: "storm"; name: string };
+  | { kind: "storm"; name: string }
+  | { kind: "plain"; label: string };
 
 const RISK_LABELS = ["Low", "Moderate", "Elevated", "High", "Very high"];
 const FLEET_BINS_TEXT = ["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"];
@@ -91,6 +92,7 @@ const FIFTHS = ["lowest fifth", "2nd fifth", "middle fifth", "4th fifth", "top f
 const THIRDS = ["bottom third", "middle third", "top third"];
 
 export function paintLabel(context: PaintContext, level: number | null): string {
+  if (context.kind === "plain") return context.label;
   if (level == null) return "No data";
   switch (context.kind) {
     case "risk":
