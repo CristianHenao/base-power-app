@@ -11,7 +11,7 @@ Built with **Next.js**, **shadcn/ui**, **Mapbox GL**, and **Three.js**.
 
 ```bash
 cp .env.example .env.local
-# add your Mapbox token to .env.local
+# add NEXT_MAPBOX_ACCESS_TOKEN to .env.local
 
 npm install
 npm run dev

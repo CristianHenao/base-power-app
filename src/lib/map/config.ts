@@ -8,6 +8,7 @@ export const MAP_DEFAULTS = {
   antialias: true,
 } as const;
 
+/** Server-only Mapbox token. Do not call from client components. */
 export function getMapboxToken(): string | undefined {
-  return process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  return process.env.NEXT_MAPBOX_ACCESS_TOKEN;
 }
