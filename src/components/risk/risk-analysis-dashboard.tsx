@@ -45,8 +45,6 @@ export function RiskAnalysisDashboard() {
   const [showBasePower, setShowBasePower] = useState(false);
   /** Full-width appliance breakdown — only from “View battery capacity” */
   const [batteryCapacityOpen, setBatteryCapacityOpen] = useState(false);
-  /** Close-in Base Power camera until the user picks another outage card */
-  const [preferBatteryCamera, setPreferBatteryCamera] = useState(false);
   const address = draft.address;
   const addressKey = useMemo(
     () =>
@@ -151,7 +149,6 @@ export function RiskAnalysisDashboard() {
     setActiveAnalysisId(null);
     setShowBasePower(false);
     setBatteryCapacityOpen(false);
-    setPreferBatteryCamera(false);
   }
 
   function handlePrimaryTabChange(id: RiskPrimaryTabId) {
@@ -160,35 +157,27 @@ export function RiskAnalysisDashboard() {
       setActiveAnalysisId(null);
       setShowBasePower(false);
       setBatteryCapacityOpen(false);
-      setPreferBatteryCamera(false);
     }
   }
 
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
-    // Leaving the close-in Base Power view so the outage radius is visible
-    setPreferBatteryCamera(false);
     setBatteryCapacityOpen(false);
   }
 
   function handleBasePowerChange(checked: boolean) {
     setShowBasePower(checked);
-    if (!checked) {
-      setBatteryCapacityOpen(false);
-      setPreferBatteryCamera(false);
-    }
+    if (!checked) setBatteryCapacityOpen(false);
   }
 
   function handleViewBatteryCapacity(index: number) {
     setOutageIndex(index);
     setShowBasePower(true);
     setBatteryCapacityOpen(true);
-    setPreferBatteryCamera(true);
   }
 
   function handleExitBatteryCapacity() {
     setBatteryCapacityOpen(false);
-    setPreferBatteryCamera(false);
   }
 
   const activeOutage =
@@ -200,8 +189,8 @@ export function RiskAnalysisDashboard() {
     showWeatherAnalysis && activeOutage?.impactedHome,
   );
   const revealBattery = outageBlackout && showBasePower;
-  const useBatteryCamera =
-    showWeatherAnalysis && showBasePower && preferBatteryCamera;
+  /** Capacity focus: pull back to neighborhood (not house-close) */
+  const useCapacityCamera = showWeatherAnalysis && batteryCapacityOpen;
 
   const marker = useMemo<MapMarker | null>(() => {
     if (!center) return null;
@@ -248,29 +237,29 @@ export function RiskAnalysisDashboard() {
     center,
   ]);
 
-  /** Fit perimeter + home on card change; close-in only right after Base Power on */
+  /** Fit perimeter + home on card change; neighborhood camera in capacity focus */
   const cameraBounds = useMemo(() => {
-    if (useBatteryCamera) return null;
+    if (useCapacityCamera) return null;
     if (!showWeatherAnalysis || !outagePerimeterOverlay?.area.features.length) {
       return null;
     }
     return boundsForOutagePerimeter(outagePerimeterOverlay.area, center);
-  }, [useBatteryCamera, showWeatherAnalysis, outagePerimeterOverlay, center]);
+  }, [useCapacityCamera, showWeatherAnalysis, outagePerimeterOverlay, center]);
 
-  const mapZoom = useBatteryCamera
+  const mapZoom = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealZoom
     : showWeatherAnalysis
-      ? 15.85
+      ? MAP_DEFAULTS.outageHomeZoom
       : MAP_DEFAULTS.homeZoom;
-  const mapPitch = useBatteryCamera
+  const mapPitch = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealPitch
     : showWeatherAnalysis
-      ? 58
+      ? 62
       : MAP_DEFAULTS.pitch;
-  const mapBearing = useBatteryCamera
+  const mapBearing = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealBearing
     : showWeatherAnalysis
-      ? -14
+      ? -18
       : MAP_DEFAULTS.bearing;
   const basemap = outageBlackout
     ? MAP_DEFAULTS.outageBasemap
