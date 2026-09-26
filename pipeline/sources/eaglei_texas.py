@@ -8,6 +8,7 @@ Run: python -m pipeline.sources.eaglei_texas
 """
 from __future__ import annotations
 
+import csv
 import re
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ from pathlib import Path
 import duckdb
 
 from pipeline import settings
+from pipeline.sources.eaglei import CUSTOMERS_OUT_ALIASES
 
 TX_CSV_DIR = settings.REPO_ROOT / "data" / "raw" / "eaglei_tx"
 TX_PARQUET = settings.REPO_ROOT / "data" / "processed" / "eaglei_tx.parquet"
@@ -33,20 +35,31 @@ def yearly_files(raw_dir: Path, start_year: int) -> list[tuple[int, Path]]:
     return sorted(found)
 
 
+def count_column(path: Path) -> str:
+    """The customers-out column of one yearly CSV. 2023 names it "sum"."""
+    with path.open(newline="") as handle:
+        header = next(csv.reader(handle), [])
+    for name in (settings.EAGLEI_CUSTOMERS_OUT_COL, *CUSTOMERS_OUT_ALIASES):
+        if name in header:
+            return name
+    raise ValueError(f"{path.name} has no customers-out column; header is {header}")
+
+
 def _texas_select(path: Path) -> str:
     # FIPS arrives as text or as a float like 48085.0; normalize before filtering.
     fips = (
         f"lpad(regexp_replace(trim(CAST({settings.EAGLEI_FIPS_COL} AS VARCHAR)), "
         r"'\.0$', ''), 5, '0')"
     )
+    count = count_column(path)
     return f"""
         SELECT {fips} AS county_fips,
                county,
-               CAST({settings.EAGLEI_CUSTOMERS_OUT_COL} AS DOUBLE) AS customers_out,
+               CAST("{count}" AS DOUBLE) AS customers_out,
                CAST({settings.EAGLEI_TIMESTAMP_COL} AS TIMESTAMP) AS run_start_time
         FROM read_csv('{path}', header = true, all_varchar = true)
         WHERE {fips} LIKE '48%'
-          AND {settings.EAGLEI_CUSTOMERS_OUT_COL} IS NOT NULL
+          AND "{count}" IS NOT NULL
     """
 
 
