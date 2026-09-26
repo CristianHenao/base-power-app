@@ -52,9 +52,11 @@ LAYERS: list[dict] = [
                "divided by modeled customers and years reporting.",
      "table": "county_outages.parquet"},
     {"id": "flood", "group": "hazard", "label": "Flood",
-     "unit": "FEMA NRI flood risk score, 0-100 (larger of inland and coastal)",
-     "period_start": None, "period_end": "2025-12-01", "source_ids": ["fema_nri"],
-     "method": "FEMA National Risk Index December 2025 release; national percentile scores."},
+     "unit": "flood, flash-flood and coastal-flood event-days per year (NOAA, 2000-2025)",
+     "period_start": "2000-01-01", "period_end": "2025-12-31", "source_ids": ["noaa_storm_events", "fema_nri", "fema_nfhl"],
+     "method": "Rank = mean of the Texas ranks of NOAA flood event-days per year and FEMA NRI's flood risk score "
+               "(larger of inland and coastal). Demo counties also show FEMA flood-zone maps and the share of land "
+               "in the 1% annual-chance floodplain."},
     {"id": "tornado", "group": "hazard", "label": "Tornadoes", "pending": "NOAA SPC tornado tracks (UM-4.1)"},
     {"id": "severe_storm", "group": "hazard", "label": "Hail and wind", "pending": "NOAA SPC hail and wind reports (UM-4.2)"},
     {"id": "hurricane", "group": "hazard", "label": "Hurricanes", "pending": "NHC HURDAT2 tracks (UM-4.3)"},
@@ -88,6 +90,8 @@ SOURCES = [
     {"id": "acs_5yr", "name": "Census ACS 5-year 2020-2024, table B25032", "url": "https://api.census.gov/data/2024/acs/acs5/groups/B25032.html"},
     {"id": "eia861", "name": "EIA-861 2024 utility service territories and customers", "url": "https://www.eia.gov/electricity/data/eia861/"},
     {"id": "base_offers", "name": "Base Power pricing and offer pages", "url": "https://www.basepowercompany.com/pricing"},
+    {"id": "noaa_storm_events", "name": "NOAA NCEI Storm Events Database", "url": "https://www.ncei.noaa.gov/stormevents/"},
+    {"id": "fema_nfhl", "name": "FEMA National Flood Hazard Layer (effective flood maps)", "url": "https://www.fema.gov/flood-maps/national-flood-hazard-layer"},
     {"id": "ercot_load", "name": "ERCOT hourly native load by weather zone", "url": "https://www.ercot.com/gridinfo/load/load_hist"},
     {"id": "base_specs", "name": "Base Power Core specifications", "url": "https://www.basepowercompany.com/specs/core"},
 ]
@@ -159,21 +163,28 @@ def upgrade(
     v1: dict,
     crosswalk: pd.DataFrame,
     offers: dict[int, str],
-    tables: dict[str, pd.Series] | None = None,
+    tables: dict[str, pd.Series | pd.DataFrame] | None = None,
     utility_grid: pd.DataFrame | None = None,
     county_fields: dict[str, pd.Series] | None = None,
 ) -> dict:
     """Turn the phase-0 contract into the PRD v3 shape. Pure: no files touched.
 
-    tables maps a layer id to a county value Series (index = FIPS) from a normalizer;
-    those layers become available and are ranked across Texas here.
+    tables maps a layer id to county values (index = FIPS) from a normalizer: a Series,
+    ranked across Texas here, or a DataFrame with "value" and its own combined "rank".
     """
-    tables = tables or {}
     county_fields = county_fields or {}
     fips_index = [c["fips"] for c in v1["counties"]]
-    extra_ranks = {
-        layer: percentile_ranks(series.reindex(fips_index).astype(float)) for layer, series in tables.items()
-    }
+    values_by_layer: dict[str, pd.Series] = {}
+    extra_ranks: dict[str, pd.Series] = {}
+    for layer, table in (tables or {}).items():
+        if isinstance(table, pd.DataFrame):
+            values_by_layer[layer] = table["value"]
+            extra_ranks[layer] = (table["rank"] if "rank" in table
+                                  else percentile_ranks(table["value"].reindex(fips_index).astype(float)))
+        else:
+            values_by_layer[layer] = table
+            extra_ranks[layer] = percentile_ranks(table.reindex(fips_index).astype(float))
+    tables = values_by_layer
     weights = county_weights(crosswalk)
     ranked = crosswalk.sort_values(["county_fips", "share"], ascending=[True, False])
     members = ranked.groupby("county_fips")["utility"].apply(list).to_dict()
@@ -299,8 +310,15 @@ def check(release: dict, expected_counties: int = TEXAS_COUNTIES) -> list[str]:
     return problems
 
 
+def _file_names(geometry: dict) -> list[str]:
+    names: list[str] = []
+    for value in geometry.values():
+        names += _file_names(value) if isinstance(value, dict) else [value]
+    return names
+
+
 def publish(release: dict, geometry_dir: Path, public_dir: Path, today: str,
-            expected_counties: int = TEXAS_COUNTIES) -> str:
+            expected_counties: int = TEXAS_COUNTIES, extra_files: dict[str, Path] | None = None) -> str:
     """Write releases/<id>/ and point current.json at it, only if every check passes."""
     problems = check(release, expected_counties)
     if problems:
@@ -311,8 +329,10 @@ def publish(release: dict, geometry_dir: Path, public_dir: Path, today: str,
     folder = public_dir / "releases" / rid
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "utility-map.json").write_text(json.dumps(release, separators=(",", ":"), allow_nan=False))
-    for name in release["geometry"].values():
-        shutil.copyfile(geometry_dir / name, folder / name)
+    for name in _file_names(release["geometry"]):
+        target = folder / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile((extra_files or {}).get(name, geometry_dir / name), target)
     pointer = {"release_id": rid, "path": f"releases/{rid}", "schema_version": SCHEMA_VERSION}
     (public_dir / "current.json").write_text(json.dumps(pointer, indent=2) + "\n")
     return rid
@@ -339,12 +359,27 @@ def main() -> int:
         ok = outages["quality"] == "ok"
         tables["outages"] = outages["long_hours_per_customer_year"].where(ok)
         county_fields["outage_coverage_12h"] = outages["coverage_12h"].where(ok)
+    flood_path = settings.UTILITY_MAP_DIR / "county_flood.parquet"
+    if flood_path.exists():
+        tables["flood"] = pd.read_parquet(flood_path).set_index("county_fips")[["value", "rank"]]
+    sfha_path = settings.UTILITY_MAP_DIR / "county_sfha.parquet"
+    extra_files: dict[str, Path] = {}
+    flood_files: dict[str, str] = {}
+    if sfha_path.exists():
+        sfha = pd.read_parquet(sfha_path).set_index("county_fips")["sfha_land_pct"]
+        county_fields["sfha_land_pct"] = sfha
+        for fips in sfha.index:
+            name = f"flood/{fips}.geojson"
+            flood_files[fips] = name
+            extra_files[name] = settings.UTILITY_MAP_DIR / name
     grid_path = settings.UTILITY_MAP_DIR / "utility_grid.parquet"
     utility_grid = pd.read_parquet(grid_path) if grid_path.exists() else None
     release = upgrade(v1, crosswalk, load_offers(), tables=tables, utility_grid=utility_grid,
                       county_fields=county_fields)
+    if flood_files:
+        release["geometry"]["flood"] = flood_files
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
-    rid = publish(release, V1_DIR, PUBLIC_DIR, today)
+    rid = publish(release, V1_DIR, PUBLIC_DIR, today, extra_files=extra_files)
     unverified = sum(u["base_offer"] is None for u in release["utilities"])
     print(f"published {rid}: {len(release['counties'])} counties, {len(release['utilities'])} utilities "
           f"({unverified} with an unverified Base offer)")

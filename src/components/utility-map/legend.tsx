@@ -1,5 +1,7 @@
 "use client";
 
+import { FLOOD_ZONE_COLORS } from "@/components/utility-map/map-layers";
+
 /** A five-step ramp with a label under each step, plus a title and optional note. */
 export function SequentialLegend({
   title,
@@ -24,6 +26,36 @@ export function SequentialLegend({
         ))}
       </ol>
       {note ? <p className="text-[11px] leading-tight text-muted-foreground">{note}</p> : null}
+    </div>
+  );
+}
+
+/** FEMA flood-zone swatches, matching the map's fills and floodway hatch. */
+export function FloodZoneLegend() {
+  const hatch = "repeating-linear-gradient(135deg, rgba(255,255,255,0.8) 0 2px, transparent 2px 6px)";
+  const rows = [
+    { label: "Floodway", color: FLOOD_ZONE_COLORS.floodway, pattern: hatch },
+    { label: "1% annual chance (100-year)", color: FLOOD_ZONE_COLORS["1pct"] },
+    { label: "0.2% annual chance (500-year)", color: FLOOD_ZONE_COLORS["0.2pct"] },
+  ];
+  return (
+    <div className="space-y-2">
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">FEMA flood zones (effective maps)</p>
+      <ul className="space-y-1">
+        {rows.map((row) => (
+          <li key={row.label} className="flex items-center gap-2 text-[12px] leading-[18px]">
+            <span
+              className="size-3.5 rounded-sm ring-1 ring-black/10"
+              style={{ backgroundColor: row.color, backgroundImage: row.pattern }}
+              aria-hidden
+            />
+            {row.label}
+          </li>
+        ))}
+      </ul>
+      <p className="text-[11px] leading-tight text-muted-foreground">
+        Mapped for Harris, Galveston, Travis, Collin and Nueces counties.
+      </p>
     </div>
   );
 }

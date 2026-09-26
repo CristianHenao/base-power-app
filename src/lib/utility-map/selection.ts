@@ -1,5 +1,5 @@
 import type { Level, ScoreModel } from "./scoring.ts";
-import type { CountyRecord, UtilityRecord } from "./types.ts";
+import type { CountyRecord, LayerId, UtilityRecord } from "./types.ts";
 
 /**
  * Selection rules for counties served by several utilities (250 of 254 in Texas).
@@ -71,4 +71,18 @@ export function tooltipPosition(
   const left = x + TOOLTIP_OFFSET + box.width > view.width ? x - TOOLTIP_OFFSET - box.width : x + TOOLTIP_OFFSET;
   const top = y + TOOLTIP_OFFSET + box.height > view.height ? y - TOOLTIP_OFFSET - box.height : y + TOOLTIP_OFFSET;
   return { left, top };
+}
+
+/** Demo counties with FEMA flood-zone files that belong on screen: the flood layer is on and
+ * the county is picked or inside the selected utility. Other counties load nothing. */
+export function floodCountiesInView(
+  floodFiles: Record<string, string> | undefined,
+  selectedUtility: UtilityRecord | null,
+  selectedFips: string | null,
+  activeLayers: LayerId[],
+): string[] {
+  if (!floodFiles || !activeLayers.includes("flood")) return [];
+  const inView = new Set<string>(selectedUtility?.counties ?? []);
+  if (selectedFips) inView.add(selectedFips);
+  return Object.keys(floodFiles).filter((fips) => inView.has(fips)).sort();
 }

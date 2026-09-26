@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { clickTarget, countyPaintState, pickerOptions, tooltipPosition } from "./selection.ts";
+import { clickTarget, countyPaintState, floodCountiesInView, pickerOptions, tooltipPosition } from "./selection.ts";
 import type { ScoreModel } from "./scoring.ts";
 import type { CountyRecord, UtilityRecord } from "./types.ts";
 
@@ -50,4 +50,13 @@ test("picker lists every serving utility with its estimated share, largest first
 test("tooltip sits below-right of the cursor and flips near the edges", () => {
   assert.deepEqual(tooltipPosition(100, 100, { width: 200, height: 60 }, { width: 1000, height: 800 }), { left: 112, top: 112 });
   assert.deepEqual(tooltipPosition(950, 780, { width: 200, height: 60 }, { width: 1000, height: 800 }), { left: 738, top: 708 });
+});
+
+test("flood zones load only for mapped counties in view, and only with the flood layer on", () => {
+  const flood = { "48001": "flood/48001.geojson", "48999": "flood/48999.geojson" };
+  assert.deepEqual(floodCountiesInView(flood, beta, null, ["flood"]), ["48001"]);
+  assert.deepEqual(floodCountiesInView(flood, beta, "48001", ["flood"]), ["48001"]);
+  assert.deepEqual(floodCountiesInView(flood, null, null, ["flood"]), []);
+  assert.deepEqual(floodCountiesInView(flood, beta, null, ["outages"]), []);
+  assert.deepEqual(floodCountiesInView(undefined, beta, null, ["flood"]), []);
 });

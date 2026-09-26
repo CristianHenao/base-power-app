@@ -8,6 +8,15 @@ const LAYER_COUNTY_LINE = "um-county-line";
 const LAYER_TERRITORY_LINE = "um-territory-line";
 const LAYER_WARNING_LINE = "um-warning-line";
 const LAYER_PICKED_LINE = "um-picked-line";
+const SOURCE_FLOOD = "um-flood";
+const LAYER_FLOOD_FILL = "um-flood-fill";
+const LAYER_FLOODWAY = "um-floodway";
+const LAYER_FLOODWAY_HATCH = "um-floodway-hatch";
+const LAYER_FLOOD_COAST = "um-flood-coast";
+const HATCH = "um-hatch";
+
+/** FEMA flood-zone colors (PRD v3 §12.3): the flood hue, light for 0.2%, full for 1%, dark floodway. */
+export const FLOOD_ZONE_COLORS = { "0.2pct": "#9ecae1", "1pct": "#2166ac", floodway: "#08306b" } as const;
 
 /** Fill color by the county's 1-5 level, from a five-step ramp (light to dark). */
 function levelColor(colors: readonly string[]): ExpressionSpecification {
@@ -122,6 +131,86 @@ export function addUtilityMapLayers(
       "line-width": ["case", ["boolean", ["feature-state", "picked"], false], 3.5, 0],
     },
   });
+}
+
+/** A small diagonal-line tile for the floodway hatch. */
+function addHatch(map: Map) {
+  if (map.hasImage(HATCH)) return;
+  const size = 8;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if ((x + y) % size < 2) {
+        const i = (y * size + x) * 4;
+        data.set([255, 255, 255, 200], i);
+      }
+    }
+  }
+  map.addImage(HATCH, { width: size, height: size, data });
+}
+
+/** Draw FEMA flood zones for the given counties (merged into one source). Empty hides them. */
+export function setFloodZones(map: Map, collections: GeoJSON.FeatureCollection[]) {
+  const data: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: collections.flatMap((c) => c.features),
+  };
+  const source = map.getSource(SOURCE_FLOOD) as GeoJSONSource | undefined;
+  if (source) {
+    source.setData(data);
+    return;
+  }
+  if (!map.getLayer(LAYER_TERRITORY_LINE)) return;
+  addHatch(map);
+  map.addSource(SOURCE_FLOOD, { type: "geojson", data });
+  const before = LAYER_TERRITORY_LINE;
+  map.addLayer(
+    {
+      id: LAYER_FLOOD_FILL,
+      type: "fill",
+      source: SOURCE_FLOOD,
+      slot: "middle",
+      filter: ["!=", ["get", "class"], "floodway"],
+      paint: {
+        "fill-color": ["match", ["get", "class"], "1pct", FLOOD_ZONE_COLORS["1pct"], FLOOD_ZONE_COLORS["0.2pct"]],
+        "fill-opacity": ["match", ["get", "class"], "1pct", 0.55, 0.45],
+      },
+    },
+    before,
+  );
+  map.addLayer(
+    {
+      id: LAYER_FLOODWAY,
+      type: "fill",
+      source: SOURCE_FLOOD,
+      slot: "middle",
+      filter: ["==", ["get", "class"], "floodway"],
+      paint: { "fill-color": FLOOD_ZONE_COLORS.floodway, "fill-opacity": 0.8 },
+    },
+    before,
+  );
+  map.addLayer(
+    {
+      id: LAYER_FLOODWAY_HATCH,
+      type: "fill",
+      source: SOURCE_FLOOD,
+      slot: "middle",
+      filter: ["==", ["get", "class"], "floodway"],
+      paint: { "fill-pattern": HATCH },
+    },
+    before,
+  );
+  map.addLayer(
+    {
+      id: LAYER_FLOOD_COAST,
+      type: "line",
+      source: SOURCE_FLOOD,
+      slot: "middle",
+      filter: ["==", ["get", "coastal"], true],
+      paint: { "line-color": FLOOD_ZONE_COLORS.floodway, "line-width": 1 },
+    },
+    before,
+  );
 }
 
 export function setWarningsVisible(map: Map, visible: boolean) {

@@ -14,6 +14,7 @@ import {
   paintCounty,
   paintTerritory,
   setFillRamp,
+  setFloodZones,
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
@@ -23,7 +24,7 @@ import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-
 import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
-import { clickTarget, countyPaintState, tooltipPosition } from "@/lib/utility-map/selection";
+import { clickTarget, countyPaintState, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
 import type { LayerId, Preset } from "@/lib/utility-map/types";
 
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
@@ -85,6 +86,7 @@ export function UtilityMapExperience() {
   const [showWarnings, setShowWarnings] = useState(false);
   const [mode, setMode] = useState<ModeId>("risk");
   const [fleetShare, setFleetShare] = useState<FleetShare>(0.01);
+  const [floodCache, setFloodCache] = useState<Record<string, GeoJSON.FeatureCollection>>({});
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -303,6 +305,41 @@ export function UtilityMapExperience() {
     }
   }, [map, loaded, fleetModel, mode, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
 
+  // FEMA flood zones for demo counties in view; fetched once each, drawn only with the flood layer on.
+  const floodInView = useMemo(
+    () => floodCountiesInView(data?.geometry.flood, selectedUtility, selectedFips, activeLayers),
+    [data, selectedUtility, selectedFips, activeLayers],
+  );
+  useEffect(() => {
+    if (!loaded) return;
+    const missing = floodInView.filter((fips) => !floodCache[fips]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      missing.map((fips) =>
+        fetch(`${loaded.base}/${loaded.data.geometry.flood?.[fips]}`).then((r) =>
+          r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null,
+        ),
+      ),
+    ).then((files) => {
+      if (cancelled) return;
+      setFloodCache((prev) => {
+        const next = { ...prev };
+        missing.forEach((fips, i) => {
+          if (files[i]) next[fips] = files[i];
+        });
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, floodInView, floodCache]);
+  useEffect(() => {
+    if (!map || !loaded) return;
+    setFloodZones(map, floodInView.map((fips) => floodCache[fips]).filter(Boolean));
+  }, [map, loaded, floodInView, floodCache]);
+
   useEffect(() => {
     if (map) setWarningsVisible(map, showWarnings);
   }, [map, showWarnings, loaded]);
@@ -362,6 +399,7 @@ export function UtilityMapExperience() {
               mode={mode}
               onMode={onMode}
               fleetShare={fleetShare}
+              floodCounties={floodInView.filter((fips) => floodCache[fips])}
               sources={data.sources}
               layers={data.layers}
               presets={data.presets}

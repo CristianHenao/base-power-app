@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
-import { SequentialLegend } from "@/components/utility-map/legend";
+import { FloodZoneLegend, SequentialLegend } from "@/components/utility-map/legend";
 import { ModeSwitch } from "@/components/utility-map/mode-switch";
 import { FLEET_COLORS } from "@/lib/utility-map/fleet";
 import { MODES, lensCoverage, type ModeId } from "@/lib/utility-map/controls";
@@ -27,6 +27,7 @@ const LIVE_MODES: ModeId[] = ["risk", "fleet"];
 type ControlsPanelProps = {
   mode: ModeId;
   fleetShare: number;
+  floodCounties: string[];
   layers: MapLayerMeta[];
   presets: Preset[];
   sources: SourceRef[];
@@ -43,6 +44,7 @@ type ControlsPanelProps = {
 export function ControlsPanel({
   mode,
   fleetShare,
+  floodCounties,
   layers,
   presets,
   sources,
@@ -152,6 +154,7 @@ export function ControlsPanel({
       ) : (
         <ScoreLegend />
       )}
+      {floodCounties.length > 0 ? <FloodZoneLegend /> : null}
     </section>
   );
 }

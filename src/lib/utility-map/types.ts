@@ -60,6 +60,8 @@ export type CountyRecord = {
   quality: Record<LayerId, Quality>;
   /** Share of long-outage dark hours a Core's ~12 h of backup would cover (EAGLE-I estimate). */
   outage_coverage_12h?: number | null;
+  /** Percent of land in FEMA's 1% annual-chance floodplain (demo counties only). */
+  sfha_land_pct?: number | null;
 };
 
 /** A utility's estimated customers in one county (EIA-861 membership, modeled split). */
@@ -120,5 +122,6 @@ export type UtilityMapData = {
   };
   counties: CountyRecord[];
   utilities: UtilityRecord[];
-  geometry: { counties: string; territories: string };
+  /** Release files; flood maps FIPS → FEMA flood-zone GeoJSON for the demo counties. */
+  geometry: { counties: string; territories: string; flood?: Record<string, string> };
 };

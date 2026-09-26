@@ -206,3 +206,24 @@ def test_a_table_replaces_a_phase0_layer_and_county_fields_are_attached() -> Non
     assert by_fips["48003"]["outage_coverage_12h"] is None
     layers = {layer["id"]: layer for layer in release["layers"]}
     assert "12 hours or more" in layers["outages"]["unit"]
+
+
+def test_a_table_can_bring_its_own_combined_rank() -> None:
+    table = pd.DataFrame({"value": [2.0, 0.0], "rank": [0.75, 0.25]}, index=["48001", "48003"])
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS, tables={"flood": table})
+    by_fips = {c["fips"]: c for c in release["counties"]}
+    assert by_fips["48001"]["values"]["flood"] == 2.0
+    assert by_fips["48001"]["ranks"]["flood"] == 0.75
+    assert by_fips["48003"]["values"]["flood"] == 0.0
+    assert by_fips["48003"]["quality"]["flood"] == "ok"
+
+
+def test_publish_copies_extra_files_listed_in_geometry(tmp_path: Path) -> None:
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS)
+    release["geometry"]["flood"] = {"48001": "flood/48001.geojson"}
+    geo = tmp_path / "src"
+    (geo / "flood").mkdir(parents=True)
+    for name in ("counties.geojson", "territories.geojson", "flood/48001.geojson"):
+        (geo / name).write_text('{"type":"FeatureCollection","features":[]}')
+    rid = assemble.publish(release, geo, tmp_path / "public", today="2026-09-26", expected_counties=2)
+    assert (tmp_path / "public" / "releases" / rid / "flood" / "48001.geojson").exists()

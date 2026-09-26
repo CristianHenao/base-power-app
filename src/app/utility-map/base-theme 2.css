@@ -1,0 +1,194 @@
+/*
+ * Base Power style guide (docs/base-power-styleguide.md), scoped to the
+ * utility map. Everything lives under .bp-theme so the rest of the app keeps
+ * its current theme. Fonts are the guide's free stand-ins (Hanken Grotesk,
+ * Caveat, Zilla Slab), loaded by the page as CSS variables.
+ */
+
+.bp-theme {
+  /* Base palette */
+  --bp-grey-100: #292826;
+  --bp-grey-80: #54524f;
+  --bp-grey-60: #7f7d7a;
+  --bp-grey-20: #d8d7d5;
+  --bp-grey-5: #f0eeeb;
+  --bp-white: #ffffff;
+  --bp-green-100: #102a17;
+  --bp-green-90: #1e4d2b;
+  --bp-green-60: #77a45a;
+  --bp-green-20: #b2dd79;
+  --bp-green-5: #d6f0b4;
+  --bp-blue-100: #07314b;
+  --bp-blue-10: #cce5f5;
+  --bp-red-80: #c51808;
+  --bp-shadow-floating: 0 18px 48px rgba(0, 0, 0, 0.45);
+  --bp-shadow-media: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --bp-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* shadcn tokens, remapped to the guide's semantic aliases */
+  --background: var(--bp-grey-5);
+  --foreground: var(--bp-grey-100);
+  --card: var(--bp-white);
+  --card-foreground: var(--bp-grey-100);
+  --popover: var(--bp-white);
+  --popover-foreground: var(--bp-grey-100);
+  --primary: var(--bp-green-20);
+  --primary-foreground: var(--bp-green-90);
+  --secondary: var(--bp-green-5);
+  --secondary-foreground: var(--bp-green-90);
+  --muted: var(--bp-grey-5);
+  /* grey-80, not grey-60: grey-60 misses AA for small text on grey-5 */
+  --muted-foreground: var(--bp-grey-80);
+  --accent: var(--bp-green-5);
+  --accent-foreground: var(--bp-green-90);
+  --destructive: var(--bp-red-80);
+  --border: var(--bp-grey-20);
+  --input: var(--bp-grey-20);
+  --ring: var(--bp-grey-100);
+  --radius: 0.5rem; /* radius-md for controls */
+
+  /* Type: one grotesk does the talking */
+  --font-geist-sans: var(--font-bp-sans);
+  font-family: var(--font-bp-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--bp-grey-100);
+  background: var(--bp-grey-5);
+}
+
+.bp-theme :where(h1, h2, h3, button, dt, legend) {
+  font-weight: 600;
+}
+
+.bp-theme :focus-visible {
+  outline: 2px solid var(--bp-grey-100);
+  outline-offset: 2px;
+}
+
+/* Floating panels overlap the map, the one case the guide allows a shadow */
+.bp-theme .bp-panel {
+  background: var(--bp-white);
+  border-radius: 20px;
+  box-shadow: var(--bp-shadow-floating);
+}
+
+/* Hand-lettered eyebrow above a section title, once per panel at most */
+.bp-theme .bp-eyebrow {
+  font-family: var(--font-bp-script), cursive;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: var(--bp-green-90);
+}
+
+/* Clarendon-style stamp, used for the mockup badge */
+.bp-theme .bp-stamp {
+  font-family: var(--font-bp-display), Georgia, serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bp-grey-100);
+}
+
+/* Text link: 14px, 600, forest, chevron that nudges 2px on hover */
+.bp-theme .bp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+  color: var(--bp-green-90);
+}
+.bp-theme .bp-link svg {
+  transition: transform 150ms var(--bp-ease);
+}
+.bp-theme .bp-link:hover svg {
+  transform: translateX(-2px);
+}
+
+/* Pill toggles (presets, fleet size): lime fill with forest text when on */
+.bp-theme .bp-pill {
+  border: 1px solid var(--bp-grey-20);
+  border-radius: 9999px;
+  background: var(--bp-white);
+  color: var(--bp-grey-100);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+  padding: 6px 12px;
+  transition:
+    background-color 150ms var(--bp-ease),
+    border-color 150ms var(--bp-ease),
+    color 150ms var(--bp-ease);
+}
+.bp-theme .bp-pill:hover {
+  border-color: var(--bp-grey-80);
+}
+.bp-theme .bp-pill[aria-pressed="true"] {
+  background: var(--bp-green-20);
+  border-color: var(--bp-green-20);
+  color: var(--bp-green-90);
+}
+.bp-theme .bp-pill[aria-pressed="true"]:hover {
+  background: var(--bp-green-60);
+  border-color: var(--bp-green-60);
+}
+
+/* Dark feature surface: forest with white text and lime accents */
+.bp-theme .bp-dark {
+  background: var(--bp-green-90);
+  color: var(--bp-white);
+  border-radius: 20px;
+}
+.bp-theme .bp-dark .bp-pill {
+  background: transparent;
+  border-color: var(--bp-white);
+  color: var(--bp-white);
+}
+.bp-theme .bp-dark .bp-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.bp-theme .bp-dark .bp-pill[aria-pressed="true"] {
+  background: var(--bp-green-20);
+  border-color: var(--bp-green-20);
+  color: var(--bp-green-90);
+}
+.bp-theme .bp-dark :focus-visible {
+  outline-color: var(--bp-white);
+}
+
+/* Informational callout: sky tint with deep navy text */
+.bp-theme .bp-info {
+  background: var(--bp-blue-10);
+  color: var(--bp-blue-100);
+  border-radius: 16px;
+}
+
+/* Rows inside panels: white on white, separated by hairlines */
+.bp-theme .bp-row-list {
+  border: 1px solid var(--bp-grey-20);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.bp-theme .bp-row-list > li + li {
+  border-top: 1px solid var(--bp-grey-20);
+}
+.bp-theme .bp-row {
+  transition: background-color 150ms var(--bp-ease);
+}
+.bp-theme .bp-row:hover {
+  background: var(--bp-grey-5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-theme *,
+  .bp-theme *::before,
+  .bp-theme *::after {
+    transition-duration: 0ms !important;
+  }
+}

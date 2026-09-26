@@ -372,6 +372,12 @@ function CountyView({
           {county.load_zone ? ` · ${county.load_zone} (approximate)` : ""}
         </p>
       </div>
+      {county.sfha_land_pct != null ? (
+        <p className="bp-info px-4 py-3 text-[14px] leading-[21px]">
+          {Math.round(county.sfha_land_pct)}% of this county&apos;s land is in FEMA&apos;s 1% annual-chance
+          floodplain (effective flood maps). Turn on Flood to see the zones.
+        </p>
+      ) : null}
       <Breakdown
         data={data}
         rows={activeLayers.map((id) => ({

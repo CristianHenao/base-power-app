@@ -19,6 +19,7 @@ export function formatLayerValue(meta: MapLayerMeta, value: number | null, quali
     case "homes":
       return `${whole.format(value)} homes`;
     case "flood":
+      return `${oneDecimal.format(value)} flood days / yr`;
     case "weather":
       return `${oneDecimal.format(value)} / 100`;
     case "peak_demand":

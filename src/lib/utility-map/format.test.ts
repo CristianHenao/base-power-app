@@ -14,7 +14,8 @@ test("values read in their own unit", () => {
   assert.equal(formatLayerValue(meta("outages"), 13.038, "ok"), "13 h per customer / yr");
   assert.equal(formatLayerValue(meta("price_spikes"), 12.4, "ok"), "12 h / yr");
   assert.equal(formatLayerValue(meta("homes"), 1533623, "ok"), "1,533,623 homes");
-  assert.equal(formatLayerValue(meta("flood"), 41.26, "ok"), "41.3 / 100");
+  assert.equal(formatLayerValue(meta("flood"), 5.077, "ok"), "5.1 flood days / yr");
+  assert.equal(formatLayerValue(meta("weather"), 41.26, "ok"), "41.3 / 100");
 });
 
 test("missing and not-applicable values say so instead of showing zero", () => {
