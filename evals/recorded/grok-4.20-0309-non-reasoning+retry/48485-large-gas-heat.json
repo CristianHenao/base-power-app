@@ -1,8 +1,9 @@
 {
   "headline": "Wichita County Home Backup Outlook",
-  "summary": "Homes in Wichita County face a long outage about once every 9 years. This comes from 8 years of records since 2018. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth faced about 44 hours. In August 2023, 12% of homes in the county lost power. The longest-waiting tenth faced about 36 hours. One Core lasts about 14 hours in August. One Core lasts about 34 hours in November. Two Cores last about 22 hours in August. Two Cores cover 93% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "summary": "Homes in Wichita County face a long outage about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth faced about 44 hours. In August 2023, 12% of homes in the county lost power. The longest-waiting tenth faced about 36 hours. One Core lasts about 14 hours in August. One Core lasts about 34 hours in November. Two Cores last about 22 hours in August. Two Cores cover 93% of past 12-hour-plus outage hours for a home with gas heat and a larger footprint. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
+    "outlook.label",
     "outlook.once_every_years",
     "outlook.years_of_data",
     "outlook.since",
@@ -15,7 +16,9 @@
     "backup.short_month",
     "backup.long_month",
     "backup.short_month_two_cores",
+    "sizing.cores",
     "sizing.share",
+    "home.label",
     "threshold.hours"
   ]
 }

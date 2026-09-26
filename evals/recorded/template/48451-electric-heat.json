@@ -1,6 +1,6 @@
 {
-  "headline": "Low outlook for long outages in Tom Green County",
-  "summary": "Homes in Tom Green County lose power for 12 hours or more about once every 9 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 49% of homes in the county were dark. For a home with electric heat, one Core lasts about 18 hours in August and about 36 hours in March. We suggest two Cores. That would have covered 86% of past long outage hours. Base confirms sizing at install.",
+  "headline": "Moderate outlook for long outages in Tom Green County",
+  "summary": "Homes in Tom Green County lose power for 12 hours or more about once every 10 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 49% of homes in the county were dark. For a home with electric heat, one Core lasts about 18 hours in August and about 36 hours in March. We suggest two Cores. That would have covered 86% of past long outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "home.label",

@@ -18,14 +18,14 @@
   },
   "base_offer": null,
   "outlook": {
-    "level": 1,
-    "label": "Low",
-    "long_outages_per_year": 0.111,
+    "level": 2,
+    "label": "Moderate",
+    "long_outages_per_year": 0.094,
     "interval_90": [
-      0.024,
-      0.249
+      0.04,
+      0.166
     ],
-    "once_every_years": 9.0,
+    "once_every_years": 10.7,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -236,10 +236,11 @@
   },
   "narrative": {
     "status": "ok",
-    "headline": "Power Outlook for Collin County Homes",
-    "summary": "Homes in Collin County face a long outage about once every 9 years. This comes from 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 52% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "headline": "Backup Power for Collin County Homes",
+    "summary": "Collin County has a moderate outlook. It sees a long outage of 12 hours or more about once every 11 years based on 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 52% of past 12-hour-plus outage hours for homes with electric heat. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
+      "outlook.label",
       "outlook.once_every_years",
       "outlook.years_of_data",
       "outlook.since",
@@ -252,8 +253,10 @@
       "backup.short_month",
       "backup.long_month",
       "backup.short_month_two_cores",
+      "sizing.cores",
       "sizing.share",
-      "threshold.hours"
+      "threshold.hours",
+      "home.label"
     ],
     "url": null
   },

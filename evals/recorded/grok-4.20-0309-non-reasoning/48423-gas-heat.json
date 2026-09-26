@@ -1,8 +1,9 @@
 {
-  "headline": "Smith County Home Backup Report",
-  "summary": "Homes in Smith County face a long outage about once every 3 years based on 8 years of records since 2018. In recent events, 56% of homes lost power on June 2, 2024 with about 47 hours for the longest-waiting tenth. On January 30, 2023, 33% of homes lost power with about 58 hours for the longest-waiting tenth. One Core lasts about 17 hours in August and about 43 hours in February. Two Cores last about 34 hours in August. The suggested number of Cores is 2 Cores. Two Cores cover 91% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "headline": "Backup Report for Smith County Homes",
+  "summary": "Smith County has a high outlook for long power outages of 12 hours or more. Records from the past 8 years since 2018 show a long outage about once every 4 years. In a big storm on June 2 2024 about 56% of homes in the county lost power. The longest-waiting tenth waited about 47 hours. Another storm on January 30 2023 hit 33% of homes in the county. The longest-waiting tenth waited about 58 hours. One Core lasts about 17 hours in August. One Core lasts about 43 hours in February. Two Cores last about 34 hours in August. Two Cores cover 91% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
+    "outlook.label",
     "outlook.once_every_years",
     "outlook.years_of_data",
     "outlook.since",

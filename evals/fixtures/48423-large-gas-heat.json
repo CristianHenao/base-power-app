@@ -11,8 +11,8 @@
   },
   "outlook": {
     "label": "High",
-    "long_outages_per_year": 0.3259,
-    "once_every_years": 3.07,
+    "long_outages_per_year": 0.2605,
+    "once_every_years": 3.84,
     "years_of_data": 8.0,
     "since": 2018
   },

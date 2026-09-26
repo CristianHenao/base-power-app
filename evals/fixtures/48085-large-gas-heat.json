@@ -10,9 +10,9 @@
     "annual_kwh_scale": 1.5
   },
   "outlook": {
-    "label": "Low",
-    "long_outages_per_year": 0.1108,
-    "once_every_years": 9.03,
+    "label": "Moderate",
+    "long_outages_per_year": 0.0937,
+    "once_every_years": 10.68,
     "years_of_data": 8.0,
     "since": 2018
   },

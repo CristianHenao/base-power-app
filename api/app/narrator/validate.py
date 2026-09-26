@@ -86,7 +86,10 @@ def number_problems(text: str, cited: list[Fact]) -> list[str]:
             if not owners:
                 problems.append(f"number {value:g} does not match a cited fact")
             elif not any(fits_context(fact, sentence, match.start(), match.end()) for fact in owners):
-                problems.append(f"out of context: {value:g} should read like \"{owners[0].text}\"")
+                problems.append(
+                    f"out of context: {value:g} should read like \"{owners[0].text}\", "
+                    "or cite the fact this number comes from"
+                )
     return problems
 
 
