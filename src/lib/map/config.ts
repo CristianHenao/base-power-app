@@ -18,8 +18,16 @@ export const MAP_DEFAULTS = {
   center: [-97.7431, 30.2672] as [number, number], // Austin, TX
   zoom: 11,
   homeZoom: 16.5,
+  /** Close zoom while scrubbing an outage that hit the home block */
+  outageHomeZoom: 17.4,
+  /** Closer side-angle view when revealing Base Power on the home */
+  batteryRevealZoom: 18.8,
   pitch: 60,
   bearing: -20,
+  /** Pitch looking at the home facade for battery placement */
+  batteryRevealPitch: 70,
+  /** Orbit to expose the left side wall of the home */
+  batteryRevealBearing: 48,
   antialias: true,
   basemap: {
     lightPreset: "dusk",
@@ -33,6 +41,20 @@ export const MAP_DEFAULTS = {
     showRoadLabels: true,
     showTransitLabels: false,
     showLandmarkIcons: true,
+  } satisfies MapBasemapConfig,
+  /** Neighborhood blackout look while replaying an outage — dark, not pitch-black */
+  outageBasemap: {
+    lightPreset: "night",
+    show3dObjects: true,
+    show3dBuildings: true,
+    show3dTrees: true,
+    show3dLandmarks: true,
+    show3dFacades: true,
+    showPointOfInterestLabels: false,
+    showPlaceLabels: true,
+    showRoadLabels: true,
+    showTransitLabels: false,
+    showLandmarkIcons: false,
   } satisfies MapBasemapConfig,
 } as const;
 

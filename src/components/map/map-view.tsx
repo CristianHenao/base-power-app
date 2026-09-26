@@ -11,11 +11,27 @@ import {
 } from "@/lib/map/config";
 import { fetchMapboxTokenClient } from "@/lib/map/geocode-client";
 import { createThreeLayer } from "@/lib/map/create-three-layer";
+import {
+  removeHomePowerGlow,
+  syncHomePowerGlow,
+} from "@/lib/map/home-power-glow";
+import {
+  removeWeatherHazardLayers,
+  syncWeatherHazardLayers,
+} from "@/lib/map/weather-hazard-layers";
+import type { WeatherHeatmapCollection } from "@/lib/risk/synthetic-weather";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export type MapMarker = {
   lngLat: [number, number];
   label?: string;
+  /** Amber powered glow during outage replay */
+  lit?: boolean;
+};
+
+export type WeatherHazardOverlay = {
+  points: WeatherHeatmapCollection;
+  visible: boolean;
 };
 
 export type MapViewProps = {
@@ -28,6 +44,11 @@ export type MapViewProps = {
   /** Mapbox Standard basemap toggles (3D buildings, trees, landmarks, etc.). */
   basemap?: MapBasemapConfig;
   marker?: MapMarker | null;
+  weatherHazards?: WeatherHazardOverlay | null;
+  /**
+   * Neighborhood blackout: night lighting + amber glow on home.
+   */
+  outageBlackout?: boolean;
   /**
    * Optional Three.js overlay. Disabled by default — sharing Mapbox’s WebGL
    * context can blank the basemap if the layer isn’t carefully managed.
@@ -45,11 +66,23 @@ function applyBasemapConfig(map: Map, basemap: MapBasemapConfig) {
       console.warn(`Unable to set basemap config "${key}"`, error);
     }
   }
+
+  // Night: soft charcoal buildings. Lit: warm light shade (null leaves night tint stuck).
+  const buildingColor =
+    basemap.lightPreset === "night" ? "#5c5c66" : "#e8e4dc";
+  try {
+    map.setConfigProperty("basemap", "colorBuildings", buildingColor);
+  } catch {
+    // Optional config on some Standard revisions.
+  }
 }
 
-function createHomeMarkerElement(label?: string) {
+function createHomeMarkerElement(label?: string, lit = false) {
   const el = document.createElement("div");
-  el.className = "base-power-home-marker";
+  el.className = cn(
+    "base-power-home-marker",
+    lit && "base-power-home-marker--lit",
+  );
   el.title = label ?? "Your home";
   el.innerHTML = `
     <span class="base-power-home-marker__pulse"></span>
@@ -73,6 +106,8 @@ export function MapView({
   style = MAP_DEFAULTS.style,
   basemap = MAP_DEFAULTS.basemap,
   marker = null,
+  weatherHazards = null,
+  outageBlackout = false,
   enableThreeLayer = false,
   onMapReady,
 }: MapViewProps) {
@@ -177,6 +212,8 @@ export function MapView({
       map.off("error", onError);
       markerRef.current?.remove();
       markerRef.current = null;
+      removeWeatherHazardLayers(map);
+      removeHomePowerGlow(map);
       map.remove();
       mapRef.current = null;
     };
@@ -187,13 +224,19 @@ export function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== "ready") return;
+    applyBasemapConfig(map, basemap);
+  }, [status, basemap]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
 
     map.easeTo({
       center,
       zoom,
       pitch,
       bearing,
-      duration: 800,
+      duration: 900,
       essential: true,
     });
   }, [status, center, zoom, pitch, bearing]);
@@ -208,7 +251,7 @@ export function MapView({
     if (!marker) return;
 
     markerRef.current = new mapboxgl.Marker({
-      element: createHomeMarkerElement(marker.label),
+      element: createHomeMarkerElement(marker.label, Boolean(marker.lit)),
       anchor: "bottom",
     })
       .setLngLat(marker.lngLat)
@@ -221,6 +264,41 @@ export function MapView({
       )
       .addTo(map);
   }, [status, marker]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
+
+    if (!weatherHazards) {
+      syncWeatherHazardLayers(
+        map,
+        { type: "FeatureCollection", features: [] },
+        false,
+      );
+      return;
+    }
+
+    syncWeatherHazardLayers(
+      map,
+      weatherHazards.points,
+      weatherHazards.visible && !outageBlackout,
+    );
+  }, [status, weatherHazards, outageBlackout]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
+
+    const home =
+      marker?.lngLat ??
+      (Array.isArray(center) ? (center as [number, number]) : null);
+
+    syncHomePowerGlow(
+      map,
+      home,
+      outageBlackout && Boolean(marker?.lit) && Boolean(home),
+    );
+  }, [status, outageBlackout, marker, center]);
 
   if (tokenStatus === "missing") {
     return (
@@ -253,6 +331,7 @@ export function MapView({
     <div
       className={cn(
         "relative min-h-[22rem] overflow-hidden rounded-xl border bg-muted",
+        outageBlackout && "base-power-outage-map",
         className,
       )}
     >

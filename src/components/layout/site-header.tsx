@@ -19,11 +19,10 @@ export function SiteHeader({
   return (
     <header
       className={cn(
-        "z-40 border-b bg-background/80 backdrop-blur-md",
-        "pt-[env(safe-area-inset-top)]",
+        "z-40 pt-[env(safe-area-inset-top)]",
         overlay
-          ? "absolute inset-x-0 top-0 border-transparent bg-background/70 shadow-sm"
-          : "sticky top-0",
+          ? "absolute inset-x-0 top-0 border-transparent bg-black/45 text-white shadow-none backdrop-blur-xl backdrop-saturate-150"
+          : "sticky top-0 border-b bg-background/80 backdrop-blur-md",
         className,
       )}
     >
