@@ -32,3 +32,42 @@ test("the worst recorded storm is the one with the most customer-hours out in th
   assert.equal(single.peakPct, 50);
   assert.equal(worstStorm(storms, ["48999"]), null);
 });
+
+import { bandMeaning, halfReading, rankSentence, scoreFactors } from "./score-card.ts";
+
+test("the headline says where the place stands among its Texas peers", () => {
+  assert.equal(
+    rankSentence("Coleman County", { rank: 221, of: 254, level: 1 }, "county"),
+    "Coleman County is at lower grid risk than most of Texas: #221 of 254 counties, and only 33 score lower.",
+  );
+  assert.equal(
+    rankSentence("CenterPoint Energy", { rank: 4, of: 150, level: 5 }, "utility"),
+    "CenterPoint Energy is among the most at-risk grids in Texas: #4 of 150 utilities.",
+  );
+  assert.equal(
+    rankSentence("Travis County", { rank: 120, of: 254, level: 3 }, "county"),
+    "Travis County is near the Texas middle for grid risk: #120 of 254 counties.",
+  );
+});
+
+test("each band says what it means, and that it is relative", () => {
+  assert.match(bandMeaning(1, "county"), /least at-risk fifth of Texas counties/);
+  assert.match(bandMeaning(1, "county"), /not no risk/);
+  assert.match(bandMeaning(5, "utility"), /most at-risk fifth of Texas utilities/);
+});
+
+test("each half reads as a share of peers", () => {
+  assert.equal(halfReading(27, "county"), "Riskier than about 26% of Texas counties");
+  assert.equal(halfReading(100, "utility"), "Riskier than about 100% of Texas utilities");
+  assert.equal(halfReading(null, "county"), "No data");
+});
+
+test("factors split into what raises the risk and what keeps it down, strongest first", () => {
+  const { raising, lowering } = scoreFactors({
+    flood: 0.41, tornado: 0.51, severe_storm: 0.54, hurricane: 0.24, winter: 0.66, heat: 0.09,
+    outages: 0.04, price_spikes: 0.79, peak_demand: 0.08,
+  });
+  assert.deepEqual(raising.map((f) => f.id), ["price_spikes", "winter"]);
+  assert.deepEqual(lowering.map((f) => f.id), ["outages", "peak_demand", "heat"]);
+  assert.equal(raising[0].percentile, 79);
+});

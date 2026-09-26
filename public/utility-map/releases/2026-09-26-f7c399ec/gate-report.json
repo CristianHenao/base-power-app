@@ -1,7 +1,7 @@
 {
-  "release_id": "2026-09-26-8a799bfc",
+  "release_id": "2026-09-26-f7c399ec",
   "passed": true,
-  "checked_at": "2026-09-26T22:38:07.336299+00:00",
+  "checked_at": "2026-09-26T23:14:03.237183+00:00",
   "counties": 254,
   "utilities": 150,
   "layers_available": [

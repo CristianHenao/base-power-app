@@ -2,7 +2,8 @@
 
 A county's peak = Σ over its utilities of (utility summer peak × the utility's estimated
 customers in the county ÷ the utility's estimated customers everywhere). Utilities with no
-known peak add nothing; a county none of whose utilities has a peak stays missing.
+known peak add nothing; a county where no customers belong to a utility with a known peak
+stays missing (not 0 MW), so it isn't ranked as the lowest demand in Texas.
 
 Run: python -m pipeline.utility_map.county_peak  (after eia_grid and ercot_load)
 """
@@ -22,6 +23,7 @@ def county_peak_demand(grid: pd.DataFrame, crosswalk: pd.DataFrame) -> pd.Series
         grid[["utility_id", "summer_peak_mw"]], on="utility_id", how="left"
     )
     pairs = pairs.dropna(subset=["summer_peak_mw"])
+    pairs = pairs[pairs["customers_est"] > 0]
     totals = pairs.groupby("utility_id")["customers_est"].transform("sum")
     pairs["mw"] = pairs["summer_peak_mw"] * pairs["customers_est"] / totals
     return pairs.groupby("county_fips")["mw"].sum().rename("peak_demand")

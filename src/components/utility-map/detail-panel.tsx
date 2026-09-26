@@ -362,6 +362,7 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
       <ScoreCard
         data={data}
         kind="utility"
+        name={utility.name}
         risk={utility.risk}
         ranks={Object.fromEntries(RISK_LAYERS.map((id) => [id, utilityLayerSummary(utility, countiesByFips, id).rank]))}
         values={Object.fromEntries(RISK_LAYERS.map((id) => [id, utilityLayerSummary(utility, countiesByFips, id).value]))}
@@ -447,6 +448,7 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
       <ScoreCard
         data={data}
         kind="county"
+        name={`${county.name} County`}
         risk={county.risk}
         ranks={county.ranks}
         values={county.values}
