@@ -5,6 +5,21 @@ on:
   pull_request:
 
 jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pipeline, API and test deps
+        run: pip install -e ".[dev,api]"
+      # Every test runs on committed data; raw downloads are not needed.
+      - name: Tests
+        run: python -m pytest -q
+      - name: Narrator evals on recorded outputs
+        run: python -m evals.score
+
   compose:
     runs-on: ubuntu-latest
     steps:

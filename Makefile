@@ -3,7 +3,7 @@
 
 PY ?= .venv/bin/python
 
-.PHONY: data download build check test
+.PHONY: data download build check test api demo
 
 data: download build
 
@@ -20,10 +20,14 @@ build:
 	$(PY) -m pipeline.storms
 	$(PY) -m pipeline.grid_value
 	$(PY) -m pipeline.insights
+	$(PY) -m pipeline.sources.eaglei
 	$(PY) -m pipeline.features
 	$(PY) -m pipeline.sources.eia861
 	$(PY) -m pipeline.sources.zip_utility
 	$(PY) -m pipeline.map_layers
+	$(PY) -m pipeline.sources.eia861_reliability
+	$(PY) -m pipeline.reports
+	$(PY) -m pipeline.charts
 
 # Recompute every persona number from raw data; writes docs/persona-check.md.
 check:
@@ -31,3 +35,11 @@ check:
 
 test:
 	$(PY) -m pytest -q
+
+# The FastAPI service on :8000. Loads XAI_API_KEY from .env when present; PORCHLIGHT_DEBUG=1 enables fault injection.
+api:
+	set -a; [ -f .env ] && . ./.env; set +a; PORCHLIGHT_DEBUG=$${PORCHLIGHT_DEBUG:-1} $(PY) -m uvicorn api.app.main:app --port 8000
+
+# Everything in containers from a clean clone: API on :4000, web on :3000.
+demo:
+	docker compose up --build --wait

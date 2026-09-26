@@ -29,22 +29,42 @@ services:
       timeout: 3s
       retries: 10
 
+  # FastAPI service (api/app/main.py). XAI_API_KEY comes from the gitignored .env; without it the
+  # narrator uses its template and the report says so.
   api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      PORT: "4000"
+      PORCHLIGHT_CORS_ORIGINS: http://localhost:3000
+      PORCHLIGHT_DEBUG: ${PORCHLIGHT_DEBUG:-0}
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:4000/health').status == 200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  worker:
     image: base-power-stub
     build: ./services/stub
-    environment: &app-env
+    environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
       REDIS_URL: redis://redis:6379
       PORT: "4000"
-      SERVICE_NAME: api
-    ports:
-      - "4000:4000"
+      SERVICE_NAME: worker
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck: &http-health
+    healthcheck:
       test:
         - CMD
         - node
@@ -54,19 +74,6 @@ services:
       timeout: 3s
       retries: 10
       start_period: 3s
-
-  worker:
-    image: base-power-stub
-    build: ./services/stub
-    environment:
-      <<: *app-env
-      SERVICE_NAME: worker
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck: *http-health
 
   web:
     build:
