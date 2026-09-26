@@ -34,6 +34,8 @@ GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
 TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
 INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 PAYS_TWICE_CSV = REPO_ROOT / "data" / "processed" / "pays_twice.csv"
+# Alejandro's NOAA Storm Events for Texas (built by pipeline/utility_map/storm_events.py on ale-dev).
+STORM_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "utility_map" / "storm_events.parquet"
 REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
 # Exported charts land where the web app serves static files.
 INSIGHTS_CHART_DIR = REPO_ROOT / "public" / "insights"

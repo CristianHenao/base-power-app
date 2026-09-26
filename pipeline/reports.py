@@ -2,9 +2,9 @@
 
 Run: python -m pipeline.reports   (after pipeline.features)
 
-`build_report` works for any Texas county. The demo personas (county plus its demo heat
-type) also get each storm's replayed backup hours and coverage and a Core recommendation;
-other counties get those fields as null, and `sizing.reason` says why. Live fields (NWS
+`build_report` works for any Texas county. Storm replays, coverage and the Core
+recommendation come from pipeline.features for the demo homes and pipeline.statewide for
+everyone else; if those tables are missing, the fields are null and `sizing.reason` says why. Live fields (NWS
 alerts, grid status, tract) are filled by the API. `main` writes the three persona
 reports to data/processed/reports/{fips}.json for the web app.
 
@@ -36,8 +36,8 @@ MONTHS = (
 CENTRAL = "America/Chicago"
 CORES = (1, 2)
 DEFAULT_PROFILE = "RESLOWR"
-NO_SIZING = ("Core sizing replays every past storm on this home's load. It is ready for the demo "
-             "homes; for this address, see backup hours by month. Base confirms sizing at install.")
+NO_SIZING = ("Core sizing replays every past storm on this home's load, and it is not built for this "
+             "address yet; see backup hours by month. Base confirms sizing at install.")
 
 
 def event_label(storm: object, start_central: pd.Timestamp) -> str:
@@ -144,11 +144,20 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, profile_type: str | 
     persona = is_persona(fips, profile)
     floored = bool(row.get("customers_floored", False))
 
-    event_table = "events" if persona else "events_texas"
-    events = con.execute(
-        f"select * from {event_table} where county_fips = ? order by customer_hours desc limit ?",
-        [fips, settings.REPORT_EVENTS],
-    ).df()
+    tables = {r[0] for r in con.execute("show tables").fetchall()}
+    statewide = not persona and {"event_replays_texas", "sizing_texas"} <= tables
+    if persona:
+        events = con.execute("select * from events where county_fips = ? order by customer_hours desc limit ?",
+                             [fips, settings.REPORT_EVENTS]).df()
+    elif statewide:
+        events = con.execute("""
+            select e.*, r.* exclude (id, county_fips, profile_type)
+            from events_texas e left join event_replays_texas r on r.id = e.id and r.profile_type = ?
+            where e.county_fips = ? order by e.customer_hours desc limit ?
+        """, [profile, fips, settings.REPORT_EVENTS]).df()
+    else:
+        events = con.execute("select * from events_texas where county_fips = ? order by customer_hours desc limit ?",
+                             [fips, settings.REPORT_EVENTS]).df()
     if persona:
         monthly = con.execute(
             "select mode, cores, month, hours from backup_monthly where county_fips = ?", [fips]).df()
@@ -164,13 +173,19 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, profile_type: str | 
     utility_name = by_zip[1] if by_zip else (None if pd.isna(info_row["utility_name"]) else str(info_row["utility_name"]))
     _, offers_as_of = base_offers()
 
+    sizing_rows = pd.DataFrame()
     if persona:
-        sizing_row = con.execute("select * from sizing where county_fips = ?", [fips]).df().iloc[0]
+        sizing_rows = con.execute("select * from sizing where county_fips = ?", [fips]).df()
+    elif statewide:
+        sizing_rows = con.execute("select * from sizing_texas where county_fips = ? and profile_type = ?",
+                                  [fips, profile]).df()
+    if sizing_rows.empty:
+        sizing = {"cores": None, "reason": NO_SIZING, "share": None}
+    else:
+        sizing_row = sizing_rows.iloc[0]
         cores = int(sizing_row["cores"])
         sizing = {"cores": cores, "reason": sizing_row["reason"],
                   "share": round(float(sizing_row[f"{sizing_row['order']}_share_{cores}"]), 3)}
-    else:
-        sizing = {"cores": None, "reason": NO_SIZING, "share": None}
 
     return {
         "report_id": f"rpt_{fips}_{profile.lower()}",

@@ -1,0 +1,20 @@
+# This Vercel project is Next.js only. The Python pipeline/API live
+# elsewhere (compose / api Dockerfile). Hide Python package metadata so
+# Vercel does not run `uv sync` against 3.11.
+
+pyproject.toml
+uv.lock
+.python-version
+requirements.txt
+Pipfile
+Pipfile.lock
+
+# Offline pipeline / API / evals — not part of the web deploy.
+# Leading `/` anchors to repo root so we do NOT ignore Next.js `src/app/api`.
+/pipeline/
+/api/
+/evals/
+/tests/
+/data/raw/
+/data/features.duckdb
+Makefile

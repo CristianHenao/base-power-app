@@ -196,6 +196,7 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
 <nav class="index" aria-label="Sections">
   <p>Sheets</p>
   <ol>
+    <li><a href="#now-next"><span class="code">N-01</span>Now / Next</a></li>
     <li><a href="#call"><span class="code">G-01</span>The call</a></li>
     <li><a href="#reality"><span class="code">G-02</span>Reality check</a></li>
     <li><a href="#product"><span class="code">P-01</span>Porchlight</a></li>
@@ -219,6 +220,32 @@ footer{margin-top:48px;padding-top:18px;border-top:2px solid var(--ink-strong);c
 </nav>
 
 <main>
+
+<section id="now-next">
+  <h2><span class="sheet">N-01</span>Now / Next</h2>
+  <p>The one place to see what is left. Update your row when you start or finish something; details stay in the other sheets. <span class="small muted">Last updated Sat 4:45 PM by Nolan.</span></p>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Unblocks</th><th>Due</th></tr></thead>
+    <tbody>
+      <tr><td>Report page on real data at <code>/report</code> (<code>3d4c1e6</code>): address in; outlook, storms with duration bands and coverage, backup by month, sizing, live grid, source chips, streamed narrative. Christian's screens untouched; sign in first</td><td>Nolan</td><td><span class="tag done">Done</span></td><td>The whole demo</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Appliance backup time (<code>9553cfc</code>): <code>applianceRuntime(devices)</code> and <code>describeRuntime()</code> in <code>src/lib/report/core-runtime.ts</code>. Runs in the browser because device lists can hold medical equipment; hours on 1 and 2 Cores from full and from the 20% reserve, plus the 20 kW limit</td><td>Nolan</td><td><span class="tag done">Done</span></td><td>Christian's appliance scan</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Core recommendation and per-storm coverage for every address (<code>pipeline/statewide.py</code>, <code>b49c530</code>): 6,145 events in 254 counties replayed for both heat types, and it matches the demo homes exactly. Two Cores for 231 counties with electric heat and 167 with gas; the rest one Core</td><td>Nolan</td><td><span class="tag done">Done</span></td><td>Report page for any address</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>NWS alerts</td><td>Victor</td><td><span class="tag p1">In progress</span></td><td>Live alerts on the report (the API already calls NWS; coordinate in <code>api/app/adapters/nws.py</code>)</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Historical data. Much of the D-01 list (NOAA Storm Events, tornado and hurricane tracks, FEMA flood zones, ERCOT hourly load, peak demand, fleet mode) is on <code>origin/ale-dev</code>, 121 files ahead of main; merge before 7 PM so the map shows it. His 21dc0e3 computes long-outage hours and 12 h coverage separately from M-01, so check the two agree</td><td>Alejandro</td><td><span class="tag p1">In progress</span></td><td>Outlook, storms, map layers (rerun <code>make build</code> after changes; stop <code>make api</code> first)</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Appliance photo scan: power draw and grid stress</td><td>Christian</td><td><span class="tag p1">In progress</span></td><td>Home screen demo</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Household backup gap: expected hours a year this home is dark with 0, 1 or 2 Cores, from outage frequency (county model with covariates) x outage duration by storm type (survival model on EAGLE-I labeled with NOAA Storm Events) x the home's appliances and season. Fixes the appliance math first (kWh a day, standby, surge). In the API and on <code>/report</code></td><td>Nolan</td><td><span class="tag p1">Now</span></td><td>The household answer; CRM lead fields</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>CRM (optional): show the household backup-gap fields instead of the mock <code>riskScore</code> in <code>/crm</code>. Keep addresses, phone numbers and medical notes out of lead records unless the homeowner opts in to Base contacting them (CLAUDE.md privacy rules). Funnel events already make the report CRM-ready</td><td>Christian</td><td><span class="tag p2">Optional</span></td><td>Sales story in the video</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>Demo script numbers: confirmed values are in M-01 (<code>cf80482</code> note) and the current reports</td><td>Alejandro</td><td><span class="tag p2">Open</span></td><td>The video</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Run-through checklist: persona addresses, fault-switch steps for the failure clip, fallback if the network is down</td><td>Nolan</td><td><span class="tag p2">Open</span></td><td>Recording</td><td class="gatecell">7 PM run-through</td></tr>
+      <tr><td>Safety video, recorded and uploaded unlisted</td><td>Everyone</td><td><span class="tag p2">Open</span></td><td>Submission</td><td class="gatecell">10:30 PM</td></tr>
+      <tr><td>Converge <code>src/lib/types/risk-data.ts</code> with <code>api/app/schemas.py</code></td><td>Victor</td><td><span class="tag p2">Later</span></td><td>One contract</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>Map reliability: include Oncor and TNMP (they report under the non-IEEE standard)</td><td>Alejandro</td><td><span class="tag p2">Later</span></td><td>Sales map</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>Final README and model card pass; tag v0.9</td><td>Nolan</td><td><span class="tag p2">Later</span></td><td>Submission</td><td class="gatecell">11 PM freeze</td></tr>
+      <tr><td>Hosted API and <code>PORCHLIGHT_API_URL</code> on Vercel (the demo runs from <code>make demo</code> until then)</td><td>Unowned</td><td><span class="tag p2">Parked</span></td><td>Live URL</td><td class="gatecell">Optional</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small"><strong>Done today (details in each sheet):</strong> all eight model tasks (T-01); FastAPI <code>/v1/report</code> for any Texas address with Census, NWS, ERCOT, narrative SSE, fault switch and metrics; typed web client and <code>/api/report</code>; funnel events; load test; clean-clone <code>make demo</code>; pays-twice ranking; EIA-861 insight; four insight charts; A1, A2 and the map layer refresh. <span class="tag done">CI green</span></p>
+</section>
 
 <section id="call">
   <h2><span class="sheet">G-01</span>The call</h2>

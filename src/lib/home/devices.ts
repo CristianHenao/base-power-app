@@ -91,6 +91,30 @@ export type DeviceNameplateResult = {
   notes: string | null;
 };
 
+/** One breaker / circuit from a panel directory scan. */
+export type PanelBreaker = {
+  id: string;
+  /** Slot number(s), e.g. "1", "3/5", "MAIN" */
+  position: string;
+  amps: number | null;
+  /** Handwritten or printed directory label — what this circuit feeds */
+  label: string;
+  side: "left" | "right" | "center" | "unknown";
+  isMain: boolean;
+  isSpare: boolean;
+  confidence: number;
+};
+
+/** Claude OCR of an open breaker panel (positions + handwritten labels). */
+export type PanelDirectoryResult = {
+  brand: string | null;
+  mainAmps: number | null;
+  spaces: number | null;
+  breakers: PanelBreaker[];
+  confidence: number;
+  notes: string | null;
+};
+
 export type HomeDevice = {
   id: string;
   name: string;
@@ -111,6 +135,9 @@ export type HomeDevice = {
   /** Extra nameplate fields shown in the detail grid */
   specs: DeviceSpecField[];
   nameplateScannedAt: string | null;
+  /** Breaker directory from a panel interior scan */
+  breakers: PanelBreaker[];
+  panelScannedAt: string | null;
   scannedAt: string;
   source: "scan" | "manual";
 };
@@ -211,6 +238,8 @@ export function createScannedDevice(
     thumbnailUrl,
     specs: [],
     nameplateScannedAt: null,
+    breakers: [],
+    panelScannedAt: null,
     scannedAt: new Date().toISOString(),
     source: "scan",
   };
@@ -248,6 +277,40 @@ export function applyNameplateToDevice(
     specs: nextSpecs,
     nameplateScannedAt: new Date().toISOString(),
     confidence: Math.max(device.confidence, plate.confidence),
+  };
+}
+
+/** Replace panel breaker directory from an interior / label scan. */
+export function applyPanelDirectoryToDevice(
+  device: HomeDevice,
+  directory: PanelDirectoryResult,
+): HomeDevice {
+  const extras: DeviceSpecField[] = [];
+  if (directory.mainAmps != null) {
+    extras.push({
+      key: "main_amps",
+      label: "Main breaker",
+      value: `${directory.mainAmps} A`,
+    });
+  }
+  if (directory.spaces != null) {
+    extras.push({
+      key: "spaces",
+      label: "Spaces",
+      value: String(directory.spaces),
+    });
+  }
+
+  return {
+    ...device,
+    kind: "panel",
+    category: "panel",
+    brand: directory.brand ?? device.brand,
+    notes: directory.notes ?? device.notes,
+    specs: mergeSpecFields(device.specs, extras),
+    breakers: directory.breakers,
+    panelScannedAt: new Date().toISOString(),
+    confidence: Math.max(device.confidence, directory.confidence),
   };
 }
 
@@ -303,6 +366,15 @@ export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
       key: "core_port",
       label: "Core generator port",
       value: "NEMA L14-30R · up to 4 kW charge",
+    });
+  }
+
+  if (device.kind === "panel" && device.breakers.length > 0) {
+    const labeled = device.breakers.filter((b) => !b.isSpare && b.label).length;
+    core.push({
+      key: "circuits",
+      label: "Circuits mapped",
+      value: `${labeled} of ${device.breakers.length}`,
     });
   }
 
@@ -514,6 +586,94 @@ export function parseDeviceNameplateResult(
     fccId,
     circuitRequirement,
     fields,
+    confidence,
+    notes,
+  };
+}
+
+function parseBreakerSide(
+  raw: unknown,
+): PanelBreaker["side"] {
+  if (raw === "left" || raw === "right" || raw === "center") return raw;
+  return "unknown";
+}
+
+function sortPanelBreakers(breakers: PanelBreaker[]): PanelBreaker[] {
+  const sideOrder = { left: 0, center: 1, right: 2, unknown: 3 };
+  return [...breakers].sort((a, b) => {
+    const sideDiff = sideOrder[a.side] - sideOrder[b.side];
+    if (sideDiff !== 0) return sideDiff;
+    const aNum = Number.parseInt(a.position, 10);
+    const bNum = Number.parseInt(b.position, 10);
+    if (Number.isFinite(aNum) && Number.isFinite(bNum)) return aNum - bNum;
+    return a.position.localeCompare(b.position);
+  });
+}
+
+export function parsePanelDirectoryResult(
+  raw: unknown,
+): PanelDirectoryResult | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+
+  const brand = asNullableString(obj.brand);
+  const mainAmps = asNullableNumber(obj.mainAmps);
+  const spaces = asNullableNumber(obj.spaces);
+  const notes = asNullableString(obj.notes);
+
+  let confidence = 0.5;
+  if (typeof obj.confidence === "number" && Number.isFinite(obj.confidence)) {
+    confidence = Math.min(1, Math.max(0, obj.confidence));
+  }
+
+  const breakers: PanelBreaker[] = [];
+  if (Array.isArray(obj.breakers)) {
+    obj.breakers.forEach((item, index) => {
+      if (!item || typeof item !== "object") return;
+      const row = item as Record<string, unknown>;
+      const position =
+        asNullableString(row.position) ??
+        asNullableString(row.slot) ??
+        asNullableString(row.number);
+      if (!position) return;
+
+      const ampsRaw = asNullableNumber(row.amps);
+      const amps =
+        ampsRaw != null && ampsRaw > 0 ? Math.round(ampsRaw) : null;
+      const label =
+        asNullableString(row.label) ??
+        asNullableString(row.description) ??
+        (Boolean(row.isSpare) ? "Spare" : "Unlabeled");
+      let breakerConfidence = confidence;
+      if (
+        typeof row.confidence === "number" &&
+        Number.isFinite(row.confidence)
+      ) {
+        breakerConfidence = Math.min(1, Math.max(0, row.confidence));
+      }
+
+      breakers.push({
+        id: `brk-${position.replace(/[^a-zA-Z0-9_-]/g, "_")}-${index}`,
+        position,
+        amps,
+        label,
+        side: parseBreakerSide(row.side),
+        isMain: Boolean(row.isMain),
+        isSpare:
+          Boolean(row.isSpare) ||
+          /^spare|empty|blank|unused$/i.test(label),
+        confidence: breakerConfidence,
+      });
+    });
+  }
+
+  if (breakers.length === 0) return null;
+
+  return {
+    brand,
+    mainAmps: mainAmps != null && mainAmps > 0 ? Math.round(mainAmps) : null,
+    spaces: spaces != null && spaces > 0 ? Math.round(spaces) : null,
+    breakers: sortPanelBreakers(breakers),
     confidence,
     notes,
   };

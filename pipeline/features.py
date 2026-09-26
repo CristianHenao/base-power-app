@@ -107,12 +107,13 @@ def backup_monthly(profiles: dict[str, ProfileYears], year: int = BACKUP_YEAR) -
     return pd.DataFrame(rows)
 
 
-def sizing_table(long_parts: dict[str, dict], order: str = settings.LONG_OUTAGE_ORDER) -> pd.DataFrame:
+def sizing_table(long_parts: dict[str, dict], order: str = settings.LONG_OUTAGE_ORDER,
+                 counties: dict[str, str] | None = None) -> pd.DataFrame:
     """Cores and reason use `order`. Both orderings' shares are kept as the band."""
     since = pd.Timestamp(settings.RATES_START).year
     empty = {name: {n: [] for n in CORES} for name in ORDERS}
     rows = []
-    for fips, county in settings.DEMO_COUNTIES.items():
+    for fips, county in (counties or settings.DEMO_COUNTIES).items():
         parts = long_parts.get(fips, empty)
         shares = {name: {n: covered_share(parts[name][n]) for n in CORES} for name in ORDERS}
         cores = size_cores(shares[order])

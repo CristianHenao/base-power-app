@@ -68,6 +68,8 @@ export type Database = {
           specs: Json;
           nameplate: Json | null;
           nameplate_scanned_at: string | null;
+          breakers: Json;
+          panel_scanned_at: string | null;
           scanned_at: string;
           source: string;
           created_at: string;
@@ -92,6 +94,8 @@ export type Database = {
           specs?: Json;
           nameplate?: Json | null;
           nameplate_scanned_at?: string | null;
+          breakers?: Json;
+          panel_scanned_at?: string | null;
           scanned_at?: string;
           source?: string;
           created_at?: string;
@@ -116,6 +120,8 @@ export type Database = {
           specs?: Json;
           nameplate?: Json | null;
           nameplate_scanned_at?: string | null;
+          breakers?: Json;
+          panel_scanned_at?: string | null;
           scanned_at?: string;
           source?: string;
           created_at?: string;

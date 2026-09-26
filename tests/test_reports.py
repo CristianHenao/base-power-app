@@ -154,3 +154,27 @@ def test_floored_county_hides_the_peak_share(con):
     assert "At its peak" not in narrative["summary"]
     assert validate(narrative, build_facts(from_contract(report))) == []
     assert build_report(con, "48201")["events"][0]["peak_out_pct"] == 90.9
+
+
+def test_other_county_uses_statewide_replays_and_sizing_when_built(con):
+    replay = {"id": "48167-2024-07-08", "county_fips": "48167", "profile_type": "RESLOWR",
+              "backup_h_1": 21.0, "backup_h_2": 40.0}
+    for order in ("rotate", "stay"):
+        for n in (1, 2):
+            replay[f"covered_{order}_{n}_homes"] = 0.25 * n
+            replay[f"covered_{order}_{n}_hours"] = 0.3 * n
+    sizing = {"county_fips": "48167", "profile_type": "RESLOWR", "cores": 2, "order": "stay",
+              "reason": "Two Cores would have covered 55% of the 12-hour-plus outage hours in Galveston County since 2018.",
+              "stay_share_1": 0.4, "stay_share_2": 0.55, "rotate_share_1": 0.5, "rotate_share_2": 0.7}
+    for name, row in (("event_replays_texas", replay), ("sizing_texas", sizing)):
+        con.register("frame", pd.DataFrame([row]))
+        con.execute(f"create table {name} as select * from frame")
+        con.unregister("frame")
+    report = build_report(con, "48167")
+    assert report["events"][0]["backup_h"] == {"cores_1": 21.0, "cores_2": 40.0}
+    assert report["events"][0]["covered"]["cores_2"] == {"homes": 0.5, "hours": 0.6}
+    assert report["sizing"] == {"cores": 2, "reason": sizing["reason"], "share": 0.55}
+    # An electric-heat home has no replay rows here, so sizing stays null with the reason.
+    con.register("extra", pd.DataFrame(_monthly({"weather_zone": "COAST", "profile_type": "RESHIWR"})))
+    con.execute("insert into backup_zone_monthly select * from extra")
+    assert build_report(con, "48167", "RESHIWR")["sizing"]["cores"] is None
