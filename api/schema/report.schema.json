@@ -361,6 +361,100 @@
       "title": "Event",
       "type": "object"
     },
+    "GridNow": {
+      "description": "ERCOT conditions from the snapshot worker; the price is for the report's load zone.",
+      "properties": {
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Note"
+        },
+        "eea_level": {
+          "title": "Eea Level",
+          "type": "integer"
+        },
+        "reserves_mw": {
+          "title": "Reserves Mw",
+          "type": "number"
+        },
+        "demand_mw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Demand Mw"
+        },
+        "capacity_mw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Capacity Mw"
+        },
+        "load_zone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Load Zone"
+        },
+        "price_mwh": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Price Mwh"
+        },
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "stale": {
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "note",
+        "eea_level",
+        "reserves_mw",
+        "demand_mw",
+        "capacity_mw",
+        "load_zone",
+        "price_mwh",
+        "as_of",
+        "stale"
+      ],
+      "title": "GridNow",
+      "type": "object"
+    },
     "Home": {
       "properties": {
         "profile_type": {
@@ -423,14 +517,12 @@
         "grid": {
           "anyOf": [
             {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/$defs/GridNow"
             },
             {
               "type": "null"
             }
-          ],
-          "title": "Grid"
+          ]
         }
       },
       "required": [
