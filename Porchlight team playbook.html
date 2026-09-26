@@ -1078,6 +1078,7 @@ def shrink_rates(events, years, floor_cv=0.25):
         <dt>First two hours</dt><dd>Paper-wireframe the report and map, scaffold Next.js, and build against fixture JSON from the contract.</dd>
         <dt>Done means</dt><dd>Every state is designed, the report works on a phone, and nothing shifts while it loads.</dd>
         <dt>What Base sees</dt><dd>Taste and product sense applied to their actual funnel.</dd>
+        <dt>Ready for you (Nolan, 2:50 PM)</dt><dd>Real data for the report page and the 7 PM run-through: <code>createReport({address, heat})</code>, <code>streamNarrative(id, handlers)</code> and <code>trackEvent(...)</code> in <code>src/lib/report/client.ts</code>, typed by <code>src/lib/report/types.ts</code>. Run <code>make api</code> (or <code>docker compose up --wait</code>). Every field, including null states (no sizing outside the demo homes, degraded sources, stale grid), is described in A-02. The three persona reports are also saved in <code>data/processed/reports/</code> if you want static data first. Pays-twice county rows: <code>GET /v1/areas?layer=pays_twice</code>.</dd>
       </dl>
     </div>
     <div class="card">
@@ -1085,7 +1086,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="role">Platform and reliability</p>
       <dl>
         <dt>Owns</dt><dd>Repo, compose, FastAPI service, adapters (Census, NWS, ERCOT), Redis cache, Postgres funnel events, CI, deploy, load test.</dd>
-        <dt>First two hours</dt><dd><span class="tag done">Done</span> Repo skeleton, compose up with health checks. Still open: <code>/v1/report</code> serving the fixture, CI green.</dd>
+        <dt>First two hours</dt><dd><span class="tag done">Done</span> Repo skeleton, compose up with health checks. <span class="tag done">Done</span> by Nolan while Victor was away: <code>/v1/report</code> on real data (<code>182fb92</code>), CI green with pytest (<code>182fb92</code>), ERCOT snapshot (<code>4652df7</code>), load test (<code>0727e09</code>), funnel events (<code>22772e8</code>), clean-clone <code>make demo</code> (<code>342b4a5</code>). Open: deploy target, and converging <code>risk-data.ts</code> with <code>api/app/schemas.py</code>.</dd>
         <dt>Done means</dt><dd>Kill NWS or the LLM mid-demo and the report still renders with honest status chips; <code>make demo</code> works from a clean clone.</dd>
         <dt>What Base sees</dt><dd>The same instincts Base describes for its own fleet: stale data is flagged, not trusted.</dd>
       </dl>
