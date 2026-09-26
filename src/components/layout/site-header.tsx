@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BasePowerLogo } from "@/components/brand/base-power-logo";
 import { cn } from "@/lib/utils";
 
 type SiteHeaderProps = {
   children?: ReactNode;
   className?: string;
   homeHref?: string;
-  /** When true, header floats over content (map) with a translucent bar. */
+  /** When true, header floats over content (map). */
   overlay?: boolean;
 };
 
@@ -19,39 +20,19 @@ export function SiteHeader({
   return (
     <header
       className={cn(
-        "relative z-40 text-foreground",
-        /* Transparent shell — light glass on absolute children for Liquid Glass */
-        overlay
-          ? "absolute inset-x-0 top-0"
-          : "sticky top-0 border-b border-border/60",
+        "relative z-40 border-b border-border bg-white text-foreground",
+        overlay ? "absolute inset-x-0 top-0" : "sticky top-0",
         className,
       )}
       style={{ paddingTop: "var(--sat)" }}
     >
-      {overlay ? (
-        <>
-          <div aria-hidden className="frost-glass" />
-          <div
-            aria-hidden
-            className="frost-wash !bg-gradient-to-b from-white/80 via-white/55 to-transparent"
-          />
-        </>
-      ) : (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-background/80 backdrop-blur-md"
-        />
-      )}
-
       <div className="relative mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
         <Link
           href={homeHref}
-          className="flex items-center gap-2 font-semibold tracking-tight"
+          className="inline-flex items-center text-foreground transition-opacity hover:opacity-80"
+          aria-label="Base Power home"
         >
-          <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary text-xs text-primary-foreground">
-            BP
-          </span>
-          Base Power
+          <BasePowerLogo className="h-8 w-auto sm:h-9" />
         </Link>
         {children}
       </div>

@@ -48,6 +48,22 @@ Auth protects `/onboarding`, `/risk`, and `/crm`. Sign-in lives at `/` and uses 
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Containers
+
+```bash
+docker compose up --build
+```
+
+| Service | Port | Health |
+| --- | --- | --- |
+| web | 3000 | `GET /api/health` |
+| api | 4000 | `GET /health` |
+| worker | — | `GET /health` inside the container |
+| postgres | 5432 | `pg_isready -U postgres -h localhost` |
+| redis | 6379 | `redis-cli ping` |
+
+Local Postgres uses Supabase’s defaults: user `postgres`, password `postgres`, database `postgres`.
+
 ## Product flow (scaffold)
 
 | Area | Routes |

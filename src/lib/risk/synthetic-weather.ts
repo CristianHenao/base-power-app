@@ -136,8 +136,8 @@ export function generateSyntheticWeatherHazards(
       gridImpact: "Elevated outage risk from downed lines and momentary faults.",
       severity: 4,
       bearing: 35 + seededUnit(lng, lat, 1) * 40,
-      distanceKm: 2.2 + seededUnit(lng, lat, 2) * 2.5,
-      radiusKm: 1.8 + seededUnit(lng, lat, 3) * 1.2,
+      distanceKm: 0.35 + seededUnit(lng, lat, 2) * 0.55,
+      radiusKm: 0.45 + seededUnit(lng, lat, 3) * 0.25,
     },
     {
       kind: "snow",
@@ -147,8 +147,8 @@ export function generateSyntheticWeatherHazards(
       gridImpact: "Ice accretion can snap laterals; heating load rises overnight.",
       severity: 3,
       bearing: 200 + seededUnit(lng, lat, 4) * 50,
-      distanceKm: 3.5 + seededUnit(lng, lat, 5) * 3,
-      radiusKm: 2.4 + seededUnit(lng, lat, 6) * 1.6,
+      distanceKm: 0.5 + seededUnit(lng, lat, 5) * 0.7,
+      radiusKm: 0.55 + seededUnit(lng, lat, 6) * 0.3,
     },
     {
       kind: "heat",
@@ -158,8 +158,8 @@ export function generateSyntheticWeatherHazards(
       gridImpact: "Transformer and feeder overload risk during late-afternoon peak.",
       severity: 5,
       bearing: 280 + seededUnit(lng, lat, 7) * 45,
-      distanceKm: 1.4 + seededUnit(lng, lat, 8) * 2,
-      radiusKm: 3.2 + seededUnit(lng, lat, 9) * 1.8,
+      distanceKm: 0.25 + seededUnit(lng, lat, 8) * 0.45,
+      radiusKm: 0.65 + seededUnit(lng, lat, 9) * 0.3,
     },
     {
       kind: "storm",
@@ -168,8 +168,8 @@ export function generateSyntheticWeatherHazards(
       gridImpact: "Brief voltage sags possible on exposed radial circuits.",
       severity: 2,
       bearing: 120 + seededUnit(lng, lat, 10) * 35,
-      distanceKm: 5 + seededUnit(lng, lat, 11) * 2.5,
-      radiusKm: 1.2 + seededUnit(lng, lat, 12) * 0.8,
+      distanceKm: 0.8 + seededUnit(lng, lat, 11) * 0.6,
+      radiusKm: 0.35 + seededUnit(lng, lat, 12) * 0.2,
     },
   ];
 
