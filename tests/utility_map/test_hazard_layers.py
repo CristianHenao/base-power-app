@@ -34,3 +34,23 @@ def test_combined_rank_is_the_mean_of_component_ranks_and_keeps_missing_parts_ou
     assert rank["x"] == pytest.approx((0.0 + 1.0) / 2)
     assert rank["y"] == pytest.approx((0.5 + 0.0) / 2)
     assert rank["z"] == pytest.approx(1.0)
+
+
+def test_winter_and_heat_types_are_the_prd_lists() -> None:
+    from pipeline.utility_map.hazard_layers import HEAT_TYPES, WINTER_TYPES
+
+    assert WINTER_TYPES == {"Winter Storm", "Ice Storm", "Extreme Cold/Wind Chill", "Cold/Wind Chill",
+                            "Frost/Freeze", "Heavy Snow", "Blizzard", "Winter Weather"}
+    assert HEAT_TYPES == {"Heat", "Excessive Heat"}
+
+
+def test_uri_counts_one_winter_day_per_county_day() -> None:
+    events = _events([
+        ("48201", "Winter Storm", "2021-02-14"),
+        ("48201", "Ice Storm", "2021-02-14"),
+        ("48201", "Extreme Cold/Wind Chill", "2021-02-15"),
+    ])
+    from pipeline.utility_map.hazard_layers import WINTER_TYPES
+
+    days = event_days_per_year(events, WINTER_TYPES, years=1, counties=["48201"])
+    assert days["48201"] == 2.0

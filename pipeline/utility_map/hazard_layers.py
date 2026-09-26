@@ -2,6 +2,8 @@
 
 flood  value: flood, flash-flood and coastal-flood event-days per year (2000-2025);
        rank:  mean of the Texas ranks of that value and FEMA NRI's flood score.
+winter value: winter storm, ice, snow, cold and freeze event-days per year (2000-2025).
+heat   value: heat and excessive-heat event-days per year (2000-2025).
 Event-days count each county and local date once, so one storm filed as several
 reports is one day. Counties with no events get 0 (a measured zero), not missing.
 
@@ -18,6 +20,9 @@ from pipeline.map_layers import nri_layers, percentile_ranks
 from pipeline.utility_map.storm_events import YEARS
 
 FLOOD_TYPES = {"Flood", "Flash Flood", "Coastal Flood"}
+WINTER_TYPES = {"Winter Storm", "Ice Storm", "Extreme Cold/Wind Chill", "Cold/Wind Chill",
+                "Frost/Freeze", "Heavy Snow", "Blizzard", "Winter Weather"}
+HEAT_TYPES = {"Heat", "Excessive Heat"}
 EVENTS = settings.UTILITY_MAP_DIR / "storm_events.parquet"
 
 
@@ -50,6 +55,11 @@ def main() -> int:
         "nri_flood": nri_flood.to_numpy(),
     })
     flood.to_parquet(settings.UTILITY_MAP_DIR / "county_flood.parquet", index=False)
+    for name, types in (("winter", WINTER_TYPES), ("heat", HEAT_TYPES)):
+        days = event_days_per_year(events, types, years, counties).round(3)
+        days.rename(name).rename_axis("county_fips").reset_index().to_parquet(
+            settings.UTILITY_MAP_DIR / f"county_{name}.parquet", index=False)
+        print(f"{name}: {(days > 0).sum()} counties with events; top {days.idxmax()} {days.max():.2f} days/yr")
     print(flood.sort_values("rank", ascending=False).head(8).to_string(index=False))
     return 0
 

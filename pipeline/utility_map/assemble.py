@@ -70,8 +70,18 @@ LAYERS: list[dict] = [
      "method": "NHC best tracks interpolated hourly. Each storm whose 34 kt+ winds passed within 100 km of the "
                "county's interior point counts its strongest wind there ÷ 64 kt (a hurricane-force pass = 1).",
      "table": "county_hurricane.parquet"},
-    {"id": "winter", "group": "hazard", "label": "Winter freeze", "pending": "NOAA Storm Events (UM-5.1)"},
-    {"id": "heat", "group": "hazard", "label": "Extreme heat", "pending": "NOAA Storm Events (UM-5.1)"},
+    {"id": "winter", "group": "hazard", "label": "Winter freeze", "pending": "NOAA Storm Events (UM-5.1)",
+     "unit": "winter storm, ice, snow, cold and freeze event-days per year (NOAA, 2000-2025)",
+     "period_start": "2000-01-01", "period_end": "2025-12-31", "source_ids": ["noaa_storm_events"],
+     "method": "NOAA Storm Events filed for the county or its forecast zone; each county and local date counted "
+               "once. Zone-based records, so shown by county only.",
+     "table": "county_winter.parquet"},
+    {"id": "heat", "group": "hazard", "label": "Extreme heat", "pending": "NOAA Storm Events (UM-5.1)",
+     "unit": "heat and excessive-heat event-days per year (NOAA, 2000-2025)",
+     "period_start": "2000-01-01", "period_end": "2025-12-31", "source_ids": ["noaa_storm_events"],
+     "method": "NOAA Storm Events filed for the county or its forecast zone; each county and local date counted "
+               "once. Reporting varies by NWS office, so compare neighbors with care.",
+     "table": "county_heat.parquet"},
     {"id": "weather", "group": "hazard", "label": "Weather hazard (FEMA)",
      "unit": "FEMA NRI risk score, 0-100 (mean of winter, ice, hurricane, wind, tornado, heat)",
      "period_start": None, "period_end": "2025-12-01", "source_ids": ["fema_nri"],
