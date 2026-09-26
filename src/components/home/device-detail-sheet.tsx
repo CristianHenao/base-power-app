@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Cross, Fuel, ScanLine, Snowflake } from "lucide-react";
+import { CircuitBoard, Cross, Fuel, ScanLine, Snowflake } from "lucide-react";
 import { NameplateScanSheet } from "@/components/home/nameplate-scan-sheet";
+import { PanelScanSheet } from "@/components/home/panel-scan-sheet";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,10 +14,12 @@ import {
 } from "@/components/ui/sheet";
 import {
   applyNameplateToDevice,
+  applyPanelDirectoryToDevice,
   deviceDetailRows,
   HOME_DEVICE_CATEGORY_META,
   type DeviceNameplateResult,
   type HomeDevice,
+  type PanelDirectoryResult,
 } from "@/lib/home/devices";
 import {
   formatGeneratorExtensionDetail,
@@ -38,21 +41,30 @@ export function DeviceDetailSheet({
   onDeviceUpdate,
 }: DeviceDetailSheetProps) {
   const [nameplateOpen, setNameplateOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   if (!device) return null;
 
+  const isPanel = device.kind === "panel" || device.category === "panel";
   const rows = deviceDetailRows(device);
   const critical = device.isMedical || device.needsRefrigeration;
-  const detailOpen = open && !nameplateOpen;
+  const enrichOpen = nameplateOpen || panelOpen;
+  const detailOpen = open && !enrichOpen;
   const generatorExt = generatorExtensionForDevice(device);
+  const breakers = device.breakers ?? [];
 
   function handleNameplateRead(result: DeviceNameplateResult) {
     const next = applyNameplateToDevice(device!, result);
     onDeviceUpdate(next);
   }
 
+  function handlePanelRead(result: PanelDirectoryResult) {
+    const next = applyPanelDirectoryToDevice(device!, result);
+    onDeviceUpdate(next);
+  }
+
   function handleDetailOpenChange(next: boolean) {
-    if (nameplateOpen) return;
+    if (enrichOpen) return;
     onOpenChange(next);
   }
 
@@ -72,6 +84,10 @@ export function DeviceDetailSheet({
                   alt=""
                   className="size-14 shrink-0 rounded-2xl object-cover ring-1 ring-black/10"
                 />
+              ) : isPanel ? (
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-black/[0.05] text-foreground/70">
+                  <CircuitBoard className="size-6" aria-hidden />
+                </span>
               ) : null}
               <div className="min-w-0 flex-1">
                 <SheetTitle className="text-lg">{device.name}</SheetTitle>
@@ -79,8 +95,14 @@ export function DeviceDetailSheet({
                   {HOME_DEVICE_CATEGORY_META[device.category].label}
                   {device.brand ? ` · ${device.brand}` : null}
                 </SheetDescription>
-                {critical || device.kind === "generator" ? (
+                {critical || device.kind === "generator" || isPanel ? (
                   <div className="mt-2 flex flex-wrap gap-1">
+                    {isPanel ? (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-black/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                        <CircuitBoard className="size-2.5" aria-hidden />
+                        Breaker panel
+                      </span>
+                    ) : null}
                     {device.kind === "generator" ? (
                       <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
                         <Fuel className="size-2.5" aria-hidden />
@@ -123,23 +145,110 @@ export function DeviceDetailSheet({
               </div>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3">
-              {rows.map((row) => (
-                <div
-                  key={row.key}
-                  className="rounded-2xl bg-black/[0.03] px-3 py-2.5"
-                >
+            {isPanel && breakers.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between gap-2">
                   <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                    {row.label}
+                    Breakers
                   </p>
-                  <p className="mt-1 text-sm font-medium break-words text-foreground">
-                    {row.value}
+                  <p className="text-[11px] text-muted-foreground">
+                    {breakers.length} circuit
+                    {breakers.length === 1 ? "" : "s"}
                   </p>
                 </div>
-              ))}
-            </div>
+                <ul className="divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/8 bg-white">
+                  {breakers.map((breaker) => (
+                    <li
+                      key={breaker.id}
+                      className="flex items-start gap-3 px-3.5 py-2.5"
+                    >
+                      <span
+                        className={cn(
+                          "mt-0.5 flex min-w-10 shrink-0 items-center justify-center rounded-md px-1.5 py-1 font-mono text-[11px] font-semibold",
+                          breaker.isMain
+                            ? "bg-foreground text-background"
+                            : breaker.isSpare
+                              ? "bg-black/[0.04] text-muted-foreground"
+                              : "bg-amber-400/20 text-amber-950",
+                        )}
+                      >
+                        {breaker.position}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "text-sm font-medium",
+                            breaker.isSpare
+                              ? "text-muted-foreground"
+                              : "text-foreground",
+                          )}
+                        >
+                          {breaker.label}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {breaker.isMain
+                            ? "Main"
+                            : breaker.side !== "unknown"
+                              ? breaker.side
+                              : null}
+                          {breaker.amps != null
+                            ? `${breaker.isMain || breaker.side !== "unknown" ? " · " : ""}${breaker.amps} A`
+                            : null}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {rows.map((row) => (
+                  <div
+                    key={row.key}
+                    className="rounded-2xl bg-black/[0.03] px-3 py-2.5"
+                  >
+                    <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                      {row.label}
+                    </p>
+                    <p className="mt-1 text-sm font-medium break-words text-foreground">
+                      {row.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            {device.nameplateScannedAt ? (
+            {isPanel && breakers.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {rows
+                  .filter((row) =>
+                    ["brand", "model", "main_amps", "spaces", "circuits"].includes(
+                      row.key,
+                    ),
+                  )
+                  .map((row) => (
+                    <div
+                      key={row.key}
+                      className="rounded-2xl bg-black/[0.03] px-3 py-2.5"
+                    >
+                      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                        {row.label}
+                      </p>
+                      <p className="mt-1 text-sm font-medium break-words text-foreground">
+                        {row.value}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            ) : null}
+
+            {isPanel ? (
+              <p className="text-center text-[11px] text-muted-foreground">
+                {device.panelScannedAt
+                  ? `Panel scanned ${new Date(device.panelScannedAt).toLocaleString()}`
+                  : "Open the panel door and scan the breaker numbers plus handwritten labels."}
+              </p>
+            ) : device.nameplateScannedAt ? (
               <p className="text-center text-[11px] text-muted-foreground">
                 Nameplate scanned{" "}
                 {new Date(device.nameplateScannedAt).toLocaleString()}
@@ -154,16 +263,23 @@ export function DeviceDetailSheet({
 
             <button
               type="button"
-              onClick={() => setNameplateOpen(true)}
+              onClick={() => {
+                if (isPanel) setPanelOpen(true);
+                else setNameplateOpen(true);
+              }}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "w-full gap-2 bg-foreground text-background hover:bg-foreground/90",
               )}
             >
               <ScanLine className="size-4" aria-hidden />
-              {device.nameplateScannedAt
-                ? "Scan label again"
-                : "Scan for exact data"}
+              {isPanel
+                ? device.panelScannedAt
+                  ? "Scan panel again"
+                  : "Scan breaker labels"
+                : device.nameplateScannedAt
+                  ? "Scan label again"
+                  : "Scan for exact data"}
             </button>
           </div>
         </SheetContent>
@@ -173,6 +289,12 @@ export function DeviceDetailSheet({
         open={nameplateOpen}
         onClose={() => setNameplateOpen(false)}
         onNameplateRead={handleNameplateRead}
+      />
+
+      <PanelScanSheet
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        onPanelRead={handlePanelRead}
       />
     </>
   );
