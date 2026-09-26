@@ -14,18 +14,20 @@ Built for the Base Power x AITX hackathon by Christian, Victor, Nolan and Alejan
 - **Real outage history.** Every 15-minute county outage reading in Texas, 2018-2025 (ORNL EAGLE-I), turned into events with a duration band per home.
 - **Real storms, replayed.** Uri, Beryl, the 2023 ice storm and the 2024 derechos, run against a 39.2 kWh Core on ERCOT's measured household load for those exact days.
 - **An honest outlook.** 12-hour-plus outages per typical home, fit per county with empirical Bayes and backtested against simpler forecasts.
+- **A household answer.** Expected hours a year this home is dark with 0, 1 or 2 Cores, from how often outages hit the county and how long each kind of storm lasts, for the appliances you pick (medical devices first). It is computed on your device; the list is never sent.
 - **A guarded narrator.** The LLM writes the summary but never calculates; a validator rejects any number it can't trace to a fact.
 - **Where a Core pays twice.** Utility and county stress map built from EIA-861, FEMA NRI, ACS and ERCOT prices.
 
 ## Results
-
-<!-- TODO: fill from the pipeline before submitting -->
 
 | | |
 |---|---|
 | Outlook backtest (fit 2018-22, scored 2023-24) | Poisson deviance 122 against 126 for the weather-zone mean and 152 for the statewide mean; rank correlation 0.42 ([MODEL_CARD.md](MODEL_CARD.md)) |
 | Narrator eval pass rate | 88-100% first reply, 96-100% after one retry across runs, 24 fixtures ([Narrator evals](#narrator-evals)) |
 | Report latency (p95) and load test | 82 ms for a county report and 112 ms for a cached address at 20 concurrent, 0 errors in 900 requests ([API](#api)) |
+| Outage duration model (fit 2018-22, scored 2023-24) | Log-likelihood per home -2.56 with severity, storm type, season and zone, against -2.65 without severity, -3.02 zone-only and -3.05 pooled ([MODEL_CARD.md](MODEL_CARD.md)) |
+| Household backup gap, checked against EAGLE-I | No-backup dark hours a year: Harris 14.2 modeled vs 14.5 measured; rank correlation 0.75 across counties |
+| Tried and dropped | County covariates (FEMA risk scores, customers, co-op share) did not beat empirical Bayes for outage frequency (deviance 123 vs 122) |
 | Persona numbers hand-checked against raw data | 50 checks, none flagged ([docs/persona-check.md](docs/persona-check.md)) |
 
 ## Data
