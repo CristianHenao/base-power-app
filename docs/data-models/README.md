@@ -48,7 +48,7 @@ The existing `Address` type is reused. `HomeLocation.point` is authoritative for
 
 ## Proposed API boundary
 
-`POST /api/risk/report` is a **proposed route, not implemented**. It takes `RiskReportRequest` and returns `RiskReport`. An individual provider outage should normally yield HTTP 200 with affected sections marked unavailable/stale, retaining useful sections. Suggested top-level failures use `RiskReportError`: 400 invalid input, 422 unlocatable address, 503 no report can be produced. The user can correct an unlocatable address; no retries with identical input are expected for that error.
+`POST /v1/report` is the **planned endpoint, not implemented**. It takes `RiskReportRequest` and returns `RiskReport`. An individual provider outage should normally yield HTTP 200 with affected sections marked unavailable/stale, retaining useful sections. Suggested top-level failures use `RiskReportError`: 400 invalid input, 422 unlocatable address, 503 no report can be produced. The user can correct an unlocatable address; no retries with identical input are expected for that error.
 
 The request carries a history window and an optional confirmed utility ID. In production, IDs must be validated against the utility catalog and location. Large history and interval datasets should move to separate paginated endpoints with explicit cursor/window metadata; v0.1 fixtures contain only the exact small window indicated. A production viewport-layer endpoint should accept bounds and enabled layer IDs. Do not fetch national polygons or multi-year interval series on each browser request.
 
