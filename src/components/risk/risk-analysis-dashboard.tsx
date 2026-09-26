@@ -29,6 +29,7 @@ import {
   hazardsToHeatmapGeoJSON,
   WEATHER_ANALYSIS_ZOOM,
 } from "@/lib/risk/synthetic-weather";
+import { buildOutagePerimeter } from "@/lib/map/outage-perimeter-layers";
 import type { Address } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -188,6 +189,24 @@ export function RiskAnalysisDashboard() {
     outageBlackout,
   ]);
 
+  const outagePerimeterOverlay = useMemo(() => {
+    if (!showWeatherAnalysis || !activeOutage) return null;
+    const hazard =
+      weatherHazards.find((item) => item.id === activeOutage.hazardId) ?? null;
+    return {
+      area: buildOutagePerimeter(hazard, {
+        home: center,
+        impactedHome: activeOutage.impactedHome,
+      }),
+      visible: true,
+    };
+  }, [
+    showWeatherAnalysis,
+    activeOutage,
+    weatherHazards,
+    center,
+  ]);
+
   const mapZoom = revealBattery
     ? MAP_DEFAULTS.batteryRevealZoom
     : outageBlackout
@@ -227,6 +246,7 @@ export function RiskAnalysisDashboard() {
             basemap={basemap}
             marker={marker}
             weatherHazards={weatherOverlay}
+            outagePerimeter={outagePerimeterOverlay}
             outageBlackout={outageBlackout}
             enableThreeLayer={false}
           />
