@@ -83,6 +83,8 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # Server-side only: where /api/report forwards to inside the compose network.
+      PORCHLIGHT_API_URL: http://api:4000
       NEXT_MAPBOX_ACCESS_TOKEN: ${NEXT_MAPBOX_ACCESS_TOKEN:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
       REDIS_URL: redis://redis:6379
