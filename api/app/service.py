@@ -125,6 +125,22 @@ class ReportService:
         self._reports.put(report_id, report)
         return report
 
+    def areas(self, layer: str) -> list[dict]:
+        """County rows for a map layer. Only pays_twice is served here; the sales map reads its own files."""
+        if layer != "pays_twice":
+            raise ValueError("layer must be pays_twice")
+        cursor = self._con.cursor()
+        tables = {row[0] for row in cursor.execute("show tables").fetchall()}
+        if "pays_twice" not in tables:
+            raise LookupError("pays_twice is not built; run python -m pipeline.pays_twice")
+        frame = cursor.execute("""
+            select county_fips, county, load_zone, base_offer, homes, long_outages_per_year,
+                   household_long_outages, grid_usd_per_core, home_rank, grid_rank, "index"
+            from pays_twice order by "index" desc nulls last
+        """).df()
+        return [{key: (None if isinstance(value, float) and value != value else value)
+                 for key, value in row.items()} for row in frame.to_dict(orient="records")]
+
     def get(self, report_id: str) -> dict | None:
         return self._reports.get(report_id)
 

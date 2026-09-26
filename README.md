@@ -174,6 +174,7 @@ curl -X POST localhost:8000/v1/debug/faults -d '{"nws": true, "llm": true}' \
 | `GET /v1/report/{id}` | The stored report (one hour) |
 | `GET /v1/report/{id}/narrative` | Server-sent events: status, headline, tokens, done. Only validated text streams |
 | `GET /v1/report/{id}/narrative.json` | The same narrative as JSON |
+| `POST /v1/events`, `GET /v1/events/summary` | Funnel events (`report_viewed`, `replay_opened`, `cta_clicked`) with a report id and county only; Postgres in compose, memory otherwise |
 | `GET /v1/grid/now` | ERCOT conditions, reserves, demand and real-time prices by load zone, refreshed every 5 minutes |
 | `GET /health`, `/metrics` | Liveness and Prometheus metrics (latency by route, adapter outcomes) |
 

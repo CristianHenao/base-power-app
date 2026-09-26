@@ -48,6 +48,89 @@ export type Database = {
         };
         Relationships: [];
       };
+      home_devices: {
+        Row: {
+          id: string;
+          user_id: string;
+          client_key: string;
+          name: string;
+          kind: string;
+          category: string;
+          brand: string | null;
+          model: string | null;
+          watts: number;
+          watts_exact: boolean;
+          confidence: number;
+          notes: string | null;
+          is_medical: boolean;
+          needs_refrigeration: boolean;
+          thumbnail_url: string | null;
+          specs: Json;
+          nameplate: Json | null;
+          nameplate_scanned_at: string | null;
+          scanned_at: string;
+          source: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          client_key: string;
+          name: string;
+          kind: string;
+          category: string;
+          brand?: string | null;
+          model?: string | null;
+          watts?: number;
+          watts_exact?: boolean;
+          confidence?: number;
+          notes?: string | null;
+          is_medical?: boolean;
+          needs_refrigeration?: boolean;
+          thumbnail_url?: string | null;
+          specs?: Json;
+          nameplate?: Json | null;
+          nameplate_scanned_at?: string | null;
+          scanned_at?: string;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          client_key?: string;
+          name?: string;
+          kind?: string;
+          category?: string;
+          brand?: string | null;
+          model?: string | null;
+          watts?: number;
+          watts_exact?: boolean;
+          confidence?: number;
+          notes?: string | null;
+          is_medical?: boolean;
+          needs_refrigeration?: boolean;
+          thumbnail_url?: string | null;
+          specs?: Json;
+          nameplate?: Json | null;
+          nameplate_scanned_at?: string | null;
+          scanned_at?: string;
+          source?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "home_devices_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -58,3 +141,8 @@ export type Database = {
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+export type HomeDeviceRow = Database["public"]["Tables"]["home_devices"]["Row"];
+export type HomeDeviceInsert =
+  Database["public"]["Tables"]["home_devices"]["Insert"];
+export type HomeDeviceUpdate =
+  Database["public"]["Tables"]["home_devices"]["Update"];

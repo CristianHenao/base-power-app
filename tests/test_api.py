@@ -202,3 +202,32 @@ def test_report_carries_the_grid_for_its_load_zone(monkeypatch):
     report = client.post("/v1/report", json={"county_fips": "48201"}).json()
     assert report["live"]["grid"] is None
     assert {s["id"]: s["status"] for s in report["sources"]}["ercot_live"] == "degraded"
+
+
+def test_areas_serves_pays_twice_rows(client):
+    body = client.get("/v1/areas", params={"layer": "pays_twice"}).json()
+    assert body["layer"] == "pays_twice" and len(body["counties"]) == 254
+    scored = [row["index"] for row in body["counties"] if row["index"] is not None]
+    assert body["counties"][0]["index"] == max(scored)
+    assert body["counties"][-1]["index"] is None  # counties outside ERCOT sort last
+    assert client.get("/v1/areas", params={"layer": "flood"}).status_code == 422
+
+
+def test_funnel_events_are_counted_without_personal_data():
+    from api.app.events import MemoryStore
+
+    client = TestClient(create_app(_service(), events=MemoryStore()))
+    assert client.post("/v1/events", json={"name": "report_viewed", "report_id": "rpt_0123456789ab",
+                                           "county_fips": "48201"}).status_code == 202
+    client.post("/v1/events", json={"name": "cta_clicked"})
+    assert client.get("/v1/events/summary").json() == {"counts": {"report_viewed": 1, "cta_clicked": 1},
+                                                       "store": "MemoryStore"}
+    assert client.post("/v1/events", json={"name": "report_viewed", "address": "1 Main St"}).status_code == 422
+    assert client.post("/v1/events", json={"name": "signed_up"}).status_code == 422
+
+
+def test_event_store_falls_back_to_memory_without_a_database():
+    from api.app.events import MemoryStore, event_store
+
+    assert isinstance(event_store(None), MemoryStore)
+    assert isinstance(event_store("postgres://nobody:nothing@127.0.0.1:1/none"), MemoryStore)

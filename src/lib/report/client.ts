@@ -65,3 +65,16 @@ export function streamNarrative(reportId: string, handlers: NarrativeHandlers): 
   };
   return () => source.close();
 }
+
+export type FunnelEventName = "report_viewed" | "replay_opened" | "cta_clicked";
+
+/** Fire-and-forget funnel event. Carries the report id and county only; never an address. */
+export function trackEvent(name: FunnelEventName, report?: Pick<Report, "report_id" | "location">): void {
+  const body = JSON.stringify({
+    name,
+    report_id: report?.report_id ?? null,
+    county_fips: report?.location.county_fips ?? null,
+  });
+  void fetch("/api/events", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true })
+    .catch(() => undefined);
+}

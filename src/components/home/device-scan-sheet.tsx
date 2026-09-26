@@ -173,7 +173,7 @@ export function DeviceScanSheet({
           }
         }
       } catch {
-        // Keep data-URL thumbnail if disk save fails (e.g. serverless).
+        // Keep data-URL thumbnail if Storage upload fails (e.g. signed out).
       }
 
       setScanMeta(payload.device);
