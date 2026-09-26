@@ -31,10 +31,17 @@ COUNTIES = settings.REPO_ROOT / "public" / "utility-map" / "data" / "counties.ge
 
 
 def texas_tracks(frame: pd.DataFrame, years=YEARS) -> pd.DataFrame:
-    in_years = frame["yr"].between(min(years), max(years))
-    whole_texas = (frame["ns"] == 1) & (frame["sg"] == 1) & (frame["st"] == "TX")
-    texas_segment = (frame["sg"] == 2) & (frame["st"] == "TX")
-    return frame.loc[in_years & (whole_texas | texas_segment)].reset_index(drop=True)
+    """Texas tracks plus border-crossing tracks; each track once.
+
+    The current actual_tornadoes file carries whole tracks only (sg = 1). If Texas state
+    segments (sg = 2) are present they replace their whole track. Distance outside Texas
+    is dropped later when tracks are clipped to Texas counties.
+    """
+    frame = frame.loc[frame["yr"].between(min(years), max(years))]
+    segments = frame.loc[(frame["sg"] == 2) & (frame["st"] == "TX")]
+    whole = frame.loc[frame["sg"].isin([1, -9]) & ((frame["st"] == "TX") | (frame["ns"] > 1))]
+    whole = whole.loc[~whole.set_index(["om", "yr"]).index.isin(segments.set_index(["om", "yr"]).index)]
+    return pd.concat([whole, segments]).sort_values(["yr", "om"], kind="stable").reset_index(drop=True)
 
 
 def _geometry(row) -> Point | LineString:
@@ -82,6 +89,8 @@ def main() -> int:
     index.round(4).rename_axis("county_fips").reset_index().to_parquet(
         settings.UTILITY_MAP_DIR / "county_tornado.parquet", index=False)
 
+    in_texas = tracks.set_index(["om", "yr"]).index.isin(lengths.set_index(["om", "yr"]).index)
+    tracks = tracks.loc[in_texas]
     features = [
         {"type": "Feature",
          "properties": {"ef": int(r.mag), "year": int(r.yr), "date": str(r.date), "len_km": round(float(r.len) * MILE_KM, 1),

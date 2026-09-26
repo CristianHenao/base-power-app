@@ -13,15 +13,19 @@ def _row(**kw) -> dict:
     return row | kw
 
 
-def test_texas_tracks_keep_whole_texas_tracks_and_texas_segments_only() -> None:
+def test_texas_tracks_keep_texas_and_border_crossing_tracks_once() -> None:
     frame = pd.DataFrame([
-        _row(om=1),
-        _row(om=2, st="OK"),
-        _row(om=3, ns=2, sg=1),            # multi-state whole track: skip, its state segments follow
-        _row(om=3, ns=2, sg=2, st="TX"),   # Texas segment of that track: keep
-        _row(om=4, yr=1999),
+        _row(om=1),                          # Texas only
+        _row(om=2, st="OK"),                 # Oklahoma only: out
+        _row(om=3, ns=2, sn=0, sg=1),        # starts in Texas, crosses a border: in (clipped later)
+        _row(om=5, st="OK", ns=2, sn=0),     # starts in Oklahoma, crosses into Texas: in (clipped later)
+        _row(om=4, yr=1999),                 # outside the window
+        _row(om=6, ns=2, sn=0, sg=1),        # whole track that also has a Texas segment row...
+        _row(om=6, ns=2, sn=1, sg=2),        # ...so only the segment is kept
+        _row(om=6, st="OK", ns=2, sn=1, sg=2),
     ])
-    assert list(texas_tracks(frame, years=range(2000, 2026))["om"]) == [1, 3]
+    kept = texas_tracks(frame, years=range(2000, 2026))
+    assert sorted(zip(kept["om"], kept["sg"])) == [(1, 1), (3, 1), (5, 1), (6, 2)]
 
 
 def test_a_track_is_split_between_counties_by_the_distance_it_runs_in_each() -> None:
