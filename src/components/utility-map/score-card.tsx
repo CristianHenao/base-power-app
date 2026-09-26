@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { HazardChip } from "@/components/utility-map/hazard-chip";
 import { RISK_BANDS, RISK_HAZARDS } from "@/lib/utility-map/describe-view";
@@ -13,6 +14,7 @@ import {
   scoreFactors,
   worstStorm,
   type Driver,
+  type ChapterId,
 } from "@/lib/utility-map/score-card";
 import { LEVEL_COLORS, type Level } from "@/lib/utility-map/scoring";
 import type { LayerId, Quality, RiskIndex, UtilityMapData } from "@/lib/utility-map/types";
@@ -37,6 +39,10 @@ export type ScoreCardProps = {
   floodplainPct?: number | null;
   /** Chapter 5, "What could Base add?": the fleet card for this place. */
   baseChapter?: React.ReactNode;
+  /** "How big is this grid?": size, peak and local generation. */
+  gridChapter?: React.ReactNode;
+  /** The chapter to bring into view (follows the question picked in the left panel). */
+  focus?: ChapterId;
 };
 
 /**
@@ -45,6 +51,17 @@ export type ScoreCardProps = {
  */
 export function ScoreCard(props: ScoreCardProps) {
   const { data, kind, name, risk, ranks, values, quality, fips, storms } = props;
+  // Follow the left panel: bring the chapter for the chosen question into view (instantly with reduced motion).
+  const cardRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const target = props.focus ? cardRef.current?.querySelector(`[data-chapter="${props.focus}"]`) : null;
+    if (!target) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const frame = window.requestAnimationFrame(() =>
+      target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }),
+    );
+    return () => window.cancelAnimationFrame(frame);
+  }, [props.focus, name]);
   const peers = kind === "county" ? "counties" : "utilities";
   const level = (risk?.level ?? null) as Level | null;
   const color = level ? LEVEL_COLORS[level] : "var(--bp-grey-20)";
@@ -80,11 +97,12 @@ export function ScoreCard(props: ScoreCardProps) {
 
   return (
     <section
+      ref={cardRef}
       aria-label="Grid Risk Index score card"
       className="space-y-5 rounded-[20px] border-2 bg-white p-5"
       style={{ borderColor: color }}
     >
-      <Chapter n={1} title="How at risk is it?">
+      <Chapter id="risk" n={1} title="How at risk is it?">
         <div
           className="flex items-end justify-between gap-3 rounded-2xl px-5 py-4"
           style={{ backgroundColor: color, color: ink }}
@@ -124,7 +142,7 @@ export function ScoreCard(props: ScoreCardProps) {
         </div>
       </Chapter>
 
-      <Chapter n={2} title="Why does it score this way?">
+      <Chapter id="why" n={2} title="Why does it score this way?">
       <div className="grid gap-4 sm:grid-cols-2">
         <FactorList
           title="Raising the risk"
@@ -158,7 +176,7 @@ export function ScoreCard(props: ScoreCardProps) {
 
       </Chapter>
 
-      <Chapter n={3} title="What has happened here?">
+      <Chapter id="history" n={3} title="What has happened here?">
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px] leading-[19px]">
         <Fact label={kind === "county" ? "Worst storm on record" : "Worst storm on record in its counties (all utilities)"} wide>
           {storm
@@ -191,7 +209,13 @@ export function ScoreCard(props: ScoreCardProps) {
       </dl>
       </Chapter>
 
-      <Chapter n={4} title="What's happening right now?">
+      {props.gridChapter ? (
+        <Chapter id="grid" n={4} title="How big is this grid?">
+          {props.gridChapter}
+        </Chapter>
+      ) : null}
+
+      <Chapter id="now" n={props.gridChapter ? 5 : 4} title="What's happening right now?">
         <p className="text-[14px] leading-[21px] font-semibold">{liveSummary(data.live, fips)}</p>
         <p className="text-[12px] leading-[18px] text-muted-foreground">
           Live National Weather Service warnings, checked every minute. Not part of the index.
@@ -199,7 +223,7 @@ export function ScoreCard(props: ScoreCardProps) {
       </Chapter>
 
       {props.baseChapter ? (
-        <Chapter n={5} title="What could Base add?">
+        <Chapter id="base" n={props.gridChapter ? 6 : 5} title="What could Base add?">
           {props.baseChapter}
         </Chapter>
       ) : null}
@@ -222,9 +246,9 @@ export function ScoreCard(props: ScoreCardProps) {
 }
 
 /** A numbered step in the card's story. */
-function Chapter({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+function Chapter({ id, n, title, children }: { id: ChapterId; n: number; title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-3 border-t pt-4 first:border-t-0 first:pt-0">
+    <div data-chapter={id} className="scroll-mt-4 space-y-3 border-t pt-4 first:border-t-0 first:pt-0">
       <h3 className="flex items-center gap-2 text-[16px] leading-[24px] font-semibold">
         <span className="flex size-6 items-center justify-center rounded-full bg-[var(--bp-grey-100)] text-[12px] leading-none text-white">
           {n}

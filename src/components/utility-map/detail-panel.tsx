@@ -21,6 +21,7 @@ import { HAZARD_IDS, type SpotlightStorm } from "@/lib/utility-map/hazard-style"
 import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, generationSummary, paintLabel } from "@/lib/utility-map/format";
 import { riskRows, sortRiskRows } from "@/lib/utility-map/risk-table";
+import { chapterFor, gridStory } from "@/lib/utility-map/score-card";
 import {
   LEVEL_COLORS,
   utilityLayerQuality,
@@ -170,6 +171,21 @@ function RiskList({ data, countiesByFips, onSelectUtility, onOpenRiskTable }: De
       {rows.length > 15 ? <ShowAll open={open} count={rows.length} onToggle={() => setOpen(!open)} /> : null}
     </div>
   );
+}
+
+/** 1 = largest among the known values; null when this place's value is unknown. */
+function rankAmong(values: (number | null)[], mine: number | null): number | null {
+  if (mine == null) return null;
+  return 1 + values.filter((v) => v != null && v > mine).length;
+}
+
+/** Net summer MW of all power plants in a county (EIA-860). */
+function plantsIn(county: CountyRecord | undefined): number {
+  return Object.values(county?.generation_mix ?? {}).reduce((sum, mw) => sum + mw, 0);
+}
+
+function Story({ lines }: { lines: string[] }) {
+  return <p className="text-[14px] leading-[22px]">{lines.join(" ")}</p>;
 }
 
 function ShowAll({ open, count, onToggle }: { open: boolean; count: number; onToggle: () => void }) {
@@ -425,12 +441,29 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
         customers={utility.customers}
         summerPeakMw={utility.grid_stats?.summer_peak_mw ?? null}
         baseChapter={fleetCard}
+        focus={chapterFor(view.question)}
+        gridChapter={
+          <>
+            <Story
+              lines={gridStory({
+                kind: "utility",
+                name: utility.name,
+                customers: utility.customers,
+                peakMw: utility.grid_stats?.summer_peak_mw ?? null,
+                estimated: utility.grid_stats?.peak_source === "ercot_zone_estimate",
+                peakRank: rankAmong(data.utilities.map((u) => u.grid_stats?.summer_peak_mw ?? null), utility.grid_stats?.summer_peak_mw ?? null),
+                peakOf: data.utilities.filter((u) => u.grid_stats?.summer_peak_mw != null).length,
+                plantsMw: utility.counties.reduce((sum, f) => sum + plantsIn(countiesByFips.get(f)), 0),
+              })}
+            />
+            <GridCard utility={utility} />
+          </>
+        }
       />
 
       <p className="border-t pt-5 text-[12px] leading-[18px] font-semibold tracking-wide text-muted-foreground uppercase">
         More for this view
       </p>
-      {view.question === "grid" ? <GridCard utility={utility} /> : null}
       {storm ? <StormImpact storm={storm} counties={utility.counties} countiesByFips={countiesByFips} /> : null}
 
       <Breakdown
@@ -467,7 +500,6 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
         ) : null}
       </div>
 
-      {view.question !== "grid" ? <GridCard utility={utility} /> : null}
       {patterns ? fingerprint : <LongTerm open={false}>{fingerprint}</LongTerm>}
     </div>
   );
@@ -511,6 +543,33 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         storms={props.storms}
         customers={county.customers}
         floodplainPct={county.sfha_land_pct ?? null}
+        focus={chapterFor(view.question)}
+        gridChapter={
+          <>
+            <Story
+              lines={gridStory({
+                kind: "county",
+                name: `${county.name} County`,
+                customers: county.customers,
+                peakMw: county.values.peak_demand,
+                estimated: true,
+                peakRank: rankAmong(data.counties.map((c) => c.values.peak_demand), county.values.peak_demand),
+                peakOf: data.counties.filter((c) => c.values.peak_demand != null).length,
+                plantsMw: county.generation_mix ? plantsIn(county) : null,
+              })}
+            />
+            {generationSummary(county.generation_mix) ? (
+              <p className="text-[13px] leading-[19px]">
+                <span className="font-semibold">By fuel:</span> {generationSummary(county.generation_mix)}
+              </p>
+            ) : null}
+            <p className="text-[12px] leading-[18px] text-muted-foreground">
+              {county.load_zone ? `ERCOT load zone ${county.load_zone} (approximate). ` : ""}Peak is each utility&apos;s
+              2024 peak split by customers (EIA-861); plants are EIA-860 2024 net summer capacity. A grid is shared, so
+              local plants aren&apos;t reserved for the county.
+            </p>
+          </>
+        }
         baseChapter={
           <>
             <p className="text-[13px] leading-[19px] text-muted-foreground">
@@ -552,14 +611,6 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         </div>
       ) : null}
 
-      {view.question === "grid" && generationSummary(county.generation_mix) ? (
-        <p className="text-[14px] leading-[21px]">
-          <span className="font-semibold">Power plants in the county:</span> {generationSummary(county.generation_mix)}
-          <span className="block text-[12px] leading-[18px] text-muted-foreground">
-            EIA-860 2024, net summer capacity. ERCOT is one grid, so this isn&apos;t reserved for the county.
-          </span>
-        </p>
-      ) : null}
 
       {county.sfha_land_pct != null && view.question === "hazards" ? (
         <p className="bp-info px-4 py-3 text-[14px] leading-[21px]">

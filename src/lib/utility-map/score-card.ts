@@ -165,3 +165,60 @@ export function riskSummary(input: SummaryInput): string[] {
   }
   return out;
 }
+
+export type ChapterId = "risk" | "why" | "history" | "grid" | "now" | "base";
+
+/** Where the score card opens for each question in the left panel. */
+export function chapterFor(question: "risk" | "hazards" | "grid" | "fleet"): ChapterId {
+  return ({ risk: "risk", hazards: "why", grid: "grid", fleet: "base" } as const)[question];
+}
+
+function ordinal(n: number): string {
+  if (n === 1) return "the largest";
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th";
+  return `the ${n}${suffix} largest`;
+}
+
+export type GridStoryInput = {
+  kind: Kind;
+  name: string;
+  customers: number | null;
+  /** Utility: its 2024 summer peak. County: its estimated share of its utilities' peaks. */
+  peakMw: number | null;
+  estimated: boolean;
+  /** 1 = largest peak among `peakOf` peers. */
+  peakRank: number | null;
+  peakOf: number;
+  /** Net summer MW of power plants in the county (utility: in its counties, any owner). */
+  plantsMw: number | null;
+};
+
+/** "How big is this grid?" in two sentences, from the pipeline's numbers only. */
+export function gridStory(input: GridStoryInput): string[] {
+  const { kind, name, customers, peakMw, peakRank, peakOf, plantsMw } = input;
+  const who = customers != null ? `${countFormat.format(customers)} customers` : "an unknown number of customers";
+  const rank = peakRank != null ? `, ${ordinal(peakRank)} of ${peakOf} Texas ${peersOf(kind)} with a known peak` : "";
+  const out: string[] = [];
+  if (kind === "utility") {
+    out.push(
+      peakMw != null
+        ? `${name} serves ${who} with a ${countFormat.format(peakMw)} MW summer peak (2024${input.estimated ? ", estimated" : ""})${rank}.`
+        : `${name} serves ${who}; its summer peak isn't published.`,
+    );
+  } else {
+    out.push(
+      peakMw != null
+        ? `${name} has ${who} and an estimated ${countFormat.format(peakMw)} MW of summer peak demand${rank}.`
+        : `${name} has ${who}; its share of summer peak demand isn't known (its utilities don't publish one).`,
+    );
+  }
+  if (plantsMw != null) {
+    const where = kind === "county" ? "in the county" : "in its counties";
+    out.push(
+      plantsMw >= 1
+        ? `Power plants ${where} can supply ${countFormat.format(plantsMw)} MW (all owners, net summer capacity).`
+        : `No power plants ${where}; it draws on the wider grid.`,
+    );
+  }
+  return out;
+}
