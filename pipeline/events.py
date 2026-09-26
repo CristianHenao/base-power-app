@@ -94,13 +94,38 @@ def weighted_quantile(values, weights, q: float) -> float:
     return float(np.interp(q, cum, v))
 
 
+def _as_utc(series: pd.Series) -> pd.Series:
+    s = series.sort_index()
+    s = s[~s.index.duplicated(keep="last")]
+    s = pd.to_numeric(s, errors="coerce")
+    if s.index.tz is None:
+        return s.tz_localize("UTC")
+    return s.tz_convert("UTC")
+
+
+def _reported_runs(series: pd.Series) -> list[pd.Series]:
+    """Contiguous 15-minute stretches of reported counts.
+
+    A null count and a missing timestamp both end the stretch. Reported zeros stay,
+    so a source-reported quiet interval can still end or merge an event. Nothing
+    here inserts a zero for an interval the observation record does not contain.
+    """
+    s = _as_utc(series).dropna()
+    if s.empty:
+        return []
+    step = pd.Timedelta(minutes=15)
+    breaks = s.index.to_series().diff().ne(step)
+    breaks.iloc[0] = False
+    return [run for _, run in s.groupby(breaks.cumsum(), sort=False)]
+
+
 def event_curve(series: pd.Series, start, end) -> np.ndarray:
     """Customers out on the same 15-minute grid `extract_events` used.
 
     `end` is exclusive, matching the timestamp stored on an event row.
+    The window must already be fully reported. Missing slots are not filled with zero.
     """
-    s = series.sort_index().astype(float)
-    s = s[~s.index.duplicated(keep="last")].asfreq("15min", fill_value=0.0)
+    s = _as_utc(series)
     start = pd.Timestamp(start)
     end = pd.Timestamp(end)
     if start.tzinfo is None:
@@ -108,12 +133,14 @@ def event_curve(series: pd.Series, start, end) -> np.ndarray:
     if end.tzinfo is None:
         end = end.tz_localize("UTC")
     start, end = start.tz_convert("UTC"), end.tz_convert("UTC")
-    if start not in s.index or end <= start:
-        raise ValueError("event window is missing from the county series")
     last = end - pd.Timedelta(minutes=15)
-    if last not in s.index:
+    if end <= start or start not in s.index or last not in s.index:
         raise ValueError("event window is missing from the county series")
-    return s.loc[start:last].to_numpy(dtype=float)
+    window = s.loc[start:last]
+    expected = pd.date_range(start, last, freq="15min", tz="UTC")
+    if window.isna().any() or not window.index.equals(expected):
+        raise ValueError("event window is missing from the county series")
+    return window.to_numpy(dtype=float)
 
 
 def coverage(durations, weights, backup_h: float) -> tuple[float, float]:
@@ -141,13 +168,18 @@ def extract_events(series: pd.Series, customers_total: float,
                    cfg: EventConfig = EventConfig()) -> list[dict]:
     """Cut one county's customers-out series (DatetimeIndex, 15-min) into events.
 
-    Missing timestamps are treated as zero, which is how EAGLE-I stores quiet periods.
-    Model-card caveat: zeros can also be scraping gaps during big storms.
+    The series is the observation record. A reported zero is a reported zero.
+    A null count or a missing 15-minute timestamp ends the observed run and is
+    not read as customers restored. Reported quiet gaps shorter than an hour
+    still merge; unobserved gaps do not.
     """
-    if series.empty:
-        return []
-    s = series.sort_index().astype(float)
-    s = s[~s.index.duplicated(keep="last")].asfreq("15min", fill_value=0.0)
+    events: list[dict] = []
+    for run in _reported_runs(series):
+        events.extend(_events_in_run(run, customers_total, cfg))
+    return events
+
+
+def _events_in_run(s: pd.Series, customers_total: float, cfg: EventConfig) -> list[dict]:
     threshold = max(cfg.min_customers, cfg.min_frac * customers_total)
     hot = np.flatnonzero(s.to_numpy() >= threshold)
     if hot.size == 0:

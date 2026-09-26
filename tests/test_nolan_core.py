@@ -63,6 +63,18 @@ def test_coverage_bounds():
     assert coverage(d, w, 0.0)[1] == pytest.approx(0.0)
 
 
+def test_unobserved_interval_does_not_count_as_restored():
+    idx = pd.date_range("2024-07-08", periods=8, freq="15min", tz="UTC")
+    reported = pd.Series(5_000.0, index=idx).drop(idx[3:5])
+    blank = pd.Series(5_000.0, index=idx)
+    blank.iloc[3:5] = np.nan
+    for series in (reported, blank):
+        events = extract_events(series, customers_total=100_000, cfg=EventConfig())
+        assert len(events) == 2
+        assert events[0]["customer_hours"] == pytest.approx(5_000 * 0.25 * 3)
+        assert events[1]["customer_hours"] == pytest.approx(5_000 * 0.25 * 3)
+
+
 def test_extract_events_merges_short_gaps_and_drops_blips():
     idx = pd.date_range("2024-07-08", periods=40, freq="15min")
     s = pd.Series(0.0, index=idx)

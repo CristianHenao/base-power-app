@@ -30,7 +30,7 @@ import {
   formatAddressLine,
   hasHomeCoordinates,
 } from "@/lib/onboarding/storage";
-import { generateHomeOutageTimeline } from "@/lib/risk/synthetic-outages";
+import { countyHistoryToSliderEvents } from "@/lib/fixtures/county-history";
 import {
   generateSyntheticWeatherHazards,
   hazardsToHeatmapGeoJSON,
@@ -134,24 +134,16 @@ export function RiskAnalysisDashboard() {
     [weatherHazards],
   );
 
-  const outageTimeline = useMemo(() => {
-    if (!center || !weatherHazards.length) return null;
-    return generateHomeOutageTimeline(center, weatherHazards);
-  }, [center, weatherHazards]);
+  const sliderEvents = useMemo(() => countyHistoryToSliderEvents(), []);
 
   const inAnalysis = activeAnalysisId != null;
   const showWeatherAnalysis = activeAnalysisId === "weather";
   const showMyHome = primaryTab === "home";
 
-  const sliderEvents = outageTimeline?.events ?? [];
-
   useEffect(() => {
-    if (!showWeatherAnalysis || !outageTimeline) return;
-    const firstHit = outageTimeline.events.findIndex(
-      (event) => event.impactedHome,
-    );
-    setOutageIndex(firstHit >= 0 ? firstHit : 0);
-  }, [showWeatherAnalysis, outageTimeline]);
+    if (!showWeatherAnalysis || !sliderEvents.length) return;
+    setOutageIndex(0);
+  }, [showWeatherAnalysis, sliderEvents]);
 
   function closeAnalysis() {
     setActiveAnalysisId(null);

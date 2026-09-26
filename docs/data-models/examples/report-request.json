@@ -1,0 +1,16 @@
+{
+  "address": {
+    "line1": "100 Example Lane",
+    "city": "Houston",
+    "state": "TX",
+    "postalCode": "77002",
+    "country": "US",
+    "longitude": -95.36,
+    "latitude": 29.76
+  },
+  "confirmedUtilityId": null,
+  "historyWindow": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2025-01-01T00:00:00Z"
+  }
+}

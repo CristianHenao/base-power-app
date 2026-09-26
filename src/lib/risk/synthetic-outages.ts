@@ -8,7 +8,7 @@ export type OutageStatus = "restored" | "active" | "forecast";
 
 export type HomeOutageEvent = {
   id: string;
-  /** Linked synthetic weather hazard */
+  /** Linked synthetic weather hazard, or a county weather-event id */
   hazardId: string;
   causeKind: WeatherHazardKind;
   title: string;
@@ -17,10 +17,12 @@ export type HomeOutageEvent = {
   endedAt: Date;
   durationHours: number;
   status: OutageStatus;
-  /** Whether this outage darkened the homeowner’s block */
+  /** Whether this outage darkened the homeowner’s block. County history leaves this false. */
   impactedHome: boolean;
-  /** Neighborhood homes affected in the synthetic demo */
+  /** Home-block demo, or peak customers out for a county event */
   homesAffected: number;
+  /** County history describes homes in the county, not this address. */
+  scope?: "home" | "county";
 };
 
 export type HomeOutageTimeline = {

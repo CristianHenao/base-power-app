@@ -39,9 +39,10 @@ Central day (the Travis 2021 freeze is `48453-2021-02-14-2`).
 
 ### Coverage caveats
 
-- EAGLE-I stores quiet periods as missing rows, and we read missing as zero customers out. A
-  missing row can also be a scraping gap, and gaps are more likely during large storms. Some real
-  outage hours are therefore lost, which biases durations and rates low.
+- A reported zero stays zero. A blank count or a quarter-hour with no row ends the observed
+  run and is not read as customers restored. The county table below was fit when missing rows
+  were read as zero; rerun the event pipeline before treating those rates as current. Gaps are
+  more likely during large storms, so censoring them can drop real outage hours.
 - EAGLE-I counts are scraped from utility outage maps. Utilities differ in how they report, and a
   county served by several utilities can be partly covered.
 - Customers per county are the 2022 modeled counts (MCC.csv) for every year. Some are far too low
