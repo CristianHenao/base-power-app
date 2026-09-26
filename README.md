@@ -23,7 +23,7 @@ Built for the Base Power x AITX hackathon by Christian, Victor, Nolan and Alejan
 
 | | |
 |---|---|
-| Outlook backtest (fit 2018-22, scored 2023-24) | Poisson deviance 125 against 128 for the weather-zone mean and 155 for the statewide mean; rank correlation 0.42 ([MODEL_CARD.md](MODEL_CARD.md)) |
+| Outlook backtest (fit 2018-22, scored 2023-24) | Poisson deviance 122 against 126 for the weather-zone mean and 152 for the statewide mean; rank correlation 0.42 ([MODEL_CARD.md](MODEL_CARD.md)) |
 | Narrator eval pass rate | 88-100% first reply, 96-100% after one retry across runs, 24 fixtures ([Narrator evals](#narrator-evals)) |
 | Report latency (p95) and load test | TODO (Victor) |
 | Persona numbers hand-checked against raw data | 50 checks, none flagged ([docs/persona-check.md](docs/persona-check.md)) |
@@ -152,6 +152,34 @@ src/
     map/
 ```
 
+## API
+
+FastAPI in `api/app/` serves the report contract from `data/features.duckdb`. Any Texas address or
+county works. The three demo homes also get per-storm replays and a Core recommendation.
+
+```
+make api                       # uvicorn on :8000, loads XAI_API_KEY from .env, fault switch on
+docker compose up --wait api   # the same service on :4000
+
+curl -X POST localhost:8000/v1/report -H 'content-type: application/json' \
+  -d '{"address": "1600 Smith St, Houston, TX 77002", "heat": "gas"}'
+curl -N localhost:8000/v1/report/<report_id>/narrative      # validated summary as server-sent events
+curl -X POST localhost:8000/v1/debug/faults -d '{"nws": true, "llm": true}' \
+  -H 'content-type: application/json'                       # the report still renders, sources say degraded
+```
+
+| Route | What it does |
+|---|---|
+| `POST /v1/report` | Address or `county_fips`, optional `heat` (`electric` or `gas`), returns the contract report |
+| `GET /v1/report/{id}` | The stored report (one hour) |
+| `GET /v1/report/{id}/narrative` | Server-sent events: status, headline, tokens, done. Only validated text streams |
+| `GET /v1/report/{id}/narrative.json` | The same narrative as JSON |
+| `GET /health`, `/metrics` | Liveness and Prometheus metrics (latency by route, adapter outcomes) |
+
+Census geocoding (4 s timeout, cached 24 h) and NWS alerts (3 s, cached 5 min) each report `ok`,
+`degraded` or `unavailable` in `sources[]`. The address goes only to the Census geocoder; it is
+never logged or stored, and its cache key is a hash.
+
 ## Narrator evals
 
 The report summary is written by Grok (`grok-4.20-0309-non-reasoning`, xAI) from a list of facts.
@@ -161,13 +189,13 @@ rate must say it is for 12-hour-plus outages. Banned phrases, a reading grade of
 length caps are also checked. A failing reply gets one retry with the reasons, then a deterministic
 template. Details are in [MODEL_CARD.md](MODEL_CARD.md).
 
-24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 3.2 s per report.
+24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 3.0 s per report.
 Latest recorded run:
 
 | Source | Cases | Passed | Pass rate |
 |---|---|---|---|
 | Grok, first reply | 24 | 21 | 88% |
-| Grok, after one retry | 24 | 24 | 100% |
+| Grok, after one retry | 24 | 23 | 96% |
 | Template fallback | 24 | 24 | 100% |
 
 Across runs the first reply has passed 88-100% and the retried reply 96-100%. Whatever fails

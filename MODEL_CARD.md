@@ -39,10 +39,13 @@ Central day (the Travis 2021 freeze is `48453-2021-02-14-2`).
 
 ### Coverage caveats
 
-- A reported zero stays zero. A blank count or a quarter-hour with no row ends the observed
-  run and is not read as customers restored. The county table below was fit when missing rows
-  were read as zero; rerun the event pipeline before treating those rates as current. Gaps are
-  more likely during large storms, so censoring them can drop real outage hours.
+- A reported zero stays zero, and a missing row is never read as customers restored (Victor's
+  rule). EAGLE-I 2018-2021 has no zero rows at all, so quiet periods are simply absent, and single
+  scrape rows go missing mid-storm. Up to an hour of missing rows (4 quarter-hours) carries the
+  last reported count forward; a longer gap ends the observed run. Without the bridge, one
+  dropped row split Harris's May 2024 storm and cut Travis's Uri p90 from 96 h to 79 h. Gaps are
+  more likely during large storms, so long ones still drop real outage hours. Every table below
+  is built with this rule.
 - EAGLE-I counts are scraped from utility outage maps. Utilities differ in how they report, and a
   county served by several utilities can be partly covered.
 - Customers per county are the 2022 modeled counts (MCC.csv) for every year. Some are far too low
@@ -100,14 +103,14 @@ mean. The between-county variance is still floored at a coefficient of variation
 Levels come from fixed bands on "a 12-hour-plus outage about once every N years": 3 or fewer is
 Very high, 3-6 High, 6-10 Elevated, 10-15 Moderate, over 15 Low. Statewide quintiles were
 dropped because rates cluster within zones, and the middle cut points were only 0.005 a year
-apart. Statewide, 1 county is Very high, 61 High, 126 Elevated, 62 Moderate and 4 Low.
+apart. Statewide, 1 county is Very high, 61 High, 127 Elevated, 61 Moderate and 4 Low.
 
 Demo counties, 2018-2025:
 
 | County | Zone | 12h+ outages per year | 90% interval | About once every | Level |
 |---|---|---|---|---|---|
-| Collin (48085) | NCENT | 0.105 | 0.051-0.175 | 9.5 years | Elevated |
-| Harris (48201) | COAST | 0.221 | 0.145-0.310 | 4.5 years | High |
+| Collin (48085) | NCENT | 0.105 | 0.051-0.176 | 9.5 years | Elevated |
+| Harris (48201) | COAST | 0.214 | 0.140-0.301 | 4.7 years | High |
 | Travis (48453) | SCENT | 0.101 | 0.065-0.143 | 9.9 years | Elevated |
 
 Earlier builds showed Collin Low, Harris High (0.32) and Travis Elevated. The customer floor, the
@@ -119,14 +122,14 @@ Fit on 2018-2022 and scored on 2023-2024, over the 254 counties with data in bot
 
 | Method | Poisson deviance (lower is better) | Spearman rank correlation |
 |---|---|---|
-| Empirical Bayes, weather-zone prior | **125** | **0.42** |
-| Weather-zone mean | 128 | 0.33 |
-| Statewide mean | 155 | n/a (one value) |
+| Empirical Bayes, weather-zone prior | **122** | **0.42** |
+| Weather-zone mean | 126 | 0.34 |
+| Statewide mean | 152 | n/a (one value) |
 | Raw county rate | infinite | 0.32 |
 
 The raw rate has infinite deviance because 5 counties had no long outages in training and at least
 one in testing. Most of the skill comes from the weather zone. The county-level shrinkage adds a
-little on top in deviance (125 against 128) and more in ranking (0.42 against 0.33). A 0.42 rank
+little on top in deviance (122 against 126) and more in ranking (0.42 against 0.34). A 0.42 rank
 correlation is still modest: two test years is a short window, and one storm can move a county a lot. The UI shows the interval and
 says "estimate." Earlier builds reported 551 against 708. Those were on the inflated counts and are
 not comparable.
@@ -177,7 +180,7 @@ short.
 | County | 1 Core (stay) | 2 Cores (stay) | 1 Core (rotate) | 2 Cores (rotate) | Recommendation |
 |---|---|---|---|---|---|
 | Collin | 36% | 51% | 43% | 63% | 2 Cores |
-| Harris | 31% | 48% | 44% | 65% | 2 Cores |
+| Harris | 28% | 46% | 41% | 63% | 2 Cores |
 | Travis | 55% | 89% | 66% | 93% | 2 Cores |
 
 Shares are truncated, not rounded, to match the report sentence, so 89.8% never reads as meeting the
@@ -232,7 +235,7 @@ The eval set is 24 fixtures (8 counties × 3 homes):
 | Source | Passed |
 |---|---|
 | Grok, first reply | 21/24 (88%) in the latest run |
-| Grok, after one retry | 24/24 (100%) |
+| Grok, after one retry | 23/24 (96%); the one miss falls back to the template |
 | Template | 24/24 (100%) |
 
 Across runs at temperature 0 the first-reply pass rate has ranged from 88% to 100%. After the
