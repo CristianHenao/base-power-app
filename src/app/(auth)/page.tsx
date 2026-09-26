@@ -15,7 +15,7 @@ export default function SignInPage() {
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>
-          Sign in to continue your risk analysis or review your plan.
+          Sign in with a magic link — no password needed.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -23,8 +23,9 @@ npm run dev
 2. Copy **Project URL** and **publishable/anon key** into `.env.local`
 3. Run `supabase/migrations/20260326000000_profiles.sql` in the SQL editor
 4. In Auth → URL configuration, add `http://localhost:3000/auth/confirm` (and `/auth/callback`) to redirect URLs
+5. In Auth → Providers → Email, enable **magic links**. Password and OTP code entry are not used by the app.
 
-Auth protects `/onboarding`, `/risk`, and `/crm`. Sign-in lives at `/`.
+Auth protects `/onboarding`, `/risk`, and `/crm`. Sign-in lives at `/` and uses email magic links.
 
 Open [http://localhost:3000](http://localhost:3000).
 

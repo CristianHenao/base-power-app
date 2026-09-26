@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/supabase/profile";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     type,
     token_hash: tokenHash,
   });
@@ -22,5 +23,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=auth_callback`);
   }
 
-  return NextResponse.redirect(`${origin}${next.startsWith("/") ? next : "/risk"}`);
+  if (data.user) {
+    try {
+      await ensureProfile(supabase, data.user);
+    } catch {
+      // Profile trigger may have already created the row.
+    }
+  }
+
+  const destination = next.startsWith("/") ? next : "/risk";
+  return NextResponse.redirect(`${origin}${destination}`);
 }
