@@ -133,3 +133,14 @@ echo "XAI_API_KEY=..." > .env     # gitignored
 python -m evals.record            # records evals/recorded/<model>/ and <model>+retry/
 python -m evals.score             # writes evals/results.md
 ```
+
+## Insights
+
+Exported by `python -m pipeline.charts` into `public/insights/`. The numbers behind them are in
+`data/processed/backtest.json`, `insights.json` and `data/features.duckdb`.
+
+![Outlook backtest](public/insights/backtest.svg)
+
+![Same Core, different month](public/insights/backup_by_month.svg)
+
+![Tail share](public/insights/tail_share.svg)

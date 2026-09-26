@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" role="img" aria-labelledby="t d">
+<title id="t">A few storms are most of the dark hours: median county 56%</title><desc id="d">Share of each county&#x27;s outage customer-hours since 2018 from its 5 largest events; 254 Texas counties Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/insights.py. Counts only hours inside detected events.</desc>
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
+  .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
+  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
+  .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .dot { stroke: #fcfcfb; stroke-width: 2; }
+  text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
+    .dot { stroke: #1a1a19; }
+  }
+</style>
+<rect class="surface" width="720" height="400" rx="8"/>
+<text class="ink" x="24" y="34" font-size="17" font-weight="600">A few storms are most of the dark hours: median county 56%</text>
+<text class="ink2" x="24" y="56" font-size="13">Share of each county&#x27;s outage customer-hours since 2018 from its 5 largest events; 254 Texas counties</text>
+<line class="grid" x1="64" y1="330.0" x2="680" y2="330.0"/>
+<text class="muted" x="56" y="334.0" font-size="11" text-anchor="end">0</text>
+<line class="grid" x1="64" y1="286.4" x2="680" y2="286.4"/>
+<text class="muted" x="56" y="290.4" font-size="11" text-anchor="end">10</text>
+<line class="grid" x1="64" y1="242.8" x2="680" y2="242.8"/>
+<text class="muted" x="56" y="246.8" font-size="11" text-anchor="end">20</text>
+<line class="grid" x1="64" y1="199.2" x2="680" y2="199.2"/>
+<text class="muted" x="56" y="203.2" font-size="11" text-anchor="end">30</text>
+<line class="grid" x1="64" y1="155.6" x2="680" y2="155.6"/>
+<text class="muted" x="56" y="159.6" font-size="11" text-anchor="end">40</text>
+<line class="grid" x1="64" y1="112.0" x2="680" y2="112.0"/>
+<text class="muted" x="56" y="116.0" font-size="11" text-anchor="end">50</text>
+<text class="muted" x="64.0" y="348" font-size="11" text-anchor="middle">0%</text>
+<text class="muted" x="187.2" y="348" font-size="11" text-anchor="middle">20%</text>
+<text class="muted" x="310.4" y="348" font-size="11" text-anchor="middle">40%</text>
+<text class="muted" x="433.6" y="348" font-size="11" text-anchor="middle">60%</text>
+<text class="muted" x="556.8" y="348" font-size="11" text-anchor="middle">80%</text>
+<text class="muted" x="680.0" y="348" font-size="11" text-anchor="middle">100%</text>
+<path class="s1" d="M126.6,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
+<path class="s1" d="M157.4,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
+<path class="s1" d="M188.2,330 v-4.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v4.7 z"/>
+<path class="s1" d="M219.0,330 v-13.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v13.4 z"/>
+<path class="s1" d="M249.8,330 v-57.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v57.0 z"/>
+<path class="s1" d="M280.6,330 v-57.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v57.0 z"/>
+<path class="s1" d="M311.4,330 v-113.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v113.7 z"/>
+<path class="s1" d="M342.2,330 v-96.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v96.3 z"/>
+<path class="s1" d="M373.0,330 v-139.9 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v139.9 z"/>
+<path class="s1" d="M403.8,330 v-153.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v153.0 z"/>
+<path class="s1" d="M434.6,330 v-157.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v157.3 z"/>
+<path class="s1" d="M465.4,330 v-78.8 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v78.8 z"/>
+<path class="s1" d="M496.2,330 v-78.8 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v78.8 z"/>
+<path class="s1" d="M527.0,330 v-39.6 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v39.6 z"/>
+<path class="s1" d="M557.8,330 v-44.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v44.0 z"/>
+<path class="s1" d="M588.6,330 v-4.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v4.7 z"/>
+<path class="s1" d="M619.4,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
+<line class="axis" x1="439.7" y1="92" x2="439.7" y2="330"/>
+<text class="ink" x="439.7" y="88" font-size="12" text-anchor="middle">Collin 61%</text>
+<line class="axis" x1="584.0" y1="92" x2="584.0" y2="330"/>
+<text class="ink" x="579.0" y="88" font-size="12" text-anchor="end">Travis 84%</text>
+<line class="axis" x1="603.2" y1="92" x2="603.2" y2="330"/>
+<text class="ink" x="608.2" y="88" font-size="12" text-anchor="start">Harris 88%</text>
+<text class="muted" x="24" y="386" font-size="11">Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/insights.py. Counts only hours inside detected events.</text>
+</svg>

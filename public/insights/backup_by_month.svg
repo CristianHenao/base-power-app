@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" role="img" aria-labelledby="t d">
+<title id="t">Same Core, different month</title><desc id="d">Hours one Core (39.2 kWh) lasts for a typical home, median day of each month, normal use Source: ERCOT 2024 backcasted load profiles; Porchlight simulator. Estimates; battery starts full.</desc>
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
+  .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
+  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
+  .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .dot { stroke: #fcfcfb; stroke-width: 2; }
+  text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
+    .dot { stroke: #1a1a19; }
+  }
+</style>
+<rect class="surface" width="720" height="400" rx="8"/>
+<text class="ink" x="24" y="34" font-size="17" font-weight="600">Same Core, different month</text>
+<text class="ink2" x="24" y="56" font-size="13">Hours one Core (39.2 kWh) lasts for a typical home, median day of each month, normal use</text>
+<line class="grid" x1="64" y1="330.0" x2="550" y2="330.0"/>
+<text class="muted" x="56" y="334.0" font-size="11" text-anchor="end">0 h</text>
+<line class="grid" x1="64" y1="280.8" x2="550" y2="280.8"/>
+<text class="muted" x="56" y="284.8" font-size="11" text-anchor="end">10 h</text>
+<line class="grid" x1="64" y1="231.6" x2="550" y2="231.6"/>
+<text class="muted" x="56" y="235.6" font-size="11" text-anchor="end">20 h</text>
+<line class="grid" x1="64" y1="182.4" x2="550" y2="182.4"/>
+<text class="muted" x="56" y="186.4" font-size="11" text-anchor="end">30 h</text>
+<line class="grid" x1="64" y1="133.2" x2="550" y2="133.2"/>
+<text class="muted" x="56" y="137.2" font-size="11" text-anchor="end">40 h</text>
+<line class="grid" x1="64" y1="84.0" x2="550" y2="84.0"/>
+<text class="muted" x="56" y="88.0" font-size="11" text-anchor="end">50 h</text>
+<text class="muted" x="64.0" y="348" font-size="11" text-anchor="middle">Jan</text>
+<text class="muted" x="108.2" y="348" font-size="11" text-anchor="middle">Feb</text>
+<text class="muted" x="152.4" y="348" font-size="11" text-anchor="middle">Mar</text>
+<text class="muted" x="196.5" y="348" font-size="11" text-anchor="middle">Apr</text>
+<text class="muted" x="240.7" y="348" font-size="11" text-anchor="middle">May</text>
+<text class="muted" x="284.9" y="348" font-size="11" text-anchor="middle">Jun</text>
+<text class="muted" x="329.1" y="348" font-size="11" text-anchor="middle">Jul</text>
+<text class="muted" x="373.3" y="348" font-size="11" text-anchor="middle">Aug</text>
+<text class="muted" x="417.5" y="348" font-size="11" text-anchor="middle">Sep</text>
+<text class="muted" x="461.6" y="348" font-size="11" text-anchor="middle">Oct</text>
+<text class="muted" x="505.8" y="348" font-size="11" text-anchor="middle">Nov</text>
+<text class="muted" x="550.0" y="348" font-size="11" text-anchor="middle">Dec</text>
+<line class="ref" x1="64" y1="152.9" x2="550" y2="152.9"/>
+<text class="ink2" x="351.2" y="146.9" font-size="12" text-anchor="middle">Base: about 36 h for one Core</text>
+<polyline class="line s1" points="64.0,250.8 108.2,191.3 152.4,161.7 196.5,162.7 240.7,203.6 284.9,236.5 329.1,239.0 373.3,244.4 417.5,222.7 461.6,204.5 505.8,158.3 550.0,214.9"/>
+<circle class="dot s1" cx="64.0" cy="250.8" r="4"/>
+<circle class="s1" cx="566" cy="210.9" r="5"/>
+<text class="ink" x="576" y="214.9" font-size="12">Collin, electric heat</text>
+<text class="ink2" x="576" y="229.9" font-size="11">low 16 h in Jan</text>
+<polyline class="line s2" points="64.0,124.8 108.2,129.8 152.4,145.0 196.5,201.1 240.7,233.6 284.9,248.3 329.1,247.3 373.3,254.2 417.5,241.4 461.6,228.2 505.8,171.6 550.0,128.8"/>
+<circle class="dot s2" cx="373.3" cy="254.2" r="4"/>
+<circle class="s2" cx="566" cy="147.9" r="5"/>
+<text class="ink" x="576" y="151.9" font-size="12">Harris, gas heat</text>
+<text class="ink2" x="576" y="166.9" font-size="11">low 15 h in Aug</text>
+<polyline class="line s3" points="64.0,117.9 108.2,114.5 152.4,119.9 196.5,149.9 240.7,223.7 284.9,240.9 329.1,238.0 373.3,243.9 417.5,235.5 461.6,215.9 505.8,122.4 550.0,117.9"/>
+<circle class="dot s3" cx="373.3" cy="243.9" r="4"/>
+<circle class="s3" cx="566" cy="113.9" r="5"/>
+<text class="ink" x="576" y="117.9" font-size="12">Travis, gas heat</text>
+<text class="ink2" x="576" y="132.9" font-size="11">low 18 h in Aug</text>
+<text class="muted" x="24" y="386" font-size="11">Source: ERCOT 2024 backcasted load profiles; Porchlight simulator. Estimates; battery starts full.</text>
+</svg>

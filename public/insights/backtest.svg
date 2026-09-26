@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" role="img" aria-labelledby="t d">
+<title id="t">Outlook backtest: Poisson deviance, lower is better</title><desc id="d">Fit on 2018-2022, scored on 2023-2024, 254 Texas counties, 12-hour-plus outages per typical home Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/backtest.py. Estimates.</desc>
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
+  .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
+  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
+  .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .dot { stroke: #fcfcfb; stroke-width: 2; }
+  text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
+    .dot { stroke: #1a1a19; }
+  }
+</style>
+<rect class="surface" width="720" height="400" rx="8"/>
+<text class="ink" x="24" y="34" font-size="17" font-weight="600">Outlook backtest: Poisson deviance, lower is better</text>
+<text class="ink2" x="24" y="56" font-size="13">Fit on 2018-2022, scored on 2023-2024, 254 Texas counties, 12-hour-plus outages per typical home</text>
+<line class="grid" x1="210.0" y1="82" x2="210.0" y2="298"/>
+<text class="muted" x="210.0" y="314" font-size="11" text-anchor="middle">0</text>
+<line class="grid" x1="317.5" y1="82" x2="317.5" y2="298"/>
+<text class="muted" x="317.5" y="314" font-size="11" text-anchor="middle">50</text>
+<line class="grid" x1="425.0" y1="82" x2="425.0" y2="298"/>
+<text class="muted" x="425.0" y="314" font-size="11" text-anchor="middle">100</text>
+<line class="grid" x1="532.5" y1="82" x2="532.5" y2="298"/>
+<text class="muted" x="532.5" y="314" font-size="11" text-anchor="middle">150</text>
+<line class="grid" x1="640.0" y1="82" x2="640.0" y2="298"/>
+<text class="muted" x="640.0" y="314" font-size="11" text-anchor="middle">200</text>
+<text class="ink" x="198" y="112.0" font-size="13" text-anchor="end">Empirical Bayes (ours)</text>
+<path class="s1" d="M210,90 h281.5 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-281.5 z"/>
+<text class="ink" x="503.5" y="112.0" font-size="13">133</text>
+<text class="ink" x="198" y="164.0" font-size="13" text-anchor="end">Weather-zone mean</text>
+<path class="s1" d="M210,142 h287.4 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-287.4 z"/>
+<text class="ink" x="509.4" y="164.0" font-size="13">136</text>
+<text class="ink" x="198" y="216.0" font-size="13" text-anchor="end">Statewide mean</text>
+<path class="s1" d="M210,194 h346.3 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-346.3 z"/>
+<text class="ink" x="568.3" y="216.0" font-size="13">163</text>
+<text class="ink" x="198" y="268.0" font-size="13" text-anchor="end">County&#x27;s own rate</text>
+<text class="ink2" x="214" y="268.0" font-size="13">infinite: 5 counties had none in training, some in testing</text>
+<text class="muted" x="24" y="386" font-size="11">Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/backtest.py. Estimates.</text>
+</svg>
