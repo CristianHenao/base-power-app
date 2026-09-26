@@ -414,6 +414,16 @@ def publish(release: dict, geometry_dir: Path, public_dir: Path, today: str,
     return rid
 
 
+def prune_releases(public_dir: Path, current: str, keep: int = 2) -> list[str]:
+    """Keep the current release and the newest others up to `keep` (the last good one for rollback)."""
+    folders = sorted((public_dir / "releases").iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
+    kept = [current] + [f.name for f in folders if f.name != current][: max(keep - 1, 0)]
+    removed = [f.name for f in folders if f.name not in kept]
+    for name in removed:
+        shutil.rmtree(public_dir / "releases" / name)
+    return removed
+
+
 def load_offers(path: Path = settings.BASE_AVAILABILITY_YAML) -> dict[int, str]:
     rows = yaml.safe_load(path.read_text())["utilities"]
     return {int(row["eia_utility_id"]): row.get("offer") for row in rows if "eia_utility_id" in row}
@@ -473,6 +483,9 @@ def main() -> int:
                 county.setdefault("generation_mix", {})[fuel] = float(release_mix.get(county["fips"], 0.0))
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
     rid = publish(release, V1_DIR, PUBLIC_DIR, today, extra_files=extra_files)
+    removed = prune_releases(PUBLIC_DIR, rid)
+    if removed:
+        print(f"removed older releases: {', '.join(removed)}")
     unverified = sum(u["base_offer"] is None for u in release["utilities"])
     print(f"published {rid}: {len(release['counties'])} counties, {len(release['utilities'])} utilities "
           f"({unverified} with an unverified Base offer)")

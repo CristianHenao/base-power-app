@@ -273,3 +273,16 @@ def test_publish_writes_a_gate_report_and_refuses_oversized_files(tmp_path: Path
     assert report["passed"] is True
     assert report["counties"] == 2
     assert "outages" in report["layers_available"]
+
+
+def test_prune_keeps_the_current_and_previous_release(tmp_path: Path) -> None:
+    releases = tmp_path / "releases"
+    for i, name in enumerate(["2026-09-26-aaaa", "2026-09-26-bbbb", "2026-09-26-cccc", "2026-09-26-dddd"]):
+        folder = releases / name
+        folder.mkdir(parents=True)
+        (folder / "gate-report.json").write_text("{}")
+        import os
+        os.utime(folder, (1_000 + i, 1_000 + i))
+    removed = assemble.prune_releases(tmp_path, current="2026-09-26-dddd", keep=2)
+    assert sorted(p.name for p in releases.iterdir()) == ["2026-09-26-cccc", "2026-09-26-dddd"]
+    assert sorted(removed) == ["2026-09-26-aaaa", "2026-09-26-bbbb"]
