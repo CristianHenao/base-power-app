@@ -1,0 +1,839 @@
+{
+  "version": 1,
+  "as_of": "2026-09-25",
+  "description": "Typical household appliance loads for the Porchlight 'must stay on' component. Every value is an estimate; users can edit watts. The component sums kwh_per_day of switched-on items (times quantity for per_unit items) and divides by 24 to get average load in kW.",
+  "units": {
+    "circuit_v": "volts",
+    "running_w": "watts [min, max] while running",
+    "surge_w": "watts [min, max] at motor start, null if negligible",
+    "kwh_per_day": "typical energy per day during an outage (per unit when per_unit is true)",
+    "kwh_per_day_range": "[low, high] when use varies a lot, else null"
+  },
+  "groups": [
+    {
+      "id": "always_on",
+      "label": "Always on"
+    },
+    {
+      "id": "essentials",
+      "label": "Essentials"
+    },
+    {
+      "id": "kitchen",
+      "label": "Kitchen"
+    },
+    {
+      "id": "heating_cooling",
+      "label": "Heating and cooling"
+    },
+    {
+      "id": "water_laundry",
+      "label": "Water, laundry and pool"
+    },
+    {
+      "id": "pumps_other",
+      "label": "Pumps and other"
+    }
+  ],
+  "battery": {
+    "kwh_per_core": 39.2,
+    "kw_per_core_spec": 20,
+    "power_limit_kw_help_center": {
+      "one_battery": 11,
+      "two_batteries": 22
+    },
+    "reserve_fraction": null,
+    "efficiency": null,
+    "open_questions": [
+      "Power limit: 11 kW (help center) vs 20 kW per Core (spec)",
+      "Reserve kept at the start of an unforeseen outage",
+      "Inverter efficiency"
+    ]
+  },
+  "formula": {
+    "usable_kwh": "kwh_per_core * cores * (start_charge - reserve_fraction) * efficiency",
+    "load_kw": "sum(kwh_per_day * quantity for switched-on items) / 24",
+    "hours_left": "usable_kwh / load_kw",
+    "power_ok": "sum(running_w max * quantity) + max(surge_w max) <= power limit"
+  },
+  "appliances": [
+    {
+      "id": "standby",
+      "name": "Standby load (clocks, idle electronics, chargers)",
+      "group": "always_on",
+      "circuit_v": 120,
+      "running_w": [
+        50,
+        50
+      ],
+      "surge_w": null,
+      "typical_use": "24 h",
+      "kwh_per_day": 1.2,
+      "kwh_per_day_range": null,
+      "toggleable": false,
+      "default_on": true,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "refrigerator",
+      "name": "Refrigerator, full size",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        150,
+        400
+      ],
+      "surge_w": [
+        800,
+        1200
+      ],
+      "typical_use": "Cycles about a third of the time",
+      "kwh_per_day": 1.4,
+      "kwh_per_day_range": null,
+      "default_on": true,
+      "toggleable": true,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "chest_freezer",
+      "name": "Chest freezer",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        100,
+        200
+      ],
+      "surge_w": [
+        600,
+        600
+      ],
+      "typical_use": "Cycles",
+      "kwh_per_day": 1.0,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "led_lamp",
+      "name": "LED bulb or lamp (60 W equivalent)",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        8,
+        10
+      ],
+      "surge_w": null,
+      "typical_use": "5 h",
+      "kwh_per_day": 0.05,
+      "kwh_per_day_range": null,
+      "per_unit": true,
+      "default_quantity": 6,
+      "default_on": true,
+      "toggleable": true,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "incandescent_lamp",
+      "name": "Incandescent lamp",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        60,
+        60
+      ],
+      "surge_w": null,
+      "typical_use": "5 h",
+      "kwh_per_day": 0.3,
+      "kwh_per_day_range": null,
+      "per_unit": true,
+      "default_quantity": 1,
+      "toggleable": true,
+      "default_on": false,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "wifi_router",
+      "name": "Wi-Fi router and modem",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        10,
+        20
+      ],
+      "surge_w": null,
+      "typical_use": "24 h",
+      "kwh_per_day": 0.4,
+      "kwh_per_day_range": null,
+      "default_on": true,
+      "toggleable": true,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "phone_charging",
+      "name": "Phone or tablet charging",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        5,
+        20
+      ],
+      "surge_w": null,
+      "typical_use": "3 h",
+      "kwh_per_day": 0.03,
+      "kwh_per_day_range": null,
+      "per_unit": true,
+      "default_quantity": 3,
+      "default_on": true,
+      "toggleable": true,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "laptop",
+      "name": "Laptop",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        45,
+        100
+      ],
+      "surge_w": null,
+      "typical_use": "6 h",
+      "kwh_per_day": 0.4,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "tv",
+      "name": "Flat-screen TV, 50 to 55 inch",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        70,
+        150
+      ],
+      "surge_w": null,
+      "typical_use": "5 h",
+      "kwh_per_day": 0.5,
+      "kwh_per_day_range": null,
+      "default_on": true,
+      "toggleable": true,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "ceiling_fan",
+      "name": "Ceiling fan",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        10,
+        75
+      ],
+      "surge_w": [
+        75,
+        75
+      ],
+      "typical_use": "12 h",
+      "kwh_per_day": 0.5,
+      "kwh_per_day_range": null,
+      "per_unit": true,
+      "default_quantity": 1,
+      "default_on": true,
+      "toggleable": true,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "cpap",
+      "name": "CPAP machine",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        30,
+        60
+      ],
+      "surge_w": [
+        60,
+        60
+      ],
+      "typical_use": "8 h",
+      "kwh_per_day": 0.4,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "oxygen_concentrator",
+      "name": "Oxygen concentrator, 5 L/min",
+      "group": "essentials",
+      "circuit_v": 120,
+      "running_w": [
+        300,
+        300
+      ],
+      "surge_w": [
+        600,
+        600
+      ],
+      "typical_use": "24 h",
+      "kwh_per_day": 7.2,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "microwave",
+      "name": "Microwave",
+      "group": "kitchen",
+      "circuit_v": 120,
+      "running_w": [
+        1000,
+        1500
+      ],
+      "surge_w": null,
+      "typical_use": "20 min",
+      "kwh_per_day": 0.4,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "coffee_maker",
+      "name": "Coffee maker",
+      "group": "kitchen",
+      "circuit_v": 120,
+      "running_w": [
+        600,
+        1200
+      ],
+      "surge_w": null,
+      "typical_use": "15 min",
+      "kwh_per_day": 0.25,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "electric_kettle",
+      "name": "Electric kettle",
+      "group": "kitchen",
+      "circuit_v": 120,
+      "running_w": [
+        1200,
+        1500
+      ],
+      "surge_w": null,
+      "typical_use": "10 min",
+      "kwh_per_day": 0.25,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "range_burner",
+      "name": "Electric range, one burner",
+      "group": "kitchen",
+      "circuit_v": 240,
+      "running_w": [
+        1500,
+        1500
+      ],
+      "surge_w": null,
+      "typical_use": "1 h",
+      "kwh_per_day": 1.5,
+      "kwh_per_day_range": null,
+      "note": "Full range draws 5,000 to 8,000 W",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null
+    },
+    {
+      "id": "dishwasher",
+      "name": "Dishwasher",
+      "group": "kitchen",
+      "circuit_v": 120,
+      "running_w": [
+        1200,
+        1800
+      ],
+      "surge_w": null,
+      "typical_use": "1 load",
+      "kwh_per_day": 1.0,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "central_ac",
+      "name": "Central AC, 3 ton",
+      "group": "heating_cooling",
+      "circuit_v": 240,
+      "running_w": [
+        3000,
+        3800
+      ],
+      "surge_w": [
+        8000,
+        10000
+      ],
+      "typical_use": "Texas summer day: compressor runs 50 to 70% of hours",
+      "kwh_per_day": 25,
+      "kwh_per_day_range": [
+        20,
+        30
+      ],
+      "seasonal": "summer",
+      "note": "About 3.5 kWh per hour of compressor run; soft starters lower the surge",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1
+    },
+    {
+      "id": "window_ac",
+      "name": "Window AC, 10,000 BTU",
+      "group": "heating_cooling",
+      "circuit_v": 120,
+      "running_w": [
+        900,
+        900
+      ],
+      "surge_w": [
+        2700,
+        2700
+      ],
+      "typical_use": "8 h at about 60%",
+      "kwh_per_day": 4.3,
+      "kwh_per_day_range": null,
+      "seasonal": "summer",
+      "per_unit": true,
+      "default_quantity": 1,
+      "toggleable": true,
+      "default_on": false,
+      "note": null
+    },
+    {
+      "id": "heat_pump_heating",
+      "name": "Heat pump, heating, 2 to 3 ton (no strips)",
+      "group": "heating_cooling",
+      "circuit_v": 240,
+      "running_w": [
+        2200,
+        3500
+      ],
+      "surge_w": [
+        7000,
+        7000
+      ],
+      "typical_use": "Hard freeze: near continuous",
+      "kwh_per_day": 50,
+      "kwh_per_day_range": [
+        40,
+        60
+      ],
+      "seasonal": "winter",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "note": null
+    },
+    {
+      "id": "resistance_heat",
+      "name": "Electric resistance heat or heat-pump strips",
+      "group": "heating_cooling",
+      "circuit_v": 240,
+      "running_w": [
+        5000,
+        15000
+      ],
+      "surge_w": null,
+      "typical_use": "Hard freeze",
+      "kwh_per_day": 100,
+      "kwh_per_day_range": [
+        60,
+        150
+      ],
+      "seasonal": "winter",
+      "note": "Can empty a Core in under a day",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1
+    },
+    {
+      "id": "space_heater",
+      "name": "Portable space heater",
+      "group": "heating_cooling",
+      "circuit_v": 120,
+      "running_w": [
+        750,
+        1500
+      ],
+      "surge_w": null,
+      "typical_use": "8 h, thermostat cycles about 75%",
+      "kwh_per_day": 9,
+      "kwh_per_day_range": null,
+      "seasonal": "winter",
+      "per_unit": true,
+      "default_quantity": 1,
+      "toggleable": true,
+      "default_on": false,
+      "note": null
+    },
+    {
+      "id": "furnace_blower",
+      "name": "Gas furnace blower fan",
+      "group": "heating_cooling",
+      "circuit_v": 120,
+      "running_w": [
+        400,
+        900
+      ],
+      "surge_w": [
+        2000,
+        2000
+      ],
+      "typical_use": "Winter: about half of hours",
+      "kwh_per_day": 6,
+      "kwh_per_day_range": null,
+      "seasonal": "winter",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "note": null
+    },
+    {
+      "id": "water_heater",
+      "name": "Electric tank water heater, 40 to 50 gal",
+      "group": "water_laundry",
+      "circuit_v": 240,
+      "running_w": [
+        4500,
+        4500
+      ],
+      "surge_w": null,
+      "typical_use": "2 to 3 h of heating a day",
+      "kwh_per_day": 11,
+      "kwh_per_day_range": [
+        9,
+        13
+      ],
+      "note": "Draw is per element",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null
+    },
+    {
+      "id": "washer",
+      "name": "Washing machine (cold wash)",
+      "group": "water_laundry",
+      "circuit_v": 120,
+      "running_w": [
+        500,
+        1000
+      ],
+      "surge_w": [
+        2250,
+        2250
+      ],
+      "typical_use": "1 load",
+      "kwh_per_day": 0.5,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "dryer",
+      "name": "Electric clothes dryer",
+      "group": "water_laundry",
+      "circuit_v": 240,
+      "running_w": [
+        5000,
+        6000
+      ],
+      "surge_w": [
+        6000,
+        6000
+      ],
+      "typical_use": "1 load",
+      "kwh_per_day": 3,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "pool_pump",
+      "name": "Pool pump",
+      "group": "water_laundry",
+      "circuit_v": 240,
+      "running_w": [
+        1000,
+        2000
+      ],
+      "surge_w": [
+        3000,
+        3000
+      ],
+      "typical_use": "8 h",
+      "kwh_per_day": 12,
+      "kwh_per_day_range": [
+        8,
+        16
+      ],
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "well_pump",
+      "name": "Well pump, 1/2 HP",
+      "group": "pumps_other",
+      "circuit_v": 240,
+      "running_w": [
+        900,
+        1000
+      ],
+      "surge_w": [
+        2500,
+        3000
+      ],
+      "typical_use": "About 1 h of pumping",
+      "kwh_per_day": 1.0,
+      "kwh_per_day_range": null,
+      "note": "Some are 120 V",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null
+    },
+    {
+      "id": "sump_pump",
+      "name": "Sump pump, 1/2 HP",
+      "group": "pumps_other",
+      "circuit_v": 120,
+      "running_w": [
+        800,
+        800
+      ],
+      "surge_w": [
+        2150,
+        2150
+      ],
+      "typical_use": "Depends on rain",
+      "kwh_per_day": 1.0,
+      "kwh_per_day_range": [
+        0.5,
+        2
+      ],
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "garage_door",
+      "name": "Garage door opener",
+      "group": "pumps_other",
+      "circuit_v": 120,
+      "running_w": [
+        350,
+        350
+      ],
+      "surge_w": [
+        875,
+        875
+      ],
+      "typical_use": "A few cycles",
+      "kwh_per_day": 0.01,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop computer and monitor",
+      "group": "pumps_other",
+      "circuit_v": 120,
+      "running_w": [
+        150,
+        400
+      ],
+      "surge_w": [
+        500,
+        500
+      ],
+      "typical_use": "6 h",
+      "kwh_per_day": 1.5,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "game_console",
+      "name": "Game console",
+      "group": "pumps_other",
+      "circuit_v": 120,
+      "running_w": [
+        100,
+        200
+      ],
+      "surge_w": null,
+      "typical_use": "3 h",
+      "kwh_per_day": 0.45,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "ev_level1",
+      "name": "EV charger, Level 1",
+      "group": "pumps_other",
+      "circuit_v": 120,
+      "running_w": [
+        1400,
+        1400
+      ],
+      "surge_w": null,
+      "typical_use": "4 h",
+      "kwh_per_day": 5.6,
+      "kwh_per_day_range": null,
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null,
+      "note": null
+    },
+    {
+      "id": "ev_level2",
+      "name": "EV charger, Level 2 (32 A)",
+      "group": "pumps_other",
+      "circuit_v": 240,
+      "running_w": [
+        7700,
+        7700
+      ],
+      "surge_w": null,
+      "typical_use": "2 h",
+      "kwh_per_day": 15,
+      "kwh_per_day_range": null,
+      "note": "Alone it uses most of the power limit",
+      "toggleable": true,
+      "default_on": false,
+      "per_unit": false,
+      "default_quantity": 1,
+      "seasonal": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "base_help",
+      "label": "Base help center: devices backed up (11 kW / 22 kW limits)",
+      "url": "https://help.basepowercompany.com/en/articles/10195585"
+    },
+    {
+      "id": "base_duration",
+      "label": "Base duration calculator (39.2 kWh gives about 12 to 36 h)",
+      "url": "https://www.basepowercompany.com/duration-calculator"
+    },
+    {
+      "id": "wattage_guide",
+      "label": "Appliance running and starting watts reference",
+      "url": "https://www.homegeneratorcalculator.com/wattage-guide"
+    },
+    {
+      "id": "fridge",
+      "label": "Refrigerator energy use (ENERGY STAR-certified average 493 kWh/yr)",
+      "url": "https://bkvenergy.com/blog/how-much-electricity-does-refrigerator-use/"
+    },
+    {
+      "id": "lbnl_standby",
+      "label": "LBNL whole-house standby power measurements",
+      "url": "https://eta-publications.lbl.gov/sites/default/files/lbnl-45967.pdf"
+    },
+    {
+      "id": "eia_recs",
+      "label": "EIA Residential Energy Consumption Survey 2020",
+      "url": "https://www.eia.gov/consumption/residential/data/2020/"
+    }
+  ]
+}

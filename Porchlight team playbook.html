@@ -565,8 +565,63 @@ flowchart LR
       <tr><td>PNNL event-correlated outages (EAGLE-I with DOE-417)</td><td>Shortcut for labeling major events</td><td>OEDI download</td><td>Ends in 2023</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
       <tr><td>NOAA Storm Events</td><td>Storm names and causes by county and date</td><td>Bulk CSV</td><td>Fuzzy joins; keep a hand list for four marquee storms</td><td>Nolan</td><td><span class="tag p2">P2</span></td></tr>
       <tr><td>Smart Meter Texas export</td><td>The home's own 15-minute usage replaces the profile</td><td>User uploads a CSV</td><td>Competitive areas only; parse client-side or discard after use</td><td>Christian and Nolan</td><td><span class="tag p2">P2</span></td></tr>
+      <tr><td>Household appliance loads (compiled reference, below)</td><td>The "must stay on" toggles: each appliance becomes kWh per day, then hours of backup left</td><td>Hand-built table with a source per value; ships as <code>src/lib/backup/appliance-loads.json</code></td><td>Nameplate watts are not average use: fridges, AC and heat cycle. Motors surge 2 to 3 times at start. Label every number an estimate</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
     </tbody>
   </table></div>
+  <h3>Household appliance loads, for the "must stay on" component</h3>
+  <p>Users switch appliances on and off and see how many hours a Base Core lasts. The math runs on <b>watts and kWh per day</b>, not volts. Volts only tell you which loads are big: most plugs are 120 V, while water heaters, dryers, ranges, central AC, heat pumps, pool pumps and Level 2 EV chargers sit on 240 V circuits. Every value is a typical estimate for a Texas home. The toggle list stays in the browser (P-01).</p>
+  <div class="table-wrap"><table class="mid">
+    <thead><tr><th>Appliance</th><th>Circuit</th><th>Draw when running (W)</th><th>Start surge (W)</th><th>Typical outage use</th><th>About kWh per day</th></tr></thead>
+    <tbody>
+      <tr><td colspan="6"><b>Always on</b></td></tr>
+      <tr><td>Standby load (clocks, idle electronics, chargers)</td><td>120 V</td><td>about 50</td><td>none</td><td>24 h; not a toggle, always counted</td><td>1.2</td></tr>
+      <tr><td colspan="6"><b>Essentials</b></td></tr>
+      <tr><td>Refrigerator, full size</td><td>120 V</td><td>150 to 400 (compressor)</td><td>800 to 1,200</td><td>Cycles about a third of the time</td><td>1.4</td></tr>
+      <tr><td>Chest freezer</td><td>120 V</td><td>100 to 200</td><td>600</td><td>Cycles</td><td>1.0</td></tr>
+      <tr><td>LED bulb or lamp (60 W equivalent)</td><td>120 V</td><td>8 to 10</td><td>none</td><td>5 h</td><td>0.05 each</td></tr>
+      <tr><td>Incandescent lamp</td><td>120 V</td><td>60</td><td>none</td><td>5 h</td><td>0.3 each</td></tr>
+      <tr><td>Wi-Fi router and modem</td><td>120 V</td><td>10 to 20</td><td>none</td><td>24 h</td><td>0.4</td></tr>
+      <tr><td>Phone or tablet charging</td><td>120 V</td><td>5 to 20</td><td>none</td><td>3 h</td><td>0.03 each</td></tr>
+      <tr><td>Laptop</td><td>120 V</td><td>45 to 100</td><td>none</td><td>6 h</td><td>0.4</td></tr>
+      <tr><td>Flat-screen TV, 50 to 55 inch</td><td>120 V</td><td>70 to 150</td><td>none</td><td>5 h</td><td>0.5</td></tr>
+      <tr><td>Ceiling fan</td><td>120 V</td><td>10 to 75</td><td>75</td><td>12 h</td><td>0.5</td></tr>
+      <tr><td>CPAP machine</td><td>120 V</td><td>30 to 60</td><td>60</td><td>8 h</td><td>0.4</td></tr>
+      <tr><td>Oxygen concentrator, 5 L/min</td><td>120 V</td><td>about 300</td><td>600</td><td>24 h</td><td>7.2</td></tr>
+      <tr><td colspan="6"><b>Kitchen (short bursts)</b></td></tr>
+      <tr><td>Microwave</td><td>120 V</td><td>1,000 to 1,500</td><td>none</td><td>20 min</td><td>0.4</td></tr>
+      <tr><td>Coffee maker</td><td>120 V</td><td>600 to 1,200</td><td>none</td><td>15 min</td><td>0.25</td></tr>
+      <tr><td>Electric kettle</td><td>120 V</td><td>1,200 to 1,500</td><td>none</td><td>10 min</td><td>0.25</td></tr>
+      <tr><td>Electric range, one burner (full range 5,000 to 8,000)</td><td>240 V</td><td>about 1,500</td><td>none</td><td>1 h</td><td>1.5</td></tr>
+      <tr><td>Dishwasher</td><td>120 V</td><td>1,200 to 1,800</td><td>none</td><td>1 load</td><td>1.0</td></tr>
+      <tr><td colspan="6"><b>Heating and cooling (the biggest lever)</b></td></tr>
+      <tr><td>Central AC, 3 ton</td><td>240 V</td><td>3,000 to 3,800</td><td>8,000 to 10,000 (lower with a soft starter)</td><td>Texas summer day: compressor runs 50 to 70% of hours</td><td>about 3.5 per run-hour; 20 to 30 on a hot day</td></tr>
+      <tr><td>Window AC, 10,000 BTU</td><td>120 V</td><td>about 900</td><td>2,700</td><td>8 h at about 60%</td><td>4.3</td></tr>
+      <tr><td>Heat pump, heating, 2 to 3 ton (no strips)</td><td>240 V</td><td>2,200 to 3,500</td><td>7,000 or more</td><td>Hard freeze: near continuous</td><td>40 to 60</td></tr>
+      <tr><td>Electric resistance heat or heat-pump strips</td><td>240 V</td><td>5,000 to 15,000</td><td>none</td><td>Hard freeze</td><td>60 to 150 or more; can empty a Core in under a day</td></tr>
+      <tr><td>Portable space heater</td><td>120 V</td><td>1,500 (750 on low)</td><td>none</td><td>8 h, thermostat cycles about 75%</td><td>9</td></tr>
+      <tr><td>Gas furnace blower fan</td><td>120 V</td><td>400 to 900</td><td>2,000</td><td>Winter: about half of hours</td><td>6</td></tr>
+      <tr><td colspan="6"><b>Water, laundry and pool</b></td></tr>
+      <tr><td>Electric tank water heater, 40 to 50 gal</td><td>240 V</td><td>4,500 per element</td><td>none</td><td>2 to 3 h of heating a day</td><td>9 to 13</td></tr>
+      <tr><td>Washing machine (cold wash)</td><td>120 V</td><td>500 to 1,000</td><td>2,250</td><td>1 load</td><td>0.5</td></tr>
+      <tr><td>Electric clothes dryer</td><td>240 V</td><td>5,000 to 6,000</td><td>6,000</td><td>1 load</td><td>3</td></tr>
+      <tr><td>Pool pump</td><td>240 V</td><td>1,000 to 2,000</td><td>3,000</td><td>8 h</td><td>8 to 16</td></tr>
+      <tr><td colspan="6"><b>Pumps and other</b></td></tr>
+      <tr><td>Well pump, 1/2 HP</td><td>240 V (some 120 V)</td><td>900 to 1,000</td><td>2,500 to 3,000</td><td>About 1 h of pumping</td><td>1.0</td></tr>
+      <tr><td>Sump pump, 1/2 HP</td><td>120 V</td><td>about 800</td><td>2,150</td><td>Depends on rain</td><td>0.5 to 2</td></tr>
+      <tr><td>Garage door opener</td><td>120 V</td><td>about 350</td><td>875</td><td>A few cycles</td><td>about 0</td></tr>
+      <tr><td>Desktop computer and monitor</td><td>120 V</td><td>150 to 400</td><td>500</td><td>6 h</td><td>1.5</td></tr>
+      <tr><td>Game console</td><td>120 V</td><td>100 to 200</td><td>200</td><td>3 h</td><td>0.45</td></tr>
+      <tr><td>EV charger, Level 1</td><td>120 V</td><td>about 1,400</td><td>none</td><td>4 h</td><td>5.6</td></tr>
+      <tr><td>EV charger, Level 2 (32 A)</td><td>240 V</td><td>about 7,700</td><td>none</td><td>2 h</td><td>15; alone it uses most of the power limit</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>The math the component runs.</b></p>
+<pre><code>usable_kwh  = 39.2 * cores * (start_charge - reserve) * efficiency   # reserve and efficiency: ask Base
+load_kw     = (sum of kWh per day for switched-on items + 1.2 standby) / 24
+hours_left  = usable_kwh / load_kw
+power_ok    = sum of running W + largest single start surge &lt;= power limit</code></pre>
+  <p><b>Sanity check against Base's own range</b> (full battery, no reserve or losses). Essentials are a fridge, router, six LED lamps, phones, a TV, a ceiling fan and standby, about 4.3 kWh a day or 0.18 kW. One Core carries that for more than a week. Add central AC on a hot day (about 25 kWh) and it drops to about 32 hours. Add the water heater and it drops to about 23 hours. That falls inside the "about 12 to 36 hours" Base quotes for one 39.2 kWh battery, so the table is in the right range.</p>
+  <p><b>Watch out for.</b> The heating and cooling rows should scale with the month and heat type, like the backup-by-month block: in a February freeze, resistance heat dominates. Present the toggles as "typical" and let users edit watts. Confirm three numbers with Base before the video. First, the power limit: the help center says backup needs load at or below 11 kW (22 kW with two batteries), while the spec in G-02 says 20 kW per Core. Second, the reserve at the start of an outage. Third, inverter efficiency. The U.S. DOE Energy Saver appliance page was offline on September 25, so the wattages come from a generator-sizing reference, checked against ENERGY STAR, LBNL and Base's published ranges.</p>
   <h3>Leave alone this weekend</h3>
   <p>Nodal and bus prices, shadow prices, and the 60-day SCED and state-estimator disclosures. They matter for real siting, and Base's ADER post shows substation-level siting using power transfer distribution factors, but that needs network topology we don't have. In the video, call our map a public-data prior that would feed that work.</p>
 </section>
@@ -860,6 +915,15 @@ def shrink_rates(events, years, floor_cv=0.25):
     <li><a href="https://data.openei.org/submissions/6458">Event-correlated outage dataset (PNNL)</a></li>
     <li><a href="https://geocoding.geo.census.gov/geocoder/">Census Geocoder</a></li>
     <li><a href="https://www.weather.gov/documentation/services-web-api">NWS API documentation</a></li>
+  </ul>
+  <h3>Appliance loads</h3>
+  <ul class="sources">
+    <li><a href="https://help.basepowercompany.com/en/articles/10195585">Base help center: what devices the battery backs up (11 kW and 22 kW limits, EIA end-use shares)</a></li>
+    <li><a href="https://www.basepowercompany.com/duration-calculator">Base duration calculator (39.2 kWh gives about 12 to 36 hours; 78.4 kWh about 24 to 72)</a></li>
+    <li><a href="https://www.homegeneratorcalculator.com/wattage-guide">Appliance running and starting watts reference</a></li>
+    <li><a href="https://bkvenergy.com/blog/how-much-electricity-does-refrigerator-use/">Refrigerator energy use (ENERGY STAR-certified average, 493 kWh a year)</a></li>
+    <li><a href="https://eta-publications.lbl.gov/sites/default/files/lbnl-45967.pdf">LBNL whole-house measurements of standby power</a></li>
+    <li><a href="https://www.eia.gov/consumption/residential/data/2020/">EIA Residential Energy Consumption Survey 2020</a></li>
   </ul>
   <h3>Event</h3>
   <ul class="sources">
