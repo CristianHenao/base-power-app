@@ -19,7 +19,7 @@
 
 ## 2. Product in one paragraph
 
-A Base sales rep opens `/utility-map`, picks a lens (say *Hurricane season*), and sees Texas colored by how much hazards overlap in each county and utility territory, with a heatmap of the actual historical events underneath. They click a utility and see its grid numbers (sales, peak demand, local generation), the evidence behind its score, and what a Base fleet of 1%, 5% or 10% of its homes would add: megawatts at peak, backup hours in long outages, and supply during price spikes. Every number shows its source and period and says "estimate" where it is one.
+A Base sales rep opens `/utility-map`, picks a lens (say *Hurricane season*), and sees Texas colored by how much hazards overlap in each county and utility territory, with the actual historical storms, tornado tracks and flood zones drawn on top. They click a utility and see its grid numbers (sales, peak demand, local generation), the evidence behind its score, and what a Base fleet of 1%, 5% or 10% of its homes would add: megawatts at peak, backup hours in long outages, and supply during price spikes. Every number shows its source and period and says "estimate" where it is one.
 
 ## 3. Demo counties
 
