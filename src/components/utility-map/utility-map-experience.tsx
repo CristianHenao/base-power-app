@@ -19,6 +19,7 @@ import {
   setFloodZones,
   setGenerators,
   setHazardTracks,
+  setView3d,
   setWarningCounties,
   setHover,
   setWarningsVisible,
@@ -177,6 +178,7 @@ export function UtilityMapExperience() {
   );
   const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
+  const [view3d, setView3dOn] = useState(false);
   const [storms, setStorms] = useState<SpotlightStorm[]>([]);
   const [spotlightName, setSpotlightName] = useState<string | null>(null);
   const spotlight = mode === "hazards" ? storms.find((s) => s.name === spotlightName) ?? null : null;
@@ -461,6 +463,13 @@ export function UtilityMapExperience() {
       cancelled = true;
     };
   }, [loaded, mode, hazardPicks, trackCache]);
+  // 3D view only in Risk mode; honor reduced motion.
+  useEffect(() => {
+    if (!map || !loaded) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setView3d(map, view3d && mode === "risk", !reduced);
+  }, [map, loaded, view3d, mode]);
+
   // Power plants for the Grid mode, fetched the first time the mode opens.
   useEffect(() => {
     const file = loaded?.data.geometry.grid?.generators;
@@ -676,6 +685,8 @@ export function UtilityMapExperience() {
               spotlight={spotlight}
               onSpotlight={onSpotlight}
               countyName={(fips) => countiesByFips.get(fips)?.name ?? fips}
+              view3d={view3d}
+              onView3d={setView3dOn}
               sources={data.sources}
               layers={data.layers}
               presets={data.presets}

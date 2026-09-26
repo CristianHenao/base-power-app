@@ -8,6 +8,8 @@ const LAYER_COUNTY_LINE = "um-county-line";
 const LAYER_TERRITORY_LINE = "um-territory-line";
 const LAYER_WARNING_LINE = "um-warning-line";
 const LAYER_PICKED_LINE = "um-picked-line";
+const LAYER_COUNTY_3D = "um-county-3d";
+const HEIGHT_PER_LEVEL_M = 12_000;
 const SOURCE_FLOOD = "um-flood";
 const LAYER_FLOOD_FILL = "um-flood-fill";
 const LAYER_FLOODWAY = "um-floodway";
@@ -33,6 +35,15 @@ const RISK_RAMP = [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLO
 export function setFillRamp(map: Map, colors: readonly string[] = RISK_RAMP) {
   if (!map.getLayer(LAYER_COUNTY_FILL)) return;
   map.setPaintProperty(LAYER_COUNTY_FILL, "fill-color", levelColor(colors));
+  map.setPaintProperty(LAYER_COUNTY_3D, "fill-extrusion-color", levelColor(colors));
+}
+
+/** 3D on: raise counties by level and tilt; off: flat and top-down. */
+export function setView3d(map: Map, on: boolean, animate: boolean) {
+  if (!map.getLayer(LAYER_COUNTY_3D)) return;
+  map.setLayoutProperty(LAYER_COUNTY_3D, "visibility", on ? "visible" : "none");
+  map.setLayoutProperty(LAYER_COUNTY_FILL, "visibility", on ? "none" : "visible");
+  map.easeTo({ pitch: on ? 50 : 0, bearing: on ? -12 : 0, duration: animate ? 900 : 0 });
 }
 
 export function addUtilityMapLayers(
@@ -67,6 +78,20 @@ export function addUtilityMapLayers(
       ],
       "fill-color-transition": { duration: 300 },
       "fill-opacity-transition": { duration: 300 },
+    },
+  });
+
+  // 3D overlap view: counties raised by level. Hidden until the view toggle turns it on.
+  map.addLayer({
+    id: LAYER_COUNTY_3D,
+    type: "fill-extrusion",
+    source: SOURCE_COUNTIES,
+    slot: "middle",
+    layout: { visibility: "none" },
+    paint: {
+      "fill-extrusion-color": levelColor(RISK_RAMP),
+      "fill-extrusion-height": ["*", ["coalesce", ["feature-state", "level"], 0], HEIGHT_PER_LEVEL_M],
+      "fill-extrusion-opacity": 0.9,
     },
   });
 

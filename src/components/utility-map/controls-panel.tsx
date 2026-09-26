@@ -40,6 +40,8 @@ type ControlsPanelProps = {
   spotlight: SpotlightStorm | null;
   onSpotlight: (name: string | null) => void;
   countyName: (fips: string) => string;
+  view3d: boolean;
+  onView3d: (on: boolean) => void;
   layers: MapLayerMeta[];
   presets: Preset[];
   sources: SourceRef[];
@@ -65,6 +67,8 @@ export function ControlsPanel({
   spotlight,
   onSpotlight,
   countyName,
+  view3d,
+  onView3d,
   layers,
   presets,
   sources,
@@ -90,7 +94,14 @@ export function ControlsPanel({
 
       <div className="space-y-2">
         <ModeSwitch mode={mode} onChange={onMode} />
-        {LIVE_MODES.includes(mode) ? (
+        {mode === "risk" ? (
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
+            <button type="button" aria-pressed={view3d} onClick={() => onView3d(!view3d)} className="bp-pill !px-2.5 !py-0.5 !text-[12px]">
+              3D
+            </button>
+          </div>
+        ) : LIVE_MODES.includes(mode) ? (
           <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
         ) : (
           <p className="bp-info px-3 py-2 text-[12px] leading-[18px]">
