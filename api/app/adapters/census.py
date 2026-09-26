@@ -25,6 +25,8 @@ class Place:
 
 
 _cache: TTLCache[Place] = TTLCache(ttl_s=24 * 3600)
+# Addresses the geocoder could not match; not asked again for an hour (made-up demo streets).
+_misses: TTLCache[bool] = TTLCache(ttl_s=3600)
 # One pooled client for the process; httpx clients are thread-safe.
 _http = httpx.Client(timeout=TIMEOUT_S)
 
@@ -60,12 +62,21 @@ def geocode(address: str, client: httpx.Client | None = None) -> Place:
     cached = _cache.get(key)
     if cached is not None:
         return cached
+    if _misses.get(key):
+        raise AdapterError("the Census geocoder found no match for this address (cached)")
     try:
         http = client or _http
         response = http.get(URL, params={**PARAMS, "address": address}, timeout=TIMEOUT_S)
         response.raise_for_status()
-        place = parse_match(response.json())
-    except (httpx.HTTPError, ValueError, KeyError) as error:
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as error:
+        raise AdapterError(f"Census geocoder failed: {type(error).__name__}") from error
+    try:
+        place = parse_match(payload)
+    except AdapterError:
+        _misses.put(key, True)
+        raise
+    except (ValueError, KeyError) as error:
         raise AdapterError(f"Census geocoder failed: {type(error).__name__}") from error
     _cache.put(key, place)
     return place

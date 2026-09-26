@@ -6,6 +6,7 @@ match and no county_fips) stops a report.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import re
 import threading
@@ -77,6 +78,8 @@ class ReportService:
         self._geocode = geocode
         self._alerts = alerts
         self._reports: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=2048)
+        # Validated narratives by the facts they were written from; identical facts reuse them.
+        self._narratives: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=1024)
         self._faults: set[str] = set()
         self._lock = threading.Lock()
 
@@ -188,9 +191,17 @@ class ReportService:
         if report["narrative"]["status"] != "pending":
             return report["narrative"]
         call = None if "llm" in self._faults else self._call
-        result = narrate(from_contract(report), call)
-        if call is not None:
-            self._record("llm", "ok" if result["status"] != "template" else "degraded")
+        facts = from_contract(report)
+        key = hashlib.sha256(json.dumps(facts, sort_keys=True).encode()).hexdigest()
+        cached = self._narratives.get(key) if call is not None else None
+        if cached is not None:
+            result = cached
+        else:
+            result = narrate(facts, call)
+            if call is not None:
+                self._record("llm", "ok" if result["status"] != "template" else "degraded")
+                if result["status"] != "template":
+                    self._narratives.put(key, result)
         narrative = {key: result[key] for key in ("status", "headline", "summary", "fact_ids")}
         narrative["url"] = report["narrative"]["url"]
         llm = {"id": "llm", "status": "ok" if result["status"] != "template" else "degraded"}

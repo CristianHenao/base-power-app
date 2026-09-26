@@ -248,3 +248,43 @@ def test_unmatched_street_falls_back_to_the_zip_county():
     sources = {s["id"]: s["status"] for s in report["sources"]}
     assert sources["census"] == "degraded" and sources["nws"] == "ok"
     assert zip_in("Houston TX 77084-1234") == "77084" and zip_in("Oakland CA 94612") is None
+
+
+def test_geocoder_misses_are_cached(monkeypatch):
+    from api.app.adapters import census
+
+    calls = []
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"result": {"addressMatches": []}}
+
+    class Client:
+        def get(self, *args, **kwargs):
+            calls.append(1)
+            return Response()
+
+    address = "1 Nowhere Lane, Plano, TX 75025 (cache test)"
+    for _ in range(2):
+        with pytest.raises(AdapterError):
+            census.geocode(address, client=Client())
+    assert len(calls) == 1
+
+
+def test_identical_facts_reuse_the_validated_narrative():
+    replies = []
+
+    def call(system, user, timeout_s):
+        replies.append(1)
+        return json.dumps({"headline": "Long outages in Harris County", "fact_ids": ["county.name"],
+                           "summary": "Homes in Harris County. Base confirms sizing at install."})
+
+    service = ReportService(settings.FEATURES_DUCKDB, call, Metrics(), geocode=lambda a: PLANO, alerts=lambda la, lo: [])
+    client = TestClient(create_app(service))
+    for _ in range(2):
+        rid = client.post("/v1/report", json={"county_fips": "48201"}).json()["report_id"]
+        assert client.get(f"/v1/report/{rid}/narrative.json").json()["status"] == "ok"
+    assert len(replies) == 1

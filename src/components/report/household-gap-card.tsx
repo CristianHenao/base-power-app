@@ -50,11 +50,19 @@ function AnswerRow({ label, answer }: { label: string; answer: Record<1 | 2, Cor
   );
 }
 
+/** A Texas home runs AC in summer and its own kind of heat in winter; start there, then let people edit. */
+function startsOn(id: string, defaultOn: boolean, electricHeat: boolean): boolean {
+  if (id === "central_ac") return true;
+  if (id === "heat_pump_heating") return electricHeat;
+  if (id === "furnace_blower") return !electricHeat;
+  return defaultOn;
+}
+
 /** Expected dark hours a year for a typical home here, then for the appliances the homeowner picks. */
-export function HouseholdGapCard({ gap, county }: { gap: HouseholdGap; county: string }) {
+export function HouseholdGapCard({ gap, county, electricHeat }: { gap: HouseholdGap; county: string; electricHeat: boolean }) {
   const [choices, setChoices] = useState<Record<string, Choice>>(() =>
     Object.fromEntries(APPLIANCES.filter((a) => a.id !== "standby")
-      .map((a) => [a.id, { on: a.default_on, priority: a.group === "essentials" && a.default_on && a.id === "refrigerator" }])));
+      .map((a) => [a.id, { on: startsOn(a.id, a.default_on, electricHeat), priority: a.id === "refrigerator" }])));
   const items: LoadItem[] = useMemo(() => Object.entries(choices)
     .filter(([, c]) => c.on).map(([id, c]) => ({ applianceId: id, priority: c.priority })), [choices]);
   const answer = useMemo(() => householdAnswer(gap, items), [gap, items]);

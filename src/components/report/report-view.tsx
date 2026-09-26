@@ -127,7 +127,10 @@ export function ReportView({ report, narrative }: { report: Report; narrative: {
         <CardContent><BackupChart backup={report.backup} /></CardContent>
       </Card>
 
-      {report.household_gap && <HouseholdGapCard gap={report.household_gap} county={location.county} />}
+      {report.household_gap && (
+        <HouseholdGapCard key={report.report_id} gap={report.household_gap} county={location.county}
+          electricHeat={report.home.profile_type === "RESHIWR"} />
+      )}
 
       <Card>
         <CardHeader>
@@ -170,7 +173,9 @@ export function ReportView({ report, narrative }: { report: Report; narrative: {
         </CardContent>
       </Card>
 
-      <SourceChips sources={report.sources} />
+      <SourceChips sources={narrative.done && narrative.status ? [...report.sources.filter((s) => s.id !== "llm"),
+        { id: "llm", status: narrative.status === "template" ? "degraded" : "ok",
+          fallback: narrative.status === "template" ? "template" : null }] : report.sources} />
       <p className="text-xs text-muted-foreground">
         Outage data is county-level, so these numbers describe homes in {location.county} County, not one address. Every number is an estimate from public data.
       </p>
