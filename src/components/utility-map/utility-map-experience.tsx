@@ -296,17 +296,17 @@ export function UtilityMapExperience() {
 
       {tooltip ? (
         <div
-          className="pointer-events-none absolute z-20 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-md"
+          className="pointer-events-none absolute z-20 rounded-lg border bg-white px-3 py-2 text-[14px] leading-[21px] shadow-[var(--bp-shadow-media)]"
           style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}
         >
-          <p className="font-medium">{tooltip.title}</p>
-          <p className="text-muted-foreground">{tooltip.detail}</p>
+          <p className="font-semibold">{tooltip.title}</p>
+          <p className="text-[12px] leading-[18px] text-muted-foreground">{tooltip.detail}</p>
         </div>
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
         <div className="pointer-events-auto w-full space-y-3 lg:max-h-full lg:w-80 lg:overflow-y-auto">
-          <p className="inline-flex rounded-full border border-dashed border-foreground/30 bg-background/90 px-3 py-1 text-xs font-medium shadow-sm">
+          <p className="bp-stamp inline-flex rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5">
             Mockup · dummy data
           </p>
           {data ? (
@@ -321,13 +321,13 @@ export function UtilityMapExperience() {
               onToggleWarnings={setShowWarnings}
             />
           ) : (
-            <Skeleton className="h-96 w-full rounded-2xl" />
+            <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
           )}
         </div>
 
         <div className="pointer-events-auto mt-auto flex max-h-[45dvh] w-full min-h-0 lg:mt-0 lg:max-h-full lg:w-[400px]">
           {loadError ? (
-            <p className="w-full rounded-2xl border bg-background/95 p-4 text-sm text-destructive">
+            <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">
               {loadError}
             </p>
           ) : data && model ? (
@@ -344,7 +344,7 @@ export function UtilityMapExperience() {
               onSelectCounty={setSelectedFips}
             />
           ) : (
-            <Skeleton className="h-96 w-full rounded-2xl" />
+            <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
           )}
         </div>
       </div>
