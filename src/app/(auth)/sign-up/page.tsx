@@ -13,8 +13,8 @@ export default function SignUpPage() {
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>
-          Start with a free account, then tell us about your home so we can run
-          a location-based risk analysis.
+          Enter your name and email. We&apos;ll send a magic link — no password
+          needed.
         </CardDescription>
       </CardHeader>
       <CardContent>
