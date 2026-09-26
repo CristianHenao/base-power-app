@@ -92,6 +92,268 @@
       "period_end": "2025-12-31",
       "retrieved_at_utc": "2026-09-26T20:37:26Z",
       "note": "Hourly native load by weather zone; hour-ending Central converted to UTC hour start."
+    },
+    {
+      "source_id": "fema_nfhl",
+      "url": "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28",
+      "files": [
+        {
+          "name": "page_000.geojson",
+          "sha256": "6882521445802ec9eb47b1257d76f56cf975bf6462a3f99357e5380f51a5bbf9",
+          "bytes": 24609445
+        },
+        {
+          "name": "page_001.geojson",
+          "sha256": "c56ee09ac6ff57f06638e88fa47dd055b8d11ff9e6650345628575a30206b1ac",
+          "bytes": 24068721
+        },
+        {
+          "name": "page_002.geojson",
+          "sha256": "5a96a82ec7c419d267ad40c1658dc3f66fed895eeb22761b12a1620e1e3133cd",
+          "bytes": 13519367
+        },
+        {
+          "name": "page_003.geojson",
+          "sha256": "1d061e93d24949ee829f77204d86fb8c7d60f008b9a56171becf3936d4a6cc00",
+          "bytes": 12699192
+        },
+        {
+          "name": "page_004.geojson",
+          "sha256": "4a44fd73fe1e3ef0e7049e0d47200b23ee39c347dec4a822921d5e578a5e5ecc",
+          "bytes": 12867350
+        },
+        {
+          "name": "page_005.geojson",
+          "sha256": "c51044d4ff8b7ec420cf70881464526648d0f574c3b3c32750740eba789c2d2b",
+          "bytes": 12131073
+        },
+        {
+          "name": "page_006.geojson",
+          "sha256": "4761c3b502addc2a6cf16fbaedd085afed3fc5ab2d4b28ab1815f80a2ba99b68",
+          "bytes": 4449036
+        },
+        {
+          "name": "page_007.geojson",
+          "sha256": "de814fab1998ae47f1b55a0c5569b0f4e9841aed8f9414c9199e7a9f40b54115",
+          "bytes": 1068653
+        },
+        {
+          "name": "page_000.geojson",
+          "sha256": "fbae863db817617cbda37b3add947fffdd79db8cb1106b59705ad9594ad9ffba",
+          "bytes": 3394448
+        },
+        {
+          "name": "page_001.geojson",
+          "sha256": "792790b142eb95f2724dd6b993c0fdd6a141d3ef25ab43c5bc4f9aca622dbd5b",
+          "bytes": 1249221
+        },
+        {
+          "name": "page_000.geojson",
+          "sha256": "c957a3b6ec552ae8007a6f0876cedf009fe3729c018e2771931936e50234e731",
+          "bytes": 1693088
+        },
+        {
+          "name": "page_001.geojson",
+          "sha256": "c91119676fad2a52e2819b8e74acd0d0082b5b5a872a5c24a4ad3333d8217214",
+          "bytes": 2936117
+        },
+        {
+          "name": "page_002.geojson",
+          "sha256": "f3703e5ce135cd770ce6caecc4284ad1f4745e12e2cd90d260b79678ff5d803b",
+          "bytes": 1815239
+        },
+        {
+          "name": "page_003.geojson",
+          "sha256": "3941c075cc9a6a694c6408b915c274bf9769a7cda7b453bb4517830557462a7f",
+          "bytes": 1679097
+        },
+        {
+          "name": "page_004.geojson",
+          "sha256": "7fa4954e56d4b7fbb35e881161d9a93faa12d09ca23c79a7d7874d40feabeae4",
+          "bytes": 2804851
+        },
+        {
+          "name": "page_005.geojson",
+          "sha256": "696c17c15ca29fbb61e359f98476c5f0555fbbbbbe4051073b02f7c38dedea6b",
+          "bytes": 703217
+        },
+        {
+          "name": "page_000.geojson",
+          "sha256": "29106842d5b0e76051ed572ca3f14427b2a379a75d20649712e08dae118d8d66",
+          "bytes": 1478932
+        },
+        {
+          "name": "page_001.geojson",
+          "sha256": "7ebdeff67812119a585388b88b314a23534690bba9b64259c74ca1e890fdbbd6",
+          "bytes": 1095237
+        },
+        {
+          "name": "page_002.geojson",
+          "sha256": "5b58ff22c8ebbd8463b262e19b11cb7e8fcc344bc801b032a32d04c9772fb766",
+          "bytes": 1126573
+        },
+        {
+          "name": "page_003.geojson",
+          "sha256": "49740b997d93ed6ce743aef2a043564048bc25e1d80c1aaa4b9561bf67169039",
+          "bytes": 1190345
+        },
+        {
+          "name": "page_000.geojson",
+          "sha256": "e7241ab9649c90b1284e085c02b08ff3f41726f09425f9d669b43ec9dc2cf737",
+          "bytes": 2421539
+        }
+      ],
+      "rows": 36325,
+      "period_start": null,
+      "period_end": null,
+      "retrieved_at_utc": "2026-09-26T20:58:19Z",
+      "note": "Flood Hazard Zones (S_FLD_HAZ_AR) for 48201, 48167, 48453, 48085, 48355; effective maps as served."
+    },
+    {
+      "source_id": "noaa_storm_events",
+      "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/",
+      "files": [
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2000_c20260323.csv.gz",
+          "sha256": "a4ca5b02ad766bf50db2b192c127b625018f66bb9fb4d9746677d39ba2e392ab",
+          "bytes": 7914864
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2001_c20260323.csv.gz",
+          "sha256": "77a84aa66aaa9f7f95a15ecb2d18451bc05be801ea10f606d2e83fb44f737e51",
+          "bytes": 6876091
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2002_c20260323.csv.gz",
+          "sha256": "6f941b2ea120245e2e924093032c91c3377e7d1ea2c9163593456facb9ebe185",
+          "bytes": 7196867
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2003_c20260323.csv.gz",
+          "sha256": "f6d23ba4043394a517c8c6b0db8346f940a1de3fb8cac76eee773c5797243e3c",
+          "bytes": 7213001
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2004_c20260323.csv.gz",
+          "sha256": "b0827cd69b8d0ddc1446d8a322132502a05af19b1193c15eae118f13396844e3",
+          "bytes": 7335278
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2005_c20260323.csv.gz",
+          "sha256": "d68e3cbfbe5fb79f720eccea372c53585614bab618f3c2a4433e47767f54e55f",
+          "bytes": 7765419
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2006_c20260323.csv.gz",
+          "sha256": "a958ea15688b3346fd69efe53e91b4d57a26f8e6f99e1ddcc3b92c2eb2d57d0b",
+          "bytes": 7590951
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2007_c20260323.csv.gz",
+          "sha256": "e8289daa871946230862e2ca0d119195df7108e4a680fe83e3d419f3f21a7524",
+          "bytes": 9775676
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2008_c20260323.csv.gz",
+          "sha256": "c97260e82760b17bc571d55e1ca1f5073ccc0558b774313d46dddc3e1ef39b37",
+          "bytes": 12276398
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2009_c20260323.csv.gz",
+          "sha256": "c04d6e0173153475440cb614bd019287986c74c311c61864478f9087d7d1b357",
+          "bytes": 10335606
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2010_c20260323.csv.gz",
+          "sha256": "d109f8a6ab1a71e70f60fe42d30a0e31f370c904e248a51e5fe85573f904878e",
+          "bytes": 11729156
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2011_c20260323.csv.gz",
+          "sha256": "be3b40cd098a879be12c2c3e614700560bd537e6178bba8b1aaf099f665dda40",
+          "bytes": 15695066
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2012_c20260323.csv.gz",
+          "sha256": "673db47f6dc9e97e06ffec3b628f5341c128f594d9b247bd07bad2e8397ebac3",
+          "bytes": 11820671
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2013_c20260323.csv.gz",
+          "sha256": "4fa4036ed1c7ea9a779d5a5841d18de08596c423920189a9e6173488d1a98260",
+          "bytes": 11725909
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2014_c20260323.csv.gz",
+          "sha256": "410b457b1b9628cfd63292848a626482a88714c8bd8c45d56a0469f9de05d078",
+          "bytes": 11084754
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2015_c20260323.csv.gz",
+          "sha256": "c4a5a24b8c69ad2b6b867790ce298f5b642a60516c9fce5550a8d2f67cd7bf2e",
+          "bytes": 10041550
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2016_c20260323.csv.gz",
+          "sha256": "d8e1389897df3557e74ba36820357f6962a7c0ca922595400fe74d883f7a5036",
+          "bytes": 9065715
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2017_c20260519.csv.gz",
+          "sha256": "bd3ca72b71544222cba8aa2b29eb3f0efe050d3330a0c408e208befb66881750",
+          "bytes": 9340854
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2018_c20260323.csv.gz",
+          "sha256": "19702480f50cd2a8dacce5e57891feba156afb87b1ea5cbb4eaeda69d2b964a4",
+          "bytes": 9585982
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2019_c20260323.csv.gz",
+          "sha256": "f5043ecc776818b0feffdf1e0fcbaf63329db0635eab1057c7b8ba00ef332e3b",
+          "bytes": 11602648
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2020_c20260323.csv.gz",
+          "sha256": "895c56fd46991c4d9a135d67558dc4b447a02a2314efac0ace645135b98f9c9d",
+          "bytes": 10444606
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2021_c20260323.csv.gz",
+          "sha256": "60c1daf96dbe8eafd48c80df5b70df51a0125ab95d467ee7009a646761d57715",
+          "bytes": 10563953
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2022_c20260625.csv.gz",
+          "sha256": "7d6b79d0049a6edec96b061738289daddba90be26fc9afe7b0a6fd617f21452e",
+          "bytes": 11817849
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2023_c20260323.csv.gz",
+          "sha256": "713784bed40d9e5a95b1d6240a654f865f3ef97703713105c7b35437270da134",
+          "bytes": 12888092
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2024_c20260728.csv.gz",
+          "sha256": "2070b83eccab041b36360ab73645b9a249c3eefc5b92b5b3fc0cbba4d9fcc09c",
+          "bytes": 12693243
+        },
+        {
+          "name": "StormEvents_details-ftp_v1.0_d2025_c20260819.csv.gz",
+          "sha256": "d9b46b4c6aae554723cadbb9691f3d5258371c02e530ba815d6fe41e4550149f",
+          "bytes": 12585209
+        },
+        {
+          "name": "bp16ap26.dbx",
+          "sha256": "69d3472d4d576b8a4924efb7a43108f7c64111f503e15efd650f43dc617a6f12",
+          "bytes": 350723
+        }
+      ],
+      "rows": 114535,
+      "period_start": "2000-01-01",
+      "period_end": "2025-12-31",
+      "retrieved_at_utc": "2026-09-26T20:59:24Z",
+      "note": "Texas rows; zone events expanded to counties with NWS zone-county file bp16ap26; 1535 of 41036 zone events use retired zone codes and are left out."
     }
   ]
 }
