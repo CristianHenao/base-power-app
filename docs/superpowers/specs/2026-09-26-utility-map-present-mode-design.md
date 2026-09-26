@@ -1,7 +1,7 @@
 # Utility map: Present mode and responsive layout
 
 **Date:** September 26, 2026
-**Status:** Design, awaiting review
+**Status:** Postponed (September 26, 2026). Not a priority for the hackathon; revisit after submission.
 **Related:** [PRD v2](../../utility-map-prd-v2.md), [PRD v1](../../utility-map-prd.md), style guide work in PR #33
 
 ## 1. Intent
