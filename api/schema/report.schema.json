@@ -1,0 +1,831 @@
+{
+  "$defs": {
+    "Alert": {
+      "properties": {
+        "event": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Severity"
+        },
+        "headline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Headline"
+        },
+        "ends": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ends"
+        }
+      },
+      "required": [
+        "event",
+        "severity",
+        "headline",
+        "ends"
+      ],
+      "title": "Alert",
+      "type": "object"
+    },
+    "Backup": {
+      "properties": {
+        "hours_by_month": {
+          "$ref": "#/$defs/HoursByMonth"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/BackupAssumptions"
+        },
+        "surprise": {
+          "$ref": "#/$defs/Surprise"
+        }
+      },
+      "required": [
+        "hours_by_month",
+        "assumptions",
+        "surprise"
+      ],
+      "title": "Backup",
+      "type": "object"
+    },
+    "BackupAssumptions": {
+      "properties": {
+        "kwh_per_core": {
+          "title": "Kwh Per Core",
+          "type": "number"
+        },
+        "kw_per_core": {
+          "title": "Kw Per Core",
+          "type": "number"
+        },
+        "start_soc": {
+          "title": "Start Soc",
+          "type": "number"
+        },
+        "mode": {
+          "const": "normal",
+          "title": "Mode",
+          "type": "string"
+        },
+        "profile_year": {
+          "title": "Profile Year",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kwh_per_core",
+        "kw_per_core",
+        "start_soc",
+        "mode",
+        "profile_year"
+      ],
+      "title": "BackupAssumptions",
+      "type": "object"
+    },
+    "Band": {
+      "description": "[rotate, stay]: the lower and upper per-home bounds, in hours.",
+      "properties": {
+        "p50": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          ],
+          "title": "P50",
+          "type": "array"
+        },
+        "p90": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          ],
+          "title": "P90",
+          "type": "array"
+        }
+      },
+      "required": [
+        "p50",
+        "p90"
+      ],
+      "title": "Band",
+      "type": "object"
+    },
+    "BaseOffer": {
+      "properties": {
+        "product": {
+          "enum": [
+            "energy_plus_backup",
+            "energy_only",
+            "backup_program",
+            "none"
+          ],
+          "title": "Product",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url"
+        }
+      },
+      "required": [
+        "product",
+        "url"
+      ],
+      "title": "BaseOffer",
+      "type": "object"
+    },
+    "Covered": {
+      "properties": {
+        "homes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Homes"
+        },
+        "hours": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Hours"
+        }
+      },
+      "required": [
+        "homes",
+        "hours"
+      ],
+      "title": "Covered",
+      "type": "object"
+    },
+    "Event": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "storm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Storm"
+        },
+        "start": {
+          "title": "Start",
+          "type": "string"
+        },
+        "peak_out": {
+          "title": "Peak Out",
+          "type": "integer"
+        },
+        "peak_out_pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Peak Out Pct"
+        },
+        "duration_h": {
+          "$ref": "#/$defs/Band"
+        },
+        "covered": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/Covered"
+              },
+              "propertyNames": {
+                "enum": [
+                  "cores_1",
+                  "cores_2"
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Covered"
+        },
+        "covered_order": {
+          "anyOf": [
+            {
+              "enum": [
+                "rotate",
+                "stay"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Covered Order"
+        },
+        "backup_h": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "propertyNames": {
+                "enum": [
+                  "cores_1",
+                  "cores_2"
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Backup H"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "storm",
+        "start",
+        "peak_out",
+        "peak_out_pct",
+        "duration_h",
+        "covered",
+        "covered_order",
+        "backup_h"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "Home": {
+      "properties": {
+        "profile_type": {
+          "enum": [
+            "RESHIWR",
+            "RESLOWR"
+          ],
+          "title": "Profile Type",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_type",
+        "label"
+      ],
+      "title": "Home",
+      "type": "object"
+    },
+    "HoursByMonth": {
+      "properties": {
+        "cores_1": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 12,
+          "minItems": 12,
+          "title": "Cores 1",
+          "type": "array"
+        },
+        "cores_2": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 12,
+          "minItems": 12,
+          "title": "Cores 2",
+          "type": "array"
+        }
+      },
+      "required": [
+        "cores_1",
+        "cores_2"
+      ],
+      "title": "HoursByMonth",
+      "type": "object"
+    },
+    "Live": {
+      "properties": {
+        "alerts": {
+          "items": {
+            "$ref": "#/$defs/Alert"
+          },
+          "title": "Alerts",
+          "type": "array"
+        },
+        "grid": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Grid"
+        }
+      },
+      "required": [
+        "alerts",
+        "grid"
+      ],
+      "title": "Live",
+      "type": "object"
+    },
+    "Location": {
+      "properties": {
+        "county_fips": {
+          "title": "County Fips",
+          "type": "string"
+        },
+        "county": {
+          "title": "County",
+          "type": "string"
+        },
+        "tract_geoid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tract Geoid"
+        },
+        "weather_zone": {
+          "title": "Weather Zone",
+          "type": "string"
+        },
+        "load_zone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Load Zone"
+        },
+        "utility": {
+          "$ref": "#/$defs/Utility"
+        }
+      },
+      "required": [
+        "county_fips",
+        "county",
+        "tract_geoid",
+        "weather_zone",
+        "load_zone",
+        "utility"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Narrative": {
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "ok",
+            "retried",
+            "template"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "headline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Headline"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Ids",
+          "type": "array"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url"
+        }
+      },
+      "required": [
+        "status",
+        "url"
+      ],
+      "title": "Narrative",
+      "type": "object"
+    },
+    "Outlook": {
+      "properties": {
+        "level": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Level",
+          "type": "integer"
+        },
+        "label": {
+          "enum": [
+            "Low",
+            "Moderate",
+            "Elevated",
+            "High",
+            "Very high"
+          ],
+          "title": "Label",
+          "type": "string"
+        },
+        "long_outages_per_year": {
+          "title": "Long Outages Per Year",
+          "type": "number"
+        },
+        "interval_90": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Interval 90",
+          "type": "array"
+        },
+        "once_every_years": {
+          "title": "Once Every Years",
+          "type": "number"
+        },
+        "years_of_data": {
+          "title": "Years Of Data",
+          "type": "number"
+        },
+        "since": {
+          "title": "Since",
+          "type": "integer"
+        },
+        "customers_floored": {
+          "title": "Customers Floored",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "level",
+        "label",
+        "long_outages_per_year",
+        "interval_90",
+        "once_every_years",
+        "years_of_data",
+        "since",
+        "customers_floored"
+      ],
+      "title": "Outlook",
+      "type": "object"
+    },
+    "Sizing": {
+      "properties": {
+        "cores": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cores"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "share": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Share"
+        }
+      },
+      "required": [
+        "cores",
+        "reason",
+        "share"
+      ],
+      "title": "Sizing",
+      "type": "object"
+    },
+    "Source": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "degraded",
+            "unavailable",
+            "not_connected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "as_of": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "As Of"
+        },
+        "fallback": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback"
+        }
+      },
+      "required": [
+        "id",
+        "status"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Surprise": {
+      "properties": {
+        "start_soc": {
+          "title": "Start Soc",
+          "type": "number"
+        },
+        "hours_by_month": {
+          "$ref": "#/$defs/HoursByMonth"
+        }
+      },
+      "required": [
+        "start_soc",
+        "hours_by_month"
+      ],
+      "title": "Surprise",
+      "type": "object"
+    },
+    "Utility": {
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Name"
+        },
+        "eia_utility_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Eia Utility Id"
+        },
+        "detected_from": {
+          "enum": [
+            "zip",
+            "county"
+          ],
+          "title": "Detected From",
+          "type": "string"
+        },
+        "confirmed": {
+          "title": "Confirmed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "eia_utility_id",
+        "detected_from",
+        "confirmed"
+      ],
+      "title": "Utility",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "location": {
+      "$ref": "#/$defs/Location"
+    },
+    "home": {
+      "$ref": "#/$defs/Home"
+    },
+    "base_offer": {
+      "$ref": "#/$defs/BaseOffer"
+    },
+    "outlook": {
+      "$ref": "#/$defs/Outlook"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "backup": {
+      "$ref": "#/$defs/Backup"
+    },
+    "sizing": {
+      "$ref": "#/$defs/Sizing"
+    },
+    "live": {
+      "$ref": "#/$defs/Live"
+    },
+    "narrative": {
+      "$ref": "#/$defs/Narrative"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "title": "Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "report_id",
+    "location",
+    "home",
+    "base_offer",
+    "outlook",
+    "events",
+    "backup",
+    "sizing",
+    "live",
+    "narrative",
+    "sources"
+  ],
+  "title": "Report",
+  "type": "object"
+}

@@ -1,0 +1,64 @@
+{
+  "additionalProperties": false,
+  "description": "An address, or a county FIPS when the caller already knows it. The address is never stored.",
+  "properties": {
+    "address": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "minLength": 5,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Address"
+    },
+    "county_fips": {
+      "anyOf": [
+        {
+          "pattern": "^48\\d{3}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "County Fips"
+    },
+    "zip": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{5}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Zip"
+    },
+    "heat": {
+      "anyOf": [
+        {
+          "enum": [
+            "electric",
+            "gas"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Heat"
+    }
+  },
+  "title": "ReportRequest",
+  "type": "object"
+}

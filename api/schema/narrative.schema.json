@@ -1,0 +1,62 @@
+{
+  "properties": {
+    "status": {
+      "enum": [
+        "pending",
+        "ok",
+        "retried",
+        "template"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "headline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Headline"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Summary"
+    },
+    "fact_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Fact Ids",
+      "type": "array"
+    },
+    "url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Url"
+    }
+  },
+  "required": [
+    "status",
+    "url"
+  ],
+  "title": "Narrative",
+  "type": "object"
+}
