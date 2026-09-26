@@ -38,10 +38,14 @@ app says "homes in your county", never "your home". Every number on screen is la
 
 ## What we'd do in week two
 
-<!-- TODO: from docs/NEXT.md -->
-- A Smart Meter Texas upload so the home's own 15-minute usage replaces the profile.
+- A Smart Meter Texas upload so the home's own 15-minute usage replaces the profile, parsed on the device.
+- Christian's appliance scan feeding the household answer directly, plus solar and generator top-up in the simulator.
+- Censoring and heavier tails in the duration model, which still understates Beryl-class storms.
+- A hosted API behind the deployed site (today it falls back to the three saved demo reports).
 - The sales map's fleet overlay and storm replay; detailed flood outlines and wildfire.
 - Utility-level outage feeds to replace the county-level EAGLE-I archive.
+
+The full list, with where each starts in the code: [docs/NEXT.md](docs/NEXT.md).
 
 ---
 
