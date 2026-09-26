@@ -106,7 +106,7 @@ export type HomeDevice = {
   notes: string | null;
   isMedical: boolean;
   needsRefrigeration: boolean;
-  /** Cropped device outline PNG — data URL or /home/scans/*.png */
+  /** Cropped device outline PNG — data URL (transient) or Supabase Storage public URL */
   thumbnailUrl: string | null;
   /** Extra nameplate fields shown in the detail grid */
   specs: DeviceSpecField[];
