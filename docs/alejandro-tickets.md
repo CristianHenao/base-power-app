@@ -1,20 +1,20 @@
 # Alejandro's tickets
 
 Data, story and glue (playbook T-01). Ordered by what unblocks the team first.
-Done means `make data` rebuilds features from scratch and `DATA_SOURCES.md` lists
+Done means `make data` rebuilds features from scratch and `docs/DATA_SOURCES.md` lists
 every source with license and as-of date.
 
 | # | Ticket | Unblocks | Status |
 |---|---|---|---|
-| A1 | EAGLE-I download + Texas-only parquet + 3-county subset | Nolan (events, outlook) | in progress |
-| A2 | ERCOT RTM load-zone prices 2018-2025 via gridstatus (DST-safe) | Nolan (grid value) | todo |
-| A3 | County crosswalk: FIPS -> ERCOT weather zone, load zone | Nolan, Victor | todo |
-| A4 | Base availability YAML: utility -> Base offer, with source URL and date | report page | todo |
-| A5 | ZIP -> utility lookup (NREL/OpenEI 2024) | Victor (address flow) | todo |
-| A6 | EIA-861 service territory crosswalk + real territory shapes (replace P-04 mock) | Christian (/utility-map) | todo |
-| A7 | NRI, EIA-861 reliability, ACS into data/features.duckdb | map layers, outlook prior | todo |
+| A1 | EAGLE-I download + Texas-only parquet + 3-county subset | Nolan (events, outlook) | done: #20, #28 (2023 `sum` header, demo parquet) |
+| A2 | ERCOT RTM load-zone prices | Nolan (grid value) | superseded by Nolan's `ercot_prices.py`; #23 closed (LZ/LZEW double count flagged) |
+| A3 | County crosswalk: FIPS -> ERCOT weather zone | Nolan, Victor | done: #21 |
+| A4 | Base availability YAML: utility -> Base offer, with source URL and date | report page | done: #24 |
+| A5 | ZIP -> utility candidates (NREL + PUCT Power to Choose) | Victor (address flow) | done: #30 |
+| A6 | EIA-861 county-utility crosswalk + real territory shapes | Christian (/utility-map) | done: #26 |
+| A7 | NRI, ACS, reliability, outlook, scarcity into the map and features.duckdb | map layers | done: #29 |
 | A8 | Marquee storm labels + persona anchor addresses; hand-check persona numbers | 1 PM gate | todo |
-| A9 | `make data` target + DATA_SOURCES.md | done criterion | todo |
+| A9 | `make data` target + DATA_SOURCES.md | done criterion | in review |
 | A10 | Story: H-01 questions to Base, insight charts with Nolan, demo script, README skeleton, safety video, submit | video | todo (human) |
 
 ## A1 EAGLE-I
@@ -26,7 +26,7 @@ every source with license and as-of date.
 ## A2 ERCOT prices
 - `gridstatus.Ercot().get_rtm_spp(year)`, keep load zones and hubs only.
 - Watch the fall-back DST hour: keep both intervals, key on UTC.
-- Output: data/processed/ercot_rtm_spp.parquet.
+- Superseded: Nolan's pipeline/sources/ercot_prices.py (gridstatus). Keep one row per (zone, interval): LZ and LZEW both say "Load Zone".
 
 ## A3 County crosswalk
 - 254 Texas counties -> ERCOT weather zone (8) and load zone (LZ_HOUSTON, LZ_NORTH, LZ_SOUTH, LZ_WEST, plus non-ERCOT flag).

@@ -22,7 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 # Only the price download needs this; it pins pandas below 3.
-data = ["gridstatus>=0.30"]
+data = ["gridstatus>=0.30", "pytz"]  # gridstatus imports pytz without declaring it
 
 [tool.setuptools.packages.find]
 include = ["pipeline*"]
