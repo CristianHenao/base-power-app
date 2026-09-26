@@ -44,3 +44,13 @@ public/swe-worker*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+
+# raw inputs; derived parquet under data/processed is tracked
+data/raw/
