@@ -1,0 +1,28 @@
+{
+  "train": [
+    "2018-01-01",
+    "2023-01-01"
+  ],
+  "test": [
+    "2023-01-01",
+    "2025-01-01"
+  ],
+  "metric": "12h+ outages per typical home (LIFO durations)",
+  "prior_scope": "statewide",
+  "counties": 254,
+  "zero_train_counties_with_test_outages": 5,
+  "methods": {
+    "empirical_bayes": {
+      "poisson_deviance": 528.9459,
+      "spearman": 0.2955
+    },
+    "statewide_mean": {
+      "poisson_deviance": 708.2031,
+      "spearman": null
+    },
+    "raw_rate": {
+      "poisson_deviance": "inf",
+      "spearman": 0.2967
+    }
+  }
+}
