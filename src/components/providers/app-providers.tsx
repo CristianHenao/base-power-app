@@ -2,6 +2,7 @@
 
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { ReactNode } from "react";
+import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       reloadOnOnline={false}
       cacheOnNavigation
     >
-      {children}
+      <OnboardingProvider>{children}</OnboardingProvider>
     </SerwistProvider>
   );
 }

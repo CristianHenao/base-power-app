@@ -1,13 +1,11 @@
 # Base Power
 
-Progressive web app built with **Next.js**, **shadcn/ui**, **Mapbox GL**, and **Three.js**.
+Progressive web app with two experiences:
 
-## Stack
+1. **Homeowner risk analysis** — account → stepped onboarding → location-based planning
+2. **Provider CRM** — manage leads that come from risk analysis planning
 
-- Next.js (App Router) + TypeScript + Tailwind CSS v4
-- shadcn/ui component primitives
-- Serwist (`@serwist/turbopack`) for PWA / service worker
-- Mapbox GL JS with a Three.js custom-layer scaffold
+Built with **Next.js**, **shadcn/ui**, **Mapbox GL**, and **Three.js**.
 
 ## Getting started
 
@@ -20,6 +18,18 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Product flow (scaffold)
+
+| Area | Routes |
+| --- | --- |
+| Sign in | `/` (also `/sign-in` → redirects here) |
+| Sign up | `/sign-up` |
+| Onboarding | `/onboarding` → address → household → goals |
+| Risk analysis | `/risk` |
+| Provider CRM | `/crm`, `/crm/leads`, `/crm/leads/[id]` |
+
+The app opens on the login screen. Onboarding captures address, household details, and backup battery goals. Auth and persistence are stubbed so the stepped UX can be walked end-to-end.
 
 ## Scripts
 
@@ -34,19 +44,20 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 src/
-  app/                 # routes, layout, PWA manifest + SW
+  app/
+    (auth)/            # sign-in (/) + sign-up
+    (consumer)/        # onboarding + risk analysis
+    crm/               # provider CRM
   components/
-    layout/            # app shell
-    map/               # Mapbox + Three.js map views
-    providers/         # Serwist + future providers
-    ui/                # shadcn primitives
+    auth/
+    onboarding/
+    crm/
+    layout/
+    map/
+    ui/
   lib/
-    map/               # map config + Three.js layer helper
+    types/             # shared domain models
+    onboarding/        # step config + option catalogs
+    crm/               # mock leads for CRM scaffold
+    map/
 ```
-
-## PWA notes
-
-- Manifest: `src/app/manifest.ts`
-- Service worker: `src/app/sw.ts` (served via `/serwist/sw.js`)
-- Offline fallback: `/~offline`
-- Service worker registration is disabled in development

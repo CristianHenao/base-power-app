@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Base Power",
     short_name: "Base Power",
-    description: "Progressive web app for power mapping and field operations.",
+    description: "Home backup risk analysis and provider CRM.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait-primary",

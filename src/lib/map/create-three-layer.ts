@@ -24,6 +24,9 @@ type ThreeLayerOptions = {
 /**
  * Creates a Mapbox GL custom layer backed by a Three.js scene.
  * Use this as the foundation for 3D overlays (assets, corridors, terrain).
+ *
+ * Important: only enable when you have content to draw. An empty Three.js
+ * layer that shares Mapbox’s WebGL context can blank the basemap.
  */
 export function createThreeLayer(
   options: ThreeLayerOptions = {},
@@ -54,7 +57,7 @@ export function createThreeLayer(
 
       renderer = new WebGLRenderer({
         canvas: map.getCanvas(),
-        context: gl,
+        context: gl as WebGLRenderingContext,
         antialias: true,
       });
       renderer.autoClear = false;
@@ -63,7 +66,12 @@ export function createThreeLayer(
     },
 
     render(_gl, matrix) {
-      const m = new Matrix4().fromArray(matrix);
+      // Skip drawing until callers add meshes — avoids stomping Mapbox state.
+      if (scene.children.length <= 2) {
+        return;
+      }
+
+      const m = new Matrix4().fromArray(matrix as number[]);
       camera.projectionMatrix = m;
 
       renderer.resetState();

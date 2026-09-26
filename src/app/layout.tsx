@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
-import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,7 +17,7 @@ const APP_NAME = "Base Power";
 const APP_DEFAULT_TITLE = "Base Power";
 const APP_TITLE_TEMPLATE = "%s · Base Power";
 const APP_DESCRIPTION =
-  "Progressive web app for power mapping and field operations.";
+  "Home backup risk analysis for homeowners, and CRM tools for energy providers.";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -77,9 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AppProviders>
-          <AppShell>{children}</AppShell>
-        </AppProviders>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

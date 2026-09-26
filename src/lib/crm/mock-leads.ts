@@ -1,0 +1,113 @@
+import type { Lead } from "@/lib/types/domain";
+
+/** Placeholder CRM leads until persistence is wired. */
+export const MOCK_LEADS: Lead[] = [
+  {
+    id: "lead_1001",
+    consumerId: "user_2001",
+    status: "new",
+    source: "risk_analysis",
+    fullName: "Jordan Lee",
+    email: "jordan.lee@example.com",
+    phone: "(512) 555-0142",
+    address: {
+      line1: "1842 Barton Springs Rd",
+      city: "Austin",
+      state: "TX",
+      postalCode: "78704",
+      country: "US",
+      latitude: 30.264,
+      longitude: -97.771,
+    },
+    household: {
+      homeType: "single_family",
+      squareFootage: 2100,
+      occupants: 4,
+      ownsHome: true,
+      hasSolar: false,
+      hasExistingBattery: false,
+      averageMonthlyBillUsd: 185,
+    },
+    goals: {
+      primaryGoal: "outage_resilience",
+      secondaryGoals: ["essentials_only"],
+      notes: "Medical equipment that needs continuous power.",
+    },
+    riskScore: 78,
+    assignedTo: null,
+    createdAt: "2026-09-20T15:12:00.000Z",
+    updatedAt: "2026-09-20T15:12:00.000Z",
+  },
+  {
+    id: "lead_1002",
+    consumerId: "user_2002",
+    status: "contacted",
+    source: "risk_analysis",
+    fullName: "Sam Rivera",
+    email: "sam.rivera@example.com",
+    address: {
+      line1: "902 Congress Ave",
+      line2: "Unit 4B",
+      city: "Austin",
+      state: "TX",
+      postalCode: "78701",
+      country: "US",
+    },
+    household: {
+      homeType: "condo",
+      squareFootage: 980,
+      occupants: 2,
+      ownsHome: true,
+      hasSolar: true,
+      hasExistingBattery: false,
+      averageMonthlyBillUsd: 95,
+    },
+    goals: {
+      primaryGoal: "bill_savings",
+      secondaryGoals: ["ev_charging"],
+      notes: "",
+    },
+    riskScore: 54,
+    assignedTo: "agent_01",
+    createdAt: "2026-09-18T11:40:00.000Z",
+    updatedAt: "2026-09-22T09:05:00.000Z",
+  },
+  {
+    id: "lead_1003",
+    consumerId: "user_2003",
+    status: "qualified",
+    source: "risk_analysis",
+    fullName: "Casey Nguyen",
+    email: "casey.nguyen@example.com",
+    phone: "(737) 555-0199",
+    address: {
+      line1: "4500 Duval St",
+      city: "Austin",
+      state: "TX",
+      postalCode: "78751",
+      country: "US",
+    },
+    household: {
+      homeType: "townhouse",
+      squareFootage: 1600,
+      occupants: 3,
+      ownsHome: true,
+      hasSolar: false,
+      hasExistingBattery: false,
+      averageMonthlyBillUsd: 140,
+    },
+    goals: {
+      primaryGoal: "whole_home_backup",
+      secondaryGoals: ["outage_resilience"],
+      notes: "Interested in a site visit next week.",
+    },
+    riskScore: 69,
+    assignedTo: "agent_01",
+    createdAt: "2026-09-12T18:22:00.000Z",
+    updatedAt: "2026-09-24T14:10:00.000Z",
+  },
+];
+
+export function getLeadById(id: string): Lead | undefined {
+  return MOCK_LEADS.find((lead) => lead.id === id);
+}
