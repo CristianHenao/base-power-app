@@ -20,6 +20,15 @@ export function formatLayerValue(meta: MapLayerMeta, value: number | null, quali
       return `${whole.format(value)} homes`;
     case "flood":
       return `${oneDecimal.format(value)} flood days / yr`;
+    case "winter":
+    case "heat":
+      return `${oneDecimal.format(value)} event days / yr`;
+    case "tornado":
+      return `${oneDecimal.format(value)} EF-km / 1,000 km² / yr`;
+    case "severe_storm":
+      return `${oneDecimal.format(value)} reports / 1,000 km² / yr`;
+    case "hurricane":
+      return `${oneDecimal.format(value)} passes / decade`;
     case "weather":
       return `${oneDecimal.format(value)} / 100`;
     case "peak_demand":

@@ -8,7 +8,8 @@ import { CountyPicker } from "@/components/utility-map/county-picker";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { FleetCard, GridCard, type FleetShare } from "@/components/utility-map/fleet-card";
 import { HazardChip } from "@/components/utility-map/hazard-chip";
-import { isHazard, type HazardId } from "@/lib/utility-map/hazard-style";
+import { HazardFingerprint } from "@/components/utility-map/hazard-fingerprint";
+import { HAZARD_IDS, isHazard, type HazardId } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, generationSummary, liveSummary } from "@/lib/utility-map/format";
 import {
@@ -309,6 +310,13 @@ function UtilityView({
         }))}
       />
 
+      <HazardFingerprint
+        layers={data.layers}
+        ranks={Object.fromEntries(HAZARD_IDS.map((h) => [h, utilityLayerSummary(utility, countiesByFips, h).rank]))}
+        values={Object.fromEntries(HAZARD_IDS.map((h) => [h, utilityLayerSummary(utility, countiesByFips, h).value]))}
+        quality={Object.fromEntries(HAZARD_IDS.map((h) => [h, utilityLayerQuality(utility, countiesByFips, h)]))}
+      />
+
       <RightNow data={data} fips={utility.counties} />
 
       <FleetCard
@@ -412,6 +420,12 @@ function CountyView({
           rank: county.ranks[id],
           quality: county.quality[id],
         }))}
+      />
+      <HazardFingerprint
+        layers={data.layers}
+        ranks={Object.fromEntries(HAZARD_IDS.map((h) => [h, county.ranks[h]]))}
+        values={Object.fromEntries(HAZARD_IDS.map((h) => [h, county.values[h]]))}
+        quality={Object.fromEntries(HAZARD_IDS.map((h) => [h, county.quality[h]]))}
       />
       <RightNow data={data} fips={[county.fips]} />
       <p className="text-[12px] leading-[18px] text-muted-foreground">

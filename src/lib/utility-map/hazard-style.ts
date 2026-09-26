@@ -63,3 +63,13 @@ export function overlapCount(county: CountyRecord, active: LayerId[]): number {
 export function efWidth(ef: number): number {
   return [1, 1.5, 2.5, 3.5, 4.5][Math.max(0, Math.min(ef, 4))];
 }
+
+export type FingerprintRow = { hazard: HazardId; rank: number | null; topFifth: boolean };
+
+/** Hazards present in `ranks`, highest rank first, unknown ranks last. */
+export function fingerprintRows(ranks: Partial<Record<HazardId, number | null>>): FingerprintRow[] {
+  return (Object.keys(ranks) as HazardId[])
+    .filter(isHazard)
+    .map((hazard) => ({ hazard, rank: ranks[hazard] ?? null, topFifth: (ranks[hazard] ?? 0) >= 0.8 }))
+    .sort((a, b) => (b.rank ?? -1) - (a.rank ?? -1));
+}

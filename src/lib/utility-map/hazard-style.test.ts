@@ -5,6 +5,7 @@ import {
   HAZARDS,
   bivariateClass,
   efWidth,
+  fingerprintRows,
   hazardLevel,
   overlapCount,
 } from "./hazard-style.ts";
@@ -56,4 +57,11 @@ test("overlap counts active hazards where the county is in the top fifth", () =>
 
 test("tornado line width grows with EF rating", () => {
   assert.deepEqual([-9, 0, 1, 2, 3, 4, 5].map(efWidth), [1, 1, 1.5, 2.5, 3.5, 4.5, 4.5]);
+});
+
+test("fingerprint rows sort by rank, flag the top fifth and keep unknowns last", () => {
+  const rows = fingerprintRows({ flood: 0.95, tornado: 0.3, hurricane: null, heat: 0.8 });
+  assert.deepEqual(rows.map((r) => [r.hazard, r.topFifth]), [
+    ["flood", true], ["heat", true], ["tornado", false], ["hurricane", false],
+  ]);
 });
