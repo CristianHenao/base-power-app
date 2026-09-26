@@ -1,5 +1,7 @@
 # PRD: Utility risk map for Base sales
 
+> **Implementation successor:** [Utility Map PRD 2.0](utility-map-prd-v2.md) consolidates the source contracts, data architecture, handoffs and validation plan. Alejandro confirmed ownership of the map implementation and final dataset/export assembly on September 26, 2026; this resolves ownership question 7 below. This v1 document is preserved for context.
+
 | | |
 |---|---|
 | **Status** | Draft for team review. The mockup is live at `/utility-map` on dummy data. |
