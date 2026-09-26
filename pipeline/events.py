@@ -62,6 +62,28 @@ def weighted_quantile(values, weights, q: float) -> float:
     return float(np.interp(q, cum, v))
 
 
+def event_curve(series: pd.Series, start, end) -> np.ndarray:
+    """Customers out on the same 15-minute grid `extract_events` used.
+
+    `end` is exclusive, matching the timestamp stored on an event row.
+    """
+    s = series.sort_index().astype(float)
+    s = s[~s.index.duplicated(keep="last")].asfreq("15min", fill_value=0.0)
+    start = pd.Timestamp(start)
+    end = pd.Timestamp(end)
+    if start.tzinfo is None:
+        start = start.tz_localize("UTC")
+    if end.tzinfo is None:
+        end = end.tz_localize("UTC")
+    start, end = start.tz_convert("UTC"), end.tz_convert("UTC")
+    if start not in s.index or end <= start:
+        raise ValueError("event window is missing from the county series")
+    last = end - pd.Timedelta(minutes=15)
+    if last not in s.index:
+        raise ValueError("event window is missing from the county series")
+    return s.loc[start:last].to_numpy(dtype=float)
+
+
 def coverage(durations, weights, backup_h: float) -> tuple[float, float]:
     """(share of affected homes fully covered, share of their dark hours covered)."""
     d, w = np.asarray(durations, float), np.asarray(weights, float)

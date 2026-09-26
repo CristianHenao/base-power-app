@@ -239,6 +239,19 @@ def build_events(
     return events
 
 
+def demo_series(
+    raw_dir: Path = settings.RAW_EAGLEI_DIR,
+    fips: tuple[str, ...] = settings.DEMO_FIPS,
+) -> dict[str, pd.Series]:
+    """Customers-out series from 2018 on for each county, read the way build_events reads them."""
+    columns = columns_from_settings()
+    if columns is None:
+        raise RuntimeError("EAGLE-I column map in pipeline/settings.py is unset")
+    start = pd.Timestamp(settings.RATES_START, tz="UTC")
+    frame = keep_from(keep_texas(concat_yearly(list_yearly_csvs(raw_dir), columns)), start)
+    return {_one_fips(code): county_series(frame, code) for code in fips}
+
+
 def main() -> int:
     paths = list_yearly_csvs(settings.RAW_EAGLEI_DIR)
     if not paths:
