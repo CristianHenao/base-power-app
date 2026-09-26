@@ -13,8 +13,8 @@ export default function SignUpPage() {
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>
-          Enter your name and email. We&apos;ll send a magic link — no password
-          needed.
+          Enter your name and email. We&apos;ll send a one-time code — no
+          password needed.
         </CardDescription>
       </CardHeader>
       <CardContent>

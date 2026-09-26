@@ -1,21 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { ensureProfile } from "@/lib/supabase/profile";
 import { cn } from "@/lib/utils";
 
 export function SignUpForm() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  async function onSubmit(event: React.FormEvent) {
+  async function sendCode(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
@@ -27,7 +31,6 @@ export function SignUpForm() {
         options: {
           shouldCreateUser: true,
           data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/onboarding/address`,
         },
       });
 
@@ -38,10 +41,48 @@ export function SignUpForm() {
       }
 
       setSent(true);
+      setToken("");
       setSubmitting(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to send a magic link.",
+        err instanceof Error ? err.message : "Unable to send a sign-up code.",
+      );
+      setSubmitting(false);
+    }
+  }
+
+  async function verifyCode(event: React.FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token: token.trim(),
+        type: "email",
+      });
+
+      if (verifyError) {
+        setError(verifyError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      if (data.user) {
+        try {
+          await ensureProfile(supabase, data.user, { fullName });
+        } catch {
+          // Profile trigger may have already created the row.
+        }
+      }
+
+      router.push("/onboarding/address");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to verify that code.",
       );
       setSubmitting(false);
     }
@@ -49,31 +90,54 @@ export function SignUpForm() {
 
   if (sent) {
     return (
-      <div className="space-y-4 text-center">
-        <div className="space-y-2">
-          <p className="font-medium">Check your email</p>
+      <form onSubmit={verifyCode} className="space-y-4">
+        <div className="space-y-2 text-center">
+          <p className="font-medium">Enter your code</p>
           <p className="text-sm text-muted-foreground">
-            We sent a magic link to <strong>{email}</strong>. Open it on this
-            device to create your account and continue onboarding.
+            We sent a one-time code to <strong>{email}</strong>.
           </p>
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="token">One-time code</Label>
+          <Input
+            id="token"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            minLength={6}
+            maxLength={8}
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            placeholder="123456"
+          />
+        </div>
+        {error ? (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? "Verifying…" : "Verify and continue"}
+        </Button>
         <Button
           type="button"
           variant="ghost"
           className="w-full"
+          disabled={submitting}
           onClick={() => {
             setSent(false);
+            setToken("");
             setError(null);
           }}
         >
           Edit details
         </Button>
-      </div>
+      </form>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={sendCode} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="fullName">Full name</Label>
         <Input
@@ -101,7 +165,7 @@ export function SignUpForm() {
         </p>
       ) : null}
       <Button type="submit" className="w-full" disabled={submitting}>
-        {submitting ? "Sending link…" : "Email me a magic link"}
+        {submitting ? "Sending code…" : "Email me a code"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

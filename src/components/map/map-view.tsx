@@ -5,7 +5,10 @@ import mapboxgl, { type LngLatLike, type Map, type Marker } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPinned } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MAP_DEFAULTS } from "@/lib/map/config";
+import {
+  MAP_DEFAULTS,
+  type MapBasemapConfig,
+} from "@/lib/map/config";
 import { fetchMapboxTokenClient } from "@/lib/map/geocode-client";
 import { createThreeLayer } from "@/lib/map/create-three-layer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +25,8 @@ export type MapViewProps = {
   pitch?: number;
   bearing?: number;
   style?: string;
+  /** Mapbox Standard basemap toggles (3D buildings, trees, landmarks, etc.). */
+  basemap?: MapBasemapConfig;
   marker?: MapMarker | null;
   /**
    * Optional Three.js overlay. Disabled by default — sharing Mapbox’s WebGL
@@ -30,6 +35,17 @@ export type MapViewProps = {
   enableThreeLayer?: boolean;
   onMapReady?: (map: Map) => void;
 };
+
+function applyBasemapConfig(map: Map, basemap: MapBasemapConfig) {
+  for (const [key, value] of Object.entries(basemap)) {
+    if (value === undefined) continue;
+    try {
+      map.setConfigProperty("basemap", key, value);
+    } catch (error) {
+      console.warn(`Unable to set basemap config "${key}"`, error);
+    }
+  }
+}
 
 function createHomeMarkerElement(label?: string) {
   const el = document.createElement("div");
@@ -55,6 +71,7 @@ export function MapView({
   pitch = MAP_DEFAULTS.pitch,
   bearing = MAP_DEFAULTS.bearing,
   style = MAP_DEFAULTS.style,
+  basemap = MAP_DEFAULTS.basemap,
   marker = null,
   enableThreeLayer = false,
   onMapReady,
@@ -103,31 +120,23 @@ export function MapView({
     const map = new mapboxgl.Map({
       container,
       style,
+      config: {
+        basemap: { ...basemap },
+      },
       center,
       zoom,
       pitch,
       bearing,
+      maxPitch: 85,
       antialias: MAP_DEFAULTS.antialias,
       attributionControl: true,
     });
-
-    map.addControl(
-      new mapboxgl.NavigationControl({ visualizePitch: true }),
-      "top-right",
-    );
-    map.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true,
-      }),
-      "top-right",
-    );
 
     const onLoad = () => {
       if (cancelled) return;
 
       map.resize();
+      applyBasemapConfig(map, basemap);
 
       if (enableThreeLayer && !map.getLayer("three-layer")) {
         try {

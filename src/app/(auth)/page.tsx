@@ -15,7 +15,7 @@ export default function SignInPage() {
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>
-          Sign in with a magic link — no password needed.
+          We&apos;ll email you a one-time code — no password needed.
         </CardDescription>
       </CardHeader>
       <CardContent>
