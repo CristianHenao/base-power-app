@@ -1,0 +1,238 @@
+{
+  "dataMode": "synthetic",
+  "noAlerts": {
+    "status": "available",
+    "data": [],
+    "asOf": "2026-09-26T12:00:00Z",
+    "expiresAt": "2026-09-26T12:05:00Z",
+    "issues": []
+  },
+  "staleThreats": {
+    "status": "stale",
+    "data": [
+      {
+        "id": "demo-alert-wind",
+        "kind": "alert",
+        "hazard": "wind",
+        "title": "Example severe thunderstorm warning",
+        "issuedAt": "2026-09-26T11:55:00Z",
+        "window": {
+          "start": "2026-09-26T11:55:00Z",
+          "end": "2026-09-26T12:30:00Z"
+        },
+        "severity": "severe",
+        "category": null,
+        "probability": null,
+        "footprint": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -95.4,
+                29.73
+              ],
+              [
+                -95.32,
+                29.73
+              ],
+              [
+                -95.32,
+                29.79
+              ],
+              [
+                -95.4,
+                29.79
+              ],
+              [
+                -95.4,
+                29.73
+              ]
+            ]
+          ]
+        },
+        "affectedZoneIds": [],
+        "homeRelation": "inside",
+        "layerId": "demo-layer-alert",
+        "evidence": [
+          {
+            "sourceId": "nws_alerts",
+            "datasetVersion": "synthetic-fixture-v1",
+            "sourceRecordId": "demo-nws_alerts",
+            "retrievedAt": "2026-09-26T12:00:00Z",
+            "spatialScope": "hazard_footprint",
+            "resolutionMeters": null,
+            "method": null,
+            "qualityFlags": [
+              "synthetic_example"
+            ]
+          }
+        ]
+      }
+    ],
+    "asOf": "2026-09-26T12:00:00Z",
+    "expiresAt": "2026-09-26T12:05:00Z",
+    "issues": [
+      {
+        "code": "upstream_error",
+        "message": "Weather updates are temporarily unavailable. Last checked at 12:00 UTC.",
+        "sourceId": "nws_alerts"
+      },
+      {
+        "code": "expired",
+        "message": "The cached warning has expired; do not show it as active.",
+        "sourceId": "nws_alerts"
+      }
+    ]
+  },
+  "gridUnavailable": {
+    "status": "unavailable",
+    "data": null,
+    "asOf": null,
+    "expiresAt": null,
+    "issues": [
+      {
+        "code": "upstream_error",
+        "message": "Current grid conditions are temporarily unavailable.",
+        "sourceId": "ercot_live"
+      }
+    ]
+  },
+  "approximateLocation": {
+    "status": "available",
+    "asOf": "2026-09-26T12:00:00Z",
+    "expiresAt": null,
+    "issues": [
+      {
+        "code": "approximate_location",
+        "message": "Showing a ZIP-area location; address-level hazard matching is unavailable.",
+        "sourceId": null
+      }
+    ],
+    "data": {
+      "address": {
+        "line1": "100 Example Lane",
+        "city": "Houston",
+        "state": "TX",
+        "postalCode": "77002",
+        "country": "US",
+        "longitude": -95.36,
+        "latitude": 29.76
+      },
+      "point": {
+        "type": "Point",
+        "coordinates": [
+          -95.36,
+          29.76
+        ]
+      },
+      "accuracy": "zip_centroid",
+      "countyFips": null,
+      "tractGeoid": null,
+      "timeZone": "America/Chicago",
+      "evidence": []
+    }
+  },
+  "zoneAlertWithoutPolygon": {
+    "id": "demo-zone-alert",
+    "kind": "alert",
+    "hazard": "heat",
+    "title": "Example zone-based heat alert",
+    "issuedAt": "2026-09-26T11:55:00Z",
+    "window": {
+      "start": "2026-09-26T11:55:00Z",
+      "end": "2026-09-26T12:30:00Z"
+    },
+    "severity": "severe",
+    "category": null,
+    "probability": null,
+    "footprint": null,
+    "affectedZoneIds": [
+      "demo-zone-id"
+    ],
+    "homeRelation": "zone_match",
+    "layerId": null,
+    "evidence": [
+      {
+        "sourceId": "nws_alerts",
+        "datasetVersion": "synthetic-fixture-v1",
+        "sourceRecordId": "demo-nws_alerts",
+        "retrievedAt": "2026-09-26T12:00:00Z",
+        "spatialScope": "forecast_zone",
+        "resolutionMeters": null,
+        "method": "Resolve real affectedZones geometry server-side; never draw a point buffer as an alert boundary.",
+        "qualityFlags": [
+          "synthetic_example"
+        ]
+      }
+    ]
+  },
+  "missingOutageObservation": {
+    "countyFips": "48201",
+    "observedAt": "2024-07-08T13:15:00Z",
+    "customersOut": null,
+    "observationStatus": "missing_unknown",
+    "evidence": [
+      {
+        "sourceId": "eaglei",
+        "datasetVersion": "synthetic-fixture-v1",
+        "sourceRecordId": "demo-eaglei",
+        "retrievedAt": "2026-09-26T12:00:00Z",
+        "spatialScope": "county",
+        "resolutionMeters": null,
+        "method": null,
+        "qualityFlags": [
+          "synthetic_example"
+        ]
+      }
+    ]
+  },
+  "meterUsageWithMissingInterval": {
+    "basis": "meter_upload",
+    "profileType": null,
+    "weatherZone": null,
+    "timeZone": "America/Chicago",
+    "window": {
+      "start": "2024-07-08T12:00:00Z",
+      "end": "2024-07-08T12:30:00Z"
+    },
+    "targetAnnualKwh": null,
+    "scaleFactor": null,
+    "intervals": [
+      {
+        "start": "2024-07-08T12:00:00Z",
+        "end": "2024-07-08T12:15:00Z",
+        "kwh": 0.32,
+        "quality": "measured"
+      },
+      {
+        "start": "2024-07-08T12:15:00Z",
+        "end": "2024-07-08T12:30:00Z",
+        "kwh": null,
+        "quality": "missing"
+      }
+    ],
+    "evidence": [
+      {
+        "sourceId": "smart_meter_texas",
+        "datasetVersion": "synthetic-fixture-v1",
+        "sourceRecordId": "demo-smart_meter_texas",
+        "retrievedAt": "2026-09-26T12:00:00Z",
+        "spatialScope": "address",
+        "resolutionMeters": null,
+        "method": "Client-side normalized upload; contains no ESIID, meter number, or original file.",
+        "qualityFlags": [
+          "synthetic_example"
+        ]
+      }
+    ]
+  },
+  "requestError": {
+    "schemaVersion": "0.1.0",
+    "requestId": "demo-request-not-found",
+    "error": {
+      "code": "address_not_found",
+      "message": "We could not locate this address. Check the street and ZIP code.",
+      "retryable": false
+    }
+  }
+}

@@ -190,8 +190,10 @@ manually when they are no longer needed.
 
 For a 24 GB Mac, start with the default 250,000-row chunks. Reduce `--chunk-size`
 if necessary. Allow disk space for national raw files, output, and the temporary
-duplicate index. The script processes years sequentially. It does not run the
-existing event extractor or alter its gap-filling assumptions.
+duplicate index. The script processes years sequentially. It does not run the event extractor.
+`pipeline/events.py` reads this parquet as the record: a reported zero stays
+zero, and a blank or a missing quarter-hour ends the run instead of becoming
+a restoration.
 
 ## Verification performed
 

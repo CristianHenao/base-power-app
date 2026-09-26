@@ -1,0 +1,798 @@
+{
+  "dataMode": "synthetic",
+  "sources": {
+    "census_geocoder": {
+      "name": "Census Geocoder",
+      "url": "https://geocoding.geo.census.gov/geocoder/Geocoding_Services_API.html",
+      "access": "public_api"
+    },
+    "eaglei": {
+      "name": "ORNL EAGLE-I",
+      "url": "https://doi.org/10.6084/m9.figshare.24237376",
+      "access": "download"
+    },
+    "ercot_profiles": {
+      "name": "ERCOT actual load profiles",
+      "url": "https://www.ercot.com/mktinfo/loadprofile/alp",
+      "access": "download"
+    },
+    "ercot_rtm": {
+      "name": "ERCOT NP6-785-ER",
+      "url": "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-785-ER",
+      "access": "download"
+    },
+    "base_availability": {
+      "name": "Base availability",
+      "url": "https://www.basepowercompany.com/pricing",
+      "access": "manual"
+    },
+    "openei_utilities": {
+      "name": "OpenEI ZIP-to-utility",
+      "url": "https://data.openei.org/submissions/8563",
+      "access": "download"
+    },
+    "nws_alerts": {
+      "name": "NWS alerts",
+      "url": "https://www.weather.gov/documentation/services-web-alerts",
+      "access": "public_api"
+    },
+    "fema_nri": {
+      "name": "FEMA National Risk Index",
+      "url": "https://www.fema.gov/about/openfema/data-sets/national-risk-index-data",
+      "access": "download"
+    },
+    "eia861": {
+      "name": "EIA-861 reliability",
+      "url": "https://www.eia.gov/electricity/data/eia861/",
+      "access": "download"
+    },
+    "acs5": {
+      "name": "ACS 5-year B25032",
+      "url": "https://api.census.gov/data/2024/acs/acs5/groups/B25032.html",
+      "access": "public_api"
+    },
+    "ercot_live": {
+      "name": "ERCOT public API",
+      "url": "https://developer.ercot.com/applications/pubapi/user-guide/registration-and-authentication/",
+      "access": "authenticated_api"
+    },
+    "pnnl_events": {
+      "name": "PNNL event-correlated outages",
+      "url": "https://data.openei.org/submissions/6458",
+      "access": "download"
+    },
+    "noaa_storm_events": {
+      "name": "NOAA Storm Events",
+      "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/",
+      "access": "download"
+    },
+    "smart_meter_texas": {
+      "name": "Smart Meter Texas",
+      "url": "https://www.smartmetertexas.com/",
+      "access": "user_upload"
+    },
+    "fema_nfhl": {
+      "name": "FEMA flood hazard layer",
+      "url": "https://msc.fema.gov/portal/advanceSearch",
+      "access": "download"
+    },
+    "noaa_surge": {
+      "name": "NOAA storm surge scenarios",
+      "url": "https://www.nhc.noaa.gov/nationalsurge/",
+      "access": "download"
+    },
+    "usfs_wildfire": {
+      "name": "USFS wildfire risk",
+      "url": "https://wildfirerisk.org/download/",
+      "access": "download"
+    },
+    "iem_warnings": {
+      "name": "IEM NWS warning archive",
+      "url": "https://mesonet.agron.iastate.edu/request/gis/watchwarn.phtml",
+      "access": "download"
+    },
+    "spc_outlook": {
+      "name": "SPC severe-weather outlooks",
+      "url": "https://www.spc.noaa.gov/gis/",
+      "access": "download"
+    },
+    "wpc_forecast": {
+      "name": "WPC forecast GIS",
+      "url": "https://www.wpc.ncep.noaa.gov/html/about_gis.shtml",
+      "access": "download"
+    }
+  },
+  "records": {
+    "census_geocoder": {
+      "address": {
+        "line1": "100 Example Lane",
+        "city": "Houston",
+        "state": "TX",
+        "postalCode": "77002",
+        "country": "US",
+        "longitude": -95.36,
+        "latitude": 29.76
+      },
+      "point": {
+        "type": "Point",
+        "coordinates": [
+          -95.36,
+          29.76
+        ]
+      },
+      "accuracy": "address_match",
+      "countyFips": "48201",
+      "tractGeoid": "48201000100",
+      "timeZone": "America/Chicago",
+      "evidence": [
+        {
+          "sourceId": "census_geocoder",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-census_geocoder",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "address",
+          "resolutionMeters": null,
+          "method": "Example coordinate and geographic identifiers; not an actual geocode. Time zone is separately derived.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "eaglei": {
+      "countyFips": "48201",
+      "observedAt": "2024-07-08T12:00:00Z",
+      "customersOut": 1200,
+      "observationStatus": "reported",
+      "evidence": [
+        {
+          "sourceId": "eaglei",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-eaglei",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "county",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "ercot_profiles": {
+      "basis": "scaled_profile",
+      "profileType": "RESLOWR",
+      "weatherZone": "COAST",
+      "timeZone": "America/Chicago",
+      "window": {
+        "start": "2024-07-08T12:00:00Z",
+        "end": "2024-07-08T12:30:00Z"
+      },
+      "targetAnnualKwh": 12000,
+      "scaleFactor": 1.2,
+      "intervals": [
+        {
+          "start": "2024-07-08T12:00:00Z",
+          "end": "2024-07-08T12:15:00Z",
+          "kwh": 0.45,
+          "quality": "modeled"
+        },
+        {
+          "start": "2024-07-08T12:15:00Z",
+          "end": "2024-07-08T12:30:00Z",
+          "kwh": 0.5,
+          "quality": "modeled"
+        }
+      ],
+      "evidence": [
+        {
+          "sourceId": "ercot_profiles",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-ercot_profiles",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "weather_zone",
+          "resolutionMeters": null,
+          "method": "Synthetic annual reference total 10,000 kWh; 12,000 / 10,000 = 1.2. Returned intervals are a slice after scaling.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "ercot_rtm": {
+      "settlementPoint": "LZ_HOUSTON",
+      "settlementPointType": "load_zone",
+      "currency": "USD",
+      "unit": "USD/MWh",
+      "timeZone": "America/Chicago",
+      "intervals": [
+        {
+          "start": "2024-07-08T12:00:00Z",
+          "end": "2024-07-08T12:15:00Z",
+          "price": 75
+        },
+        {
+          "start": "2024-07-08T12:15:00Z",
+          "end": "2024-07-08T12:30:00Z",
+          "price": -10
+        }
+      ],
+      "evidence": [
+        {
+          "sourceId": "ercot_rtm",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-ercot_rtm",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "load_zone",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "base_availability": {
+      "utilityId": "demo-utility-a",
+      "products": [
+        "energy_and_backup"
+      ],
+      "eligibility": "utility_candidate",
+      "verifiedAt": "2026-09-26T12:00:00Z",
+      "evidence": [
+        {
+          "sourceId": "base_availability",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-base_availability",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "utility",
+          "resolutionMeters": null,
+          "method": "Illustrative offering only; requires real utility and address verification.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "openei_utilities": {
+      "candidates": [
+        {
+          "utilityId": "demo-utility-a",
+          "name": "Example Delivery Utility A",
+          "ownership": "iou",
+          "matchBasis": "zip"
+        },
+        {
+          "utilityId": "demo-utility-b",
+          "name": "Example Cooperative B",
+          "ownership": "non_iou",
+          "matchBasis": "zip"
+        }
+      ],
+      "confirmedUtilityId": null,
+      "confirmation": "required",
+      "evidence": [
+        {
+          "sourceId": "openei_utilities",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-openei_utilities",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "zip",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "nws_alerts": {
+      "id": "demo-alert-wind",
+      "kind": "alert",
+      "hazard": "wind",
+      "title": "Example severe thunderstorm warning",
+      "issuedAt": "2026-09-26T11:55:00Z",
+      "window": {
+        "start": "2026-09-26T11:55:00Z",
+        "end": "2026-09-26T12:30:00Z"
+      },
+      "severity": "severe",
+      "category": null,
+      "probability": null,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -95.4,
+              29.73
+            ],
+            [
+              -95.32,
+              29.73
+            ],
+            [
+              -95.32,
+              29.79
+            ],
+            [
+              -95.4,
+              29.79
+            ],
+            [
+              -95.4,
+              29.73
+            ]
+          ]
+        ]
+      },
+      "affectedZoneIds": [],
+      "homeRelation": "inside",
+      "layerId": "demo-layer-alert",
+      "evidence": [
+        {
+          "sourceId": "nws_alerts",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-nws_alerts",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "hazard_footprint",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "fema_nri": {
+      "id": "demo-nri-winter",
+      "hazard": "winter_weather",
+      "metric": {
+        "kind": "nri_relative_score",
+        "score": 62,
+        "scale": "0_to_100",
+        "rating": "Relatively Moderate"
+      },
+      "homeRelation": "unknown",
+      "layerId": null,
+      "featureId": null,
+      "evidence": [
+        {
+          "sourceId": "fema_nri",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-fema_nri",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "county",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "eia861": {
+      "utilityId": "demo-utility-a",
+      "state": "TX",
+      "year": 2024,
+      "standard": "IEEE",
+      "saidiMinutesWithMajorEvents": 420,
+      "saidiMinutesWithoutMajorEvents": 110,
+      "evidence": [
+        {
+          "sourceId": "eia861",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-eia861",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "utility",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "acs5": {
+      "tractGeoid": "48201000100",
+      "survey": "2024 ACS 5-year",
+      "ownerOccupiedDetached": {
+        "estimate": 850,
+        "marginOfError": 90
+      },
+      "ownerOccupiedAttached": {
+        "estimate": 120,
+        "marginOfError": 35
+      },
+      "evidence": [
+        {
+          "sourceId": "acs5",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-acs5",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "tract",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "ercot_live": {
+      "observedAt": "2026-09-26T11:55:00Z",
+      "status": "normal",
+      "loadMw": 62000,
+      "availableCapacityMw": 71000,
+      "operatingReservesMw": 4500,
+      "evidence": [
+        {
+          "sourceId": "ercot_live",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-ercot_live",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "grid",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "pnnl_events": {
+      "id": "demo-correlated-2023",
+      "name": "Example correlated disturbance",
+      "countyFips": [
+        "48201"
+      ],
+      "window": {
+        "start": "2023-06-01T12:00:00Z",
+        "end": "2023-06-01T13:00:00Z"
+      },
+      "doe417EventId": "demo-doe417-id",
+      "linkedOutageIds": [],
+      "evidence": [
+        {
+          "sourceId": "pnnl_events",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-pnnl_events",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "county",
+          "resolutionMeters": null,
+          "method": "Keep separate from raw EAGLE-I to avoid double-counting; no 2024 PNNL match is claimed.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "noaa_storm_events": {
+      "id": "demo-observed-wind",
+      "name": "Example wind event",
+      "hazards": [
+        "wind"
+      ],
+      "window": {
+        "start": "2024-07-08T12:00:00Z",
+        "end": "2024-07-08T13:00:00Z"
+      },
+      "kind": "observed_event",
+      "homeRelation": "county_context",
+      "footprint": null,
+      "layerId": null,
+      "evidence": [
+        {
+          "sourceId": "noaa_storm_events",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-noaa_storm_events",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "county",
+          "resolutionMeters": null,
+          "method": "Retain county/zone and point records; do not invent an observed polygon.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "smart_meter_texas": {
+      "basis": "meter_upload",
+      "profileType": null,
+      "weatherZone": null,
+      "timeZone": "America/Chicago",
+      "window": {
+        "start": "2024-07-08T12:00:00Z",
+        "end": "2024-07-08T12:30:00Z"
+      },
+      "targetAnnualKwh": null,
+      "scaleFactor": null,
+      "intervals": [
+        {
+          "start": "2024-07-08T12:00:00Z",
+          "end": "2024-07-08T12:15:00Z",
+          "kwh": 0.32,
+          "quality": "measured"
+        },
+        {
+          "start": "2024-07-08T12:15:00Z",
+          "end": "2024-07-08T12:30:00Z",
+          "kwh": null,
+          "quality": "missing"
+        }
+      ],
+      "evidence": [
+        {
+          "sourceId": "smart_meter_texas",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-smart_meter_texas",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "address",
+          "resolutionMeters": null,
+          "method": "Client-side normalized upload; contains no ESIID, meter number, or original file.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "fema_nfhl": {
+      "id": "demo-flood-exposure",
+      "hazard": "flood",
+      "metric": {
+        "kind": "flood_zone",
+        "zone": "AE",
+        "annualChance": 0.01,
+        "specialFloodHazardArea": true
+      },
+      "homeRelation": "inside",
+      "layerId": "demo-layer-flood",
+      "featureId": "demo-flood-polygon",
+      "evidence": [
+        {
+          "sourceId": "fema_nfhl",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-fema_nfhl",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "hazard_footprint",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "noaa_surge": {
+      "id": "demo-surge-exposure",
+      "hazard": "storm_surge",
+      "metric": {
+        "kind": "surge_scenario",
+        "hurricaneCategory": 3,
+        "inundationDepthMeters": 0.6,
+        "scenarioDescription": "Synthetic category-3 scenario; not an annual probability or current forecast."
+      },
+      "homeRelation": "inside",
+      "layerId": "demo-layer-surge",
+      "featureId": null,
+      "evidence": [
+        {
+          "sourceId": "noaa_surge",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-noaa_surge",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "raster_cell",
+          "resolutionMeters": null,
+          "method": "Point sample of a scenario raster; actual provider resolution must be preserved.",
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "usfs_wildfire": {
+      "id": "demo-wildfire-exposure",
+      "hazard": "wildfire",
+      "metric": {
+        "kind": "wildfire",
+        "metricName": "Annual burn probability",
+        "value": 0.002,
+        "unit": "probability_per_year"
+      },
+      "homeRelation": "inside",
+      "layerId": null,
+      "featureId": null,
+      "evidence": [
+        {
+          "sourceId": "usfs_wildfire",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-usfs_wildfire",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "raster_cell",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "iem_warnings": {
+      "id": "demo-historical-warning",
+      "name": "Example archived wind warning",
+      "hazards": [
+        "wind"
+      ],
+      "window": {
+        "start": "2024-07-08T12:00:00Z",
+        "end": "2024-07-08T13:00:00Z"
+      },
+      "kind": "warning",
+      "homeRelation": "inside_warning",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -95.4,
+              29.73
+            ],
+            [
+              -95.32,
+              29.73
+            ],
+            [
+              -95.32,
+              29.79
+            ],
+            [
+              -95.4,
+              29.79
+            ],
+            [
+              -95.4,
+              29.73
+            ]
+          ]
+        ]
+      },
+      "layerId": "demo-layer-history",
+      "evidence": [
+        {
+          "sourceId": "iem_warnings",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-iem_warnings",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "hazard_footprint",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "spc_outlook": {
+      "id": "demo-spc-wind",
+      "kind": "outlook",
+      "hazard": "wind",
+      "title": "Example wind outlook",
+      "issuedAt": "2026-09-26T12:00:00Z",
+      "window": {
+        "start": "2026-09-26T12:00:00Z",
+        "end": "2026-09-27T12:00:00Z"
+      },
+      "severity": "unknown",
+      "category": null,
+      "probability": {
+        "value": 0.15,
+        "definition": "Example probability of damaging thunderstorm wind within 25 miles of a point during this outlook period; verify the selected product definition."
+      },
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -95.4,
+              29.73
+            ],
+            [
+              -95.32,
+              29.73
+            ],
+            [
+              -95.32,
+              29.79
+            ],
+            [
+              -95.4,
+              29.79
+            ],
+            [
+              -95.4,
+              29.73
+            ]
+          ]
+        ]
+      },
+      "affectedZoneIds": [],
+      "homeRelation": "inside",
+      "layerId": "demo-layer-spc",
+      "evidence": [
+        {
+          "sourceId": "spc_outlook",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-spc_outlook",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "hazard_footprint",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    },
+    "wpc_forecast": {
+      "id": "demo-wpc-rain",
+      "kind": "forecast",
+      "hazard": "flood",
+      "title": "Example excessive rainfall outlook",
+      "issuedAt": "2026-09-26T12:00:00Z",
+      "window": {
+        "start": "2026-09-26T12:00:00Z",
+        "end": "2026-09-27T12:00:00Z"
+      },
+      "severity": "unknown",
+      "category": {
+        "code": "SLGT",
+        "label": "Slight"
+      },
+      "probability": null,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -95.4,
+              29.73
+            ],
+            [
+              -95.32,
+              29.73
+            ],
+            [
+              -95.32,
+              29.79
+            ],
+            [
+              -95.4,
+              29.79
+            ],
+            [
+              -95.4,
+              29.73
+            ]
+          ]
+        ]
+      },
+      "affectedZoneIds": [],
+      "homeRelation": "inside",
+      "layerId": "demo-layer-wpc",
+      "evidence": [
+        {
+          "sourceId": "wpc_forecast",
+          "datasetVersion": "synthetic-fixture-v1",
+          "sourceRecordId": "demo-wpc_forecast",
+          "retrievedAt": "2026-09-26T12:00:00Z",
+          "spatialScope": "hazard_footprint",
+          "resolutionMeters": null,
+          "method": null,
+          "qualityFlags": [
+            "synthetic_example"
+          ]
+        }
+      ]
+    }
+  }
+}
