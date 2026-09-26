@@ -38,6 +38,8 @@ export function ScoreCard(props: ScoreCardProps) {
   const peers = kind === "county" ? "counties" : "utilities";
   const level = (risk?.level ?? null) as Level | null;
   const color = level ? LEVEL_COLORS[level] : "var(--bp-grey-20)";
+  // Pale bands (Low, Moderate) take dark ink; the darker bands take white.
+  const ink = level != null && level >= 3 ? "#ffffff" : "var(--bp-grey-100)";
   const { raising, lowering } = scoreFactors(ranks);
   const storm = worstStorm(storms, fips);
   const highHazards = RISK_HAZARDS.filter((h) => (ranks[h] ?? 0) >= 0.8);
@@ -73,22 +75,23 @@ export function ScoreCard(props: ScoreCardProps) {
     >
       {/* 1. The score and where it stands */}
       <div className="space-y-3">
-        <div className="flex items-end justify-between gap-3">
+        <div
+          className="flex items-end justify-between gap-3 rounded-2xl px-5 py-4"
+          style={{ backgroundColor: color, color: ink }}
+        >
           <div>
-            <p className="text-[12px] leading-[18px] font-semibold tracking-wide text-muted-foreground uppercase">
-              Grid Risk Index
-            </p>
-            <p className="flex items-baseline gap-1">
-              <span className="text-[56px] leading-none font-semibold tabular-nums">{risk.index}</span>
-              <span className="text-[16px] leading-none font-semibold text-muted-foreground">/ 100</span>
+            <p className="text-[12px] leading-[18px] font-semibold tracking-wide uppercase opacity-85">Grid Risk Index</p>
+            <p className="flex items-baseline gap-1.5">
+              <span className="text-[88px] leading-[0.9] font-bold tracking-tight tabular-nums">{risk.index}</span>
+              <span className="text-[20px] leading-none font-semibold opacity-75">/ 100</span>
             </p>
           </div>
-          <span
-            className="mb-1 inline-flex items-center rounded-full px-3 py-1 text-[14px] leading-[21px] font-semibold"
-            style={{ backgroundColor: color, color: level >= 3 ? "white" : "var(--bp-grey-100)" }}
-          >
-            {RISK_BANDS[level - 1]} risk
-          </span>
+          <div className="pb-1 text-right">
+            <p className="text-[22px] leading-[26px] font-bold">{RISK_BANDS[level - 1]}</p>
+            <p className="text-[13px] leading-[18px] font-semibold opacity-85">
+              #{risk.rank} of {risk.of} {peers}
+            </p>
+          </div>
         </div>
         <p className="text-[15px] leading-[22px] font-semibold">
           {rankSentence(name, { rank: risk.rank, of: risk.of, level }, kind)}
