@@ -112,3 +112,42 @@ test("a county whose weather and grid are both low says neither stands out", () 
   assert.equal(text[3], "Homes in this county average 0.3 hours of long outages a year.");
   assert.equal(text.length, 4);
 });
+
+import { chapterFor, gridStory } from "./score-card.ts";
+
+test("each question opens the score card at its own chapter", () => {
+  assert.equal(chapterFor("risk"), "risk");
+  assert.equal(chapterFor("hazards"), "why");
+  assert.equal(chapterFor("grid"), "grid");
+  assert.equal(chapterFor("fleet"), "base");
+});
+
+test("the grid story gives size, rank and local generation for a utility", () => {
+  assert.deepEqual(
+    gridStory({
+      kind: "utility", name: "CenterPoint Energy", customers: 2811820, peakMw: 20697, estimated: false,
+      peakRank: 3, peakOf: 150, plantsMw: 18400,
+    }),
+    [
+      "CenterPoint Energy serves 2,811,820 customers with a 20,697 MW summer peak (2024), the 3rd largest of 150 Texas utilities with a known peak.",
+      "Power plants in its counties can supply 18,400 MW (all owners, net summer capacity).",
+    ],
+  );
+});
+
+test("the grid story for a county uses its estimated share and says when there are no plants", () => {
+  assert.deepEqual(
+    gridStory({
+      kind: "county", name: "Coleman County", customers: 4018, peakMw: null, estimated: true,
+      peakRank: null, peakOf: 254, plantsMw: 0,
+    }),
+    [
+      "Coleman County has 4,018 customers; its share of summer peak demand isn't known (its utilities don't publish one).",
+      "No power plants in the county; it draws on the wider grid.",
+    ],
+  );
+  assert.equal(
+    gridStory({ kind: "county", name: "Harris County", customers: 1827686, peakMw: 15000, estimated: true, peakRank: 1, peakOf: 254, plantsMw: 9000 })[0],
+    "Harris County has 1,827,686 customers and an estimated 15,000 MW of summer peak demand, the largest of 254 Texas counties with a known peak.",
+  );
+});

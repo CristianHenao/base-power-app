@@ -48,8 +48,10 @@ public data. Specs: docs/utility-map-prd-v3.md (data, layers), docs/superpowers/
   map key, tooltip, details and tables must all read from it; don't compute a second answer in a component.
 - Every utility and county panel opens with the score card (`score-card.tsx`, wording in
   `lib/utility-map/score-card.ts`): the score, rank and band, what the band means, an "In short" summary
-  built only from pipeline numbers (templates, no LLM), then chapters 1-5 (how at risk, why, what has
-  happened, right now, what Base could add). View-specific detail follows under "More for this view".
+  built only from pipeline numbers (templates, no LLM), then chapters: 1 how at risk, 2 why, 3 what has
+  happened, 4 how big is this grid, 5 right now, 6 what Base could add. Picking a question in the left
+  panel scrolls the open card to its chapter (`chapterFor`: risk 1, hazards 2, grid 4, fleet 6).
+  View-specific detail follows under "More for this view".
 - Statewide, the Grid Risk Index is a ranked table; "Open the full table" (`risk-table-sheet.tsx`, rows in
   `lib/utility-map/risk-table.ts`) lists all utilities and counties with every factor, sortable and searchable.
 - Route `src/app/utility-map/`; live NWS warnings `src/app/api/utility-map/live/`; components
