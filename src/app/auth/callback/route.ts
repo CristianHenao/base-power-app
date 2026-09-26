@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { resolvePostAuthPath } from "@/lib/onboarding/profile-sync";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/supabase/profile";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -8,11 +10,18 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(
-        `${origin}${next.startsWith("/") ? next : "/risk"}`,
-      );
+      let destination = next.startsWith("/") ? next : "/risk";
+      if (data.user) {
+        try {
+          const profile = await ensureProfile(supabase, data.user);
+          destination = resolvePostAuthPath(profile, destination);
+        } catch {
+          // Profile trigger may have already created the row.
+        }
+      }
+      return NextResponse.redirect(`${origin}${destination}`);
     }
   }
 

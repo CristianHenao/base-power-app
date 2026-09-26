@@ -15,6 +15,11 @@ import {
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { geocodeAddressClient } from "@/lib/map/geocode-client";
 import { US_STATES } from "@/lib/onboarding/constants";
+import { createClient } from "@/lib/supabase/client";
+import {
+  getCurrentUser,
+  saveOnboardingDraft,
+} from "@/lib/supabase/profile";
 import type { Address } from "@/lib/types/domain";
 
 const emptyAddress: Address = {
@@ -69,13 +74,24 @@ export function AddressStepForm() {
         return;
       }
 
-      updateDraft({
+      const next = updateDraft({
         address: {
           ...address,
           latitude: location.latitude,
           longitude: location.longitude,
         },
       });
+
+      try {
+        const supabase = createClient();
+        const user = await getCurrentUser(supabase);
+        if (user) {
+          await saveOnboardingDraft(supabase, user.id, next);
+        }
+      } catch {
+        // Keep going with local draft if sync fails.
+      }
+
       router.push("/onboarding/household");
     } catch {
       setError(

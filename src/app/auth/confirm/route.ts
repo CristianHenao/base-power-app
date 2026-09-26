@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { resolvePostAuthPath } from "@/lib/onboarding/profile-sync";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/lib/supabase/profile";
 
@@ -23,14 +24,15 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=auth_callback`);
   }
 
+  let destination = next.startsWith("/") ? next : "/risk";
   if (data.user) {
     try {
-      await ensureProfile(supabase, data.user);
+      const profile = await ensureProfile(supabase, data.user);
+      destination = resolvePostAuthPath(profile, destination);
     } catch {
       // Profile trigger may have already created the row.
     }
   }
 
-  const destination = next.startsWith("/") ? next : "/risk";
   return NextResponse.redirect(`${origin}${destination}`);
 }

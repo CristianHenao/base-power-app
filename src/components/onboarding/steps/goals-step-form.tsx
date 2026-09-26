@@ -8,6 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { BACKUP_GOAL_OPTIONS } from "@/lib/onboarding/constants";
+import { createClient } from "@/lib/supabase/client";
+import {
+  completeOnboarding,
+  getCurrentUser,
+} from "@/lib/supabase/profile";
 import type { BackupGoal, OnboardingGoals } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -50,14 +55,27 @@ export function GoalsStepForm() {
 
   function onFinish(event: React.FormEvent) {
     event.preventDefault();
-    updateDraft({
-      goals: {
-        primaryGoal: form.primaryGoal,
-        secondaryGoals: form.secondaryGoals,
-        notes: form.notes,
-      },
-    });
-    router.push("/risk");
+    void (async () => {
+      const next = updateDraft({
+        goals: {
+          primaryGoal: form.primaryGoal,
+          secondaryGoals: form.secondaryGoals,
+          notes: form.notes,
+        },
+      });
+
+      try {
+        const supabase = createClient();
+        const user = await getCurrentUser(supabase);
+        if (user) {
+          await completeOnboarding(supabase, user.id, next);
+        }
+      } catch {
+        // Local draft is saved; user can still view risk offline.
+      }
+
+      router.push("/risk");
+    })();
   }
 
   return (

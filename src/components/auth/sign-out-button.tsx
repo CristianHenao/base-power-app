@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { clearOnboardingDraft } from "@/lib/onboarding/storage";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
@@ -13,6 +14,7 @@ export function SignOutButton() {
     setPending(true);
     const supabase = createClient();
     await supabase.auth.signOut();
+    clearOnboardingDraft();
     router.push("/");
     router.refresh();
   }

@@ -16,6 +16,9 @@ export type Database = {
           full_name: string | null;
           phone: string | null;
           onboarding_completed_at: string | null;
+          address: Json | null;
+          household: Json | null;
+          goals: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -25,6 +28,9 @@ export type Database = {
           full_name?: string | null;
           phone?: string | null;
           onboarding_completed_at?: string | null;
+          address?: Json | null;
+          household?: Json | null;
+          goals?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -34,6 +40,9 @@ export type Database = {
           full_name?: string | null;
           phone?: string | null;
           onboarding_completed_at?: string | null;
+          address?: Json | null;
+          household?: Json | null;
+          goals?: Json | null;
           created_at?: string;
           updated_at?: string;
         };

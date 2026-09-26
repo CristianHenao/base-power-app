@@ -1,10 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import {
+  isOnboardingComplete,
+  isOnboardingPath,
+  ONBOARDING_START_PATH,
+  POST_ONBOARDING_PATH,
+  resolvePostAuthPath,
+} from "@/lib/onboarding/profile-sync";
+import {
   getSupabasePublishableKey,
   getSupabaseUrl,
   hasSupabaseConfig,
 } from "@/lib/supabase/env";
+import type { Database } from "@/lib/supabase/database.types";
 
 const PUBLIC_PREFIXES = [
   "/",
@@ -34,7 +42,7 @@ export async function updateSession(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     getSupabaseUrl(),
     getSupabasePublishableKey(),
     {
@@ -60,6 +68,7 @@ export async function updateSession(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
+  const userId = typeof user?.sub === "string" ? user.sub : null;
   const { pathname } = request.nextUrl;
 
   if (!user && !isPublicPath(pathname)) {
@@ -69,10 +78,32 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthEntryPath(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/risk";
-    return NextResponse.redirect(url);
+  if (user && userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const complete = isOnboardingComplete(profile);
+
+    if (isAuthEntryPath(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = resolvePostAuthPath(profile, POST_ONBOARDING_PATH);
+      return NextResponse.redirect(url);
+    }
+
+    if (!complete && (pathname === "/risk" || pathname.startsWith("/risk/"))) {
+      const url = request.nextUrl.clone();
+      url.pathname = ONBOARDING_START_PATH;
+      return NextResponse.redirect(url);
+    }
+
+    if (complete && isOnboardingPath(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = POST_ONBOARDING_PATH;
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

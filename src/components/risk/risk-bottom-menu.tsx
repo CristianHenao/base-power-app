@@ -2,6 +2,8 @@
 
 import { Activity, CloudSun, Home, LineChart, Zap } from "lucide-react";
 import { FrostPanel } from "@/components/risk/frost-panel";
+import type { WeatherHazardKind } from "@/lib/risk/synthetic-weather";
+import { WEATHER_HAZARD_META } from "@/lib/risk/synthetic-weather";
 import { cn } from "@/lib/utils";
 
 export const RISK_PRIMARY_TABS = [
@@ -38,12 +40,20 @@ export const RISK_ANALYSIS_ITEMS = [
 export type RiskPrimaryTabId = (typeof RISK_PRIMARY_TABS)[number]["id"];
 export type RiskAnalysisItemId = (typeof RISK_ANALYSIS_ITEMS)[number]["id"];
 
+export type WeatherRiskBadge = {
+  kind: WeatherHazardKind;
+  label: string;
+  color: string;
+};
+
 type RiskBottomMenuProps = {
   primaryTab: RiskPrimaryTabId;
   onPrimaryTabChange: (id: RiskPrimaryTabId) => void;
   /** null = browsing options; map stays lit until user picks one */
   activeAnalysisId: RiskAnalysisItemId | null;
   onAnalysisChange: (id: RiskAnalysisItemId) => void;
+  /** Property-facing weather risks shown under Weather analysis */
+  weatherRiskBadges?: WeatherRiskBadge[];
   className?: string;
 };
 
@@ -52,6 +62,7 @@ export function RiskBottomMenu({
   onPrimaryTabChange,
   activeAnalysisId,
   onAnalysisChange,
+  weatherRiskBadges = [],
   className,
 }: RiskBottomMenuProps) {
   const showAnalysisList = primaryTab === "analysis";
@@ -70,6 +81,8 @@ export function RiskBottomMenu({
               {RISK_ANALYSIS_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = item.id === activeAnalysisId;
+                const showWeatherBadges =
+                  item.id === "weather" && weatherRiskBadges.length > 0;
                 return (
                   <li key={item.id}>
                     <button
@@ -93,7 +106,23 @@ export function RiskBottomMenu({
                       >
                         <Icon className="size-4.5" aria-hidden />
                       </span>
-                      <span className="text-sm font-medium">{item.label}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-foreground">
+                          {item.label}
+                        </span>
+                        {showWeatherBadges ? (
+                          <span className="mt-1.5 flex flex-wrap gap-1">
+                            {weatherRiskBadges.map((badge) => (
+                              <span
+                                key={badge.kind}
+                                className="inline-flex items-center rounded-md bg-black/[0.06] px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground/70 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
+                              >
+                                {badge.label}
+                              </span>
+                            ))}
+                          </span>
+                        ) : null}
+                      </span>
                     </button>
                   </li>
                 );
@@ -133,4 +162,24 @@ export function RiskBottomMenu({
       </FrostPanel>
     </div>
   );
+}
+
+/** Compact badges from the property’s nearby weather hazards. */
+export function weatherRiskBadgesFromHazards(
+  hazards: Array<{ kind: WeatherHazardKind; severity: number }>,
+): WeatherRiskBadge[] {
+  const byKind = new Map<WeatherHazardKind, number>();
+  for (const hazard of hazards) {
+    const prev = byKind.get(hazard.kind) ?? 0;
+    if (hazard.severity > prev) byKind.set(hazard.kind, hazard.severity);
+  }
+
+  const order: WeatherHazardKind[] = ["heat", "storm", "snow"];
+  return order
+    .filter((kind) => byKind.has(kind))
+    .map((kind) => ({
+      kind,
+      label: WEATHER_HAZARD_META[kind].label,
+      color: WEATHER_HAZARD_META[kind].color,
+    }));
 }
