@@ -1,0 +1,30 @@
+{
+  "sources": [
+    {
+      "source_id": "eia861_grid",
+      "url": "https://www.eia.gov/electricity/data/eia861/",
+      "files": [
+        {
+          "name": "Operational_Data_2024.xlsx",
+          "sha256": "a775b8d03fcfb4cef97dd30dadcb4d79a064fcdf1079f72b7d9afcc8435bc44a",
+          "bytes": 372583
+        },
+        {
+          "name": "Sales_Ult_Cust_2024.xlsx",
+          "sha256": "78f0a24db2b3eced624311f14974906eb82595e3fed17d910ef3bc8fb755780e",
+          "bytes": 472434
+        },
+        {
+          "name": "Delivery_Companies_2024.xlsx",
+          "sha256": "04ffffa595803c655a93f175ffc7222f141446d372531242de4ca758e09a83f5",
+          "bytes": 13545
+        }
+      ],
+      "rows": 238,
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "retrieved_at_utc": "2026-09-26T20:35:28Z",
+      "note": "Summer/winter peak demand, bundled sales and delivery-company energy by utility."
+    }
+  ]
+}
