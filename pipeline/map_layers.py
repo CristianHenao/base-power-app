@@ -1,16 +1,19 @@
-"""County map layers and utility reliability into data/features.duckdb and the P-04 map.
+"""County map layers and utility reliability for the P-04 sales map.
 
 Layers (one value per county, then a 0-1 percentile rank across Texas):
   outages   12h+ outages per typical home per year, from Nolan's outlook (same number as the report)
   weather   mean FEMA NRI risk score across winter weather, ice storm, hurricane, strong wind,
             tornado and heat wave (NRI scores are national percentiles, 0-100)
   flood     the larger of NRI coastal and inland flooding risk scores
-  scarcity  hours per year with a real-time price above $1,000/MWh in the county's load zone
+  scarcity  hours per year with a real-time price above $1,000/MWh in the county's load zone,
+            from Nolan's grid_value.parquet (pipeline.grid_value)
   homes     owner-occupied single-family homes (ACS 5-year, B25032)
 
-Needs pipeline/sources/eia861.py to have written public/utility-map/data first.
+Needs pipeline/sources/eia861.py (the map skeleton) and pipeline.grid_value first.
+Adds the tables county_layers and utility_reliability to data/features.duckdb;
+pipeline/features.py owns the report tables in the same file.
 
-Run: python -m pipeline.features
+Run: python -m pipeline.map_layers
 """
 from __future__ import annotations
 
@@ -27,23 +30,22 @@ ROOT = settings.REPO_ROOT
 OUTLOOK = ROOT / "data" / "processed" / "outlook.parquet"
 NRI_CSV = ROOT / "data" / "raw" / "fema" / "nri_counties_tx.csv"
 ACS_DAT = ROOT / "data" / "raw" / "census" / "acsdt5y2024-b25032.dat"
-PRICES = ROOT / "data" / "processed" / "ercot_rtm_spp.parquet"
+GRID_VALUE = ROOT / "data" / "processed" / "grid_value.parquet"
 RELIABILITY_XLSX = ROOT / "data" / "raw" / "eia861" / "Reliability_2024.xlsx"
 CROSSWALK = ROOT / "data" / "processed" / "county_utility.csv"
 MAP_JSON = ROOT / "public" / "utility-map" / "data" / "utility-map.json"
-FEATURES_DB = ROOT / "data" / "features.duckdb"
+FEATURES_DB = settings.FEATURES_DUCKDB
 
 WEATHER_HAZARDS = ("WNTW", "ISTM", "HRCN", "SWND", "TRND", "HWAV")
 FLOOD_HAZARDS = ("CFLD", "IFLD")
-SCARCITY_PRICE = 1000.0  # $/MWh, the threshold in docs/nolan-spec.md task 6
-SCARCITY_YEARS = (2018, 2025)  # full calendar years only
+SCARCITY_PRICE = 1000.0  # $/MWh, the threshold pipeline.grid_value counts
 
 LAYER_META = {
     "outages": {"unit": "12h+ outages per typical home per year (estimate)", "as_of": "2025-12-31"},
     "weather": {"unit": "FEMA NRI risk score, 0-100 (winter, ice, hurricane, wind, tornado, heat)",
                 "as_of": "2025-12-01"},
     "flood": {"unit": "FEMA NRI flood risk score, 0-100", "as_of": "2025-12-01"},
-    "scarcity": {"unit": f"hours per year above ${SCARCITY_PRICE:,.0f}/MWh in the load zone, 2018-2025",
+    "scarcity": {"unit": f"hours per year above ${SCARCITY_PRICE:,.0f}/MWh in the load zone (average)",
                  "as_of": "2025-12-31"},
     "homes": {"unit": "owner-occupied single-family homes (ACS 2020-2024)", "as_of": "2024-12-31"},
 }
@@ -67,14 +69,10 @@ def acs_homes(path: Path = ACS_DAT, state_fips: str = "48") -> pd.Series:
     return pd.Series(homes.to_numpy(), index=counties["GEO_ID"].str[-5:], name="homes")
 
 
-def scarcity_hours(prices: pd.DataFrame, threshold: float = SCARCITY_PRICE,
-                   years: tuple[int, int] = SCARCITY_YEARS) -> pd.Series:
-    """Average hours per year above `threshold` for each load zone (LZ type only, not LZEW)."""
-    zones = prices.loc[prices["point_type"] == "LZ"].copy()
-    year = zones["interval_start_utc"].dt.tz_convert("America/Chicago").dt.year
-    zones = zones.loc[(year >= years[0]) & (year <= years[1])]
-    hours = (zones["price"] > threshold).groupby(zones["settlement_point"]).sum() * 0.25
-    return (hours / (years[1] - years[0] + 1)).round(1)
+def scarcity_hours(grid_value: pd.DataFrame) -> pd.Series:
+    """Average hours per year above the scarcity price for each load zone (15-minute intervals / 4)."""
+    per_year = grid_value.groupby(["load_zone", "year"])["scarcity_intervals"].sum() / 4
+    return per_year.groupby(level="load_zone").mean().round(1)
 
 
 def percentile_ranks(values: pd.Series) -> pd.Series:
@@ -112,7 +110,7 @@ def county_features(map_counties: list[dict]) -> pd.DataFrame:
     outlook = pd.read_parquet(OUTLOOK)
     base["outages"] = outlook["long_outages_per_year"].reindex(base.index).round(3)
     base = base.join(nri_layers())
-    base["scarcity"] = base["load_zone"].map(scarcity_hours(pd.read_parquet(PRICES))) if PRICES.exists() else None
+    base["scarcity"] = base["load_zone"].map(scarcity_hours(pd.read_parquet(GRID_VALUE)))
     base["homes"] = acs_homes().reindex(base.index)
     return base
 

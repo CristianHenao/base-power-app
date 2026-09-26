@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from pipeline.features import acs_homes, nri_layers, percentile_ranks, scarcity_hours
+from pipeline.map_layers import acs_homes, nri_layers, percentile_ranks, scarcity_hours
 
 
 def test_percentile_ranks_spread_zero_to_one_and_keep_missing() -> None:
@@ -19,19 +19,14 @@ def test_percentile_ranks_ties_share_the_midpoint() -> None:
     assert ranks["a"] == ranks["b"] == 0.25
 
 
-def test_scarcity_hours_counts_lz_only_and_averages_over_years() -> None:
-    times = pd.to_datetime(["2024-07-01 20:00", "2024-07-01 20:15", "2025-07-01 20:00"], utc=True)
-    prices = pd.DataFrame(
-        {
-            "interval_start_utc": list(times) * 2,
-            "settlement_point": ["LZ_NORTH"] * 6,
-            "point_type": ["LZ"] * 3 + ["LZEW"] * 3,
-            "price": [5000.0, 50.0, 2000.0] * 2,
-        }
+def test_scarcity_hours_averages_intervals_over_years() -> None:
+    grid_value = pd.DataFrame(
+        {"load_zone": ["LZ_NORTH", "LZ_NORTH", "LZ_WEST"], "year": [2024, 2025, 2024],
+         "scarcity_intervals": [8, 0, 4]}
     )
-    hours = scarcity_hours(prices, threshold=1000.0, years=(2024, 2025))
-    # Two intervals above $1,000 (0.5 h) over two years; LZEW copies are ignored.
-    assert hours["LZ_NORTH"] == pytest.approx(0.2, abs=0.05)
+    hours = scarcity_hours(grid_value)
+    assert hours["LZ_NORTH"] == pytest.approx(1.0)
+    assert hours["LZ_WEST"] == pytest.approx(1.0)
 
 
 def test_nri_layers_average_weather_and_take_max_flood(tmp_path: Path) -> None:
