@@ -20,6 +20,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MAP_DEFAULTS } from "@/lib/map/config";
 import { geocodeAddressClient } from "@/lib/map/geocode-client";
 import {
+  boundsForOutagePerimeter,
+  buildOutagePerimeter,
+} from "@/lib/map/outage-perimeter-layers";
+import {
   formatAddressLine,
   hasHomeCoordinates,
 } from "@/lib/onboarding/storage";
@@ -27,9 +31,7 @@ import { generateHomeOutageTimeline } from "@/lib/risk/synthetic-outages";
 import {
   generateSyntheticWeatherHazards,
   hazardsToHeatmapGeoJSON,
-  WEATHER_ANALYSIS_ZOOM,
 } from "@/lib/risk/synthetic-weather";
-import { buildOutagePerimeter } from "@/lib/map/outage-perimeter-layers";
 import type { Address } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +43,10 @@ export function RiskAnalysisDashboard() {
     useState<RiskAnalysisItemId | null>(null);
   const [outageIndex, setOutageIndex] = useState(0);
   const [showBasePower, setShowBasePower] = useState(false);
+  /** Full-width appliance breakdown — only from “View battery capacity” */
+  const [batteryCapacityOpen, setBatteryCapacityOpen] = useState(false);
+  /** Close-in Base Power camera until the user picks another outage card */
+  const [preferBatteryCamera, setPreferBatteryCamera] = useState(false);
   const address = draft.address;
   const addressKey = useMemo(
     () =>
@@ -144,6 +150,8 @@ export function RiskAnalysisDashboard() {
   function closeAnalysis() {
     setActiveAnalysisId(null);
     setShowBasePower(false);
+    setBatteryCapacityOpen(false);
+    setPreferBatteryCamera(false);
   }
 
   function handlePrimaryTabChange(id: RiskPrimaryTabId) {
@@ -151,11 +159,36 @@ export function RiskAnalysisDashboard() {
     if (id === "home") {
       setActiveAnalysisId(null);
       setShowBasePower(false);
+      setBatteryCapacityOpen(false);
+      setPreferBatteryCamera(false);
     }
   }
 
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
+    // Leaving the close-in Base Power view so the outage radius is visible
+    setPreferBatteryCamera(false);
+    setBatteryCapacityOpen(false);
+  }
+
+  function handleBasePowerChange(checked: boolean) {
+    setShowBasePower(checked);
+    if (!checked) {
+      setBatteryCapacityOpen(false);
+      setPreferBatteryCamera(false);
+    }
+  }
+
+  function handleViewBatteryCapacity(index: number) {
+    setOutageIndex(index);
+    setShowBasePower(true);
+    setBatteryCapacityOpen(true);
+    setPreferBatteryCamera(true);
+  }
+
+  function handleExitBatteryCapacity() {
+    setBatteryCapacityOpen(false);
+    setPreferBatteryCamera(false);
   }
 
   const activeOutage =
@@ -167,6 +200,8 @@ export function RiskAnalysisDashboard() {
     showWeatherAnalysis && activeOutage?.impactedHome,
   );
   const revealBattery = outageBlackout && showBasePower;
+  const useBatteryCamera =
+    showWeatherAnalysis && showBasePower && preferBatteryCamera;
 
   const marker = useMemo<MapMarker | null>(() => {
     if (!center) return null;
@@ -202,6 +237,7 @@ export function RiskAnalysisDashboard() {
       area: buildOutagePerimeter(hazard, {
         home: center,
         impactedHome: activeOutage.impactedHome,
+        seedId: activeOutage.id,
       }),
       visible: true,
     };
@@ -212,24 +248,29 @@ export function RiskAnalysisDashboard() {
     center,
   ]);
 
-  const mapZoom = revealBattery
+  /** Fit perimeter + home on card change; close-in only right after Base Power on */
+  const cameraBounds = useMemo(() => {
+    if (useBatteryCamera) return null;
+    if (!showWeatherAnalysis || !outagePerimeterOverlay?.area.features.length) {
+      return null;
+    }
+    return boundsForOutagePerimeter(outagePerimeterOverlay.area, center);
+  }, [useBatteryCamera, showWeatherAnalysis, outagePerimeterOverlay, center]);
+
+  const mapZoom = useBatteryCamera
     ? MAP_DEFAULTS.batteryRevealZoom
-    : outageBlackout
-      ? MAP_DEFAULTS.outageHomeZoom
-      : showWeatherAnalysis
-        ? WEATHER_ANALYSIS_ZOOM
-        : MAP_DEFAULTS.homeZoom;
-  const mapPitch = revealBattery
+    : showWeatherAnalysis
+      ? 15.85
+      : MAP_DEFAULTS.homeZoom;
+  const mapPitch = useBatteryCamera
     ? MAP_DEFAULTS.batteryRevealPitch
-    : outageBlackout
-      ? 55
-      : showWeatherAnalysis
-        ? 45
-        : MAP_DEFAULTS.pitch;
-  const mapBearing = revealBattery
+    : showWeatherAnalysis
+      ? 58
+      : MAP_DEFAULTS.pitch;
+  const mapBearing = useBatteryCamera
     ? MAP_DEFAULTS.batteryRevealBearing
-    : outageBlackout
-      ? -12
+    : showWeatherAnalysis
+      ? -14
       : MAP_DEFAULTS.bearing;
   const basemap = outageBlackout
     ? MAP_DEFAULTS.outageBasemap
@@ -248,6 +289,7 @@ export function RiskAnalysisDashboard() {
             zoom={mapZoom}
             pitch={mapPitch}
             bearing={mapBearing}
+            cameraBounds={cameraBounds}
             basemap={basemap}
             marker={marker}
             weatherHazards={weatherOverlay}
@@ -270,7 +312,7 @@ export function RiskAnalysisDashboard() {
               {activeOutage?.impactedHome ? (
                 <BasePowerToggle
                   checked={showBasePower}
-                  onCheckedChange={setShowBasePower}
+                  onCheckedChange={handleBasePowerChange}
                 />
               ) : null}
             </div>
@@ -304,6 +346,9 @@ export function RiskAnalysisDashboard() {
             activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
             onChange={handleOutageIndexChange}
             showBasePower={showBasePower}
+            capacityFocused={batteryCapacityOpen}
+            onViewBatteryCapacity={handleViewBatteryCapacity}
+            onExitBatteryCapacity={handleExitBatteryCapacity}
           />
         ) : !inAnalysis ? (
           <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,var(--sab))] sm:px-6">
