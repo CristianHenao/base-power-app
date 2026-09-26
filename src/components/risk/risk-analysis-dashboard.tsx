@@ -7,7 +7,8 @@ import type { MapMarker } from "@/components/map/map-view";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import {
   RiskBottomMenu,
-  type RiskMenuItemId,
+  type RiskAnalysisItemId,
+  type RiskPrimaryTabId,
 } from "@/components/risk/risk-bottom-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -29,7 +30,9 @@ import { cn } from "@/lib/utils";
 
 export function RiskAnalysisDashboard() {
   const { draft, updateDraft } = useOnboarding();
-  const [activeMenu, setActiveMenu] = useState<RiskMenuItemId>("weather");
+  const [primaryTab, setPrimaryTab] = useState<RiskPrimaryTabId>("analysis");
+  const [analysisId, setAnalysisId] =
+    useState<RiskAnalysisItemId>("weather");
   const address = draft.address;
   const addressKey = useMemo(
     () =>
@@ -160,7 +163,12 @@ export function RiskAnalysisDashboard() {
         )}
 
         <div className="pointer-events-none flex w-full justify-center pb-[max(0.25rem,env(safe-area-inset-bottom))]">
-          <RiskBottomMenu activeId={activeMenu} onChange={setActiveMenu} />
+          <RiskBottomMenu
+            primaryTab={primaryTab}
+            onPrimaryTabChange={setPrimaryTab}
+            analysisId={analysisId}
+            onAnalysisChange={setAnalysisId}
+          />
         </div>
       </div>
     </main>
