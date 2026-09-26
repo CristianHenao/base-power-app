@@ -3,14 +3,14 @@
 <style>
   .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
   .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
-  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .band { fill: #0b0b0b; fill-opacity: 0.06; }
   .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
   .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .dot { stroke: #fcfcfb; stroke-width: 2; }
   text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
   @media (prefers-color-scheme: dark) {
     .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
-    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .band { fill: #ffffff; fill-opacity: 0.08; }
     .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
     .dot { stroke: #1a1a19; }
   }
@@ -18,6 +18,7 @@
 <rect class="surface" width="720" height="400" rx="8"/>
 <text class="ink" x="24" y="34" font-size="17" font-weight="600">Same Core, different month</text>
 <text class="ink2" x="24" y="56" font-size="13">Hours one Core (39.2 kWh) lasts for a typical home, median day of each month, normal use</text>
+<rect class="band" x="64" y="241.4" width="486" height="29.5"/>
 <line class="grid" x1="64" y1="330.0" x2="550" y2="330.0"/>
 <text class="muted" x="56" y="334.0" font-size="11" text-anchor="end">0 h</text>
 <line class="grid" x1="64" y1="280.8" x2="550" y2="280.8"/>
@@ -42,8 +43,7 @@
 <text class="muted" x="461.6" y="348" font-size="11" text-anchor="middle">Oct</text>
 <text class="muted" x="505.8" y="348" font-size="11" text-anchor="middle">Nov</text>
 <text class="muted" x="550.0" y="348" font-size="11" text-anchor="middle">Dec</text>
-<line class="ref" x1="64" y1="152.9" x2="550" y2="152.9"/>
-<text class="ink2" x="351.2" y="146.9" font-size="12" text-anchor="middle">Base: about 36 h for one Core</text>
+<text class="ink2" x="72" y="287.0" font-size="12">Shaded: Base says 12-18 h for a typical home</text>
 <polyline class="line s1" points="64.0,250.8 108.2,191.3 152.4,161.7 196.5,162.7 240.7,203.6 284.9,236.5 329.1,239.0 373.3,244.4 417.5,222.7 461.6,204.5 505.8,158.3 550.0,214.9"/>
 <circle class="dot s1" cx="64.0" cy="250.8" r="4"/>
 <circle class="s1" cx="566" cy="210.9" r="5"/>

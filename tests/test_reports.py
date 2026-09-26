@@ -105,3 +105,15 @@ def test_template_narrative_marks_the_llm_degraded(con):
     report = with_narrative(build_report(con, "48201", pd.Series({"48201": "COAST"})), None)
     assert report["narrative"]["status"] == "template"
     assert report["sources"][-1] == {"id": "llm", "status": "degraded", "fallback": "template"}
+
+
+def test_surprise_mode_is_reported_when_present(con):
+    rows = [{"county_fips": "48201", "mode": "surprise", "cores": n, "month": m, "hours": 2.0 * n}
+            for n in (1, 2) for m in range(1, 13)]
+    con.register("extra", pd.DataFrame(rows))
+    con.execute("insert into backup_monthly select * from extra")
+    con.execute("insert into assumptions values ('reserve_soc', 0.2)")
+    report = build_report(con, "48201", pd.Series({"48201": "COAST"}))
+    assert report["backup"]["surprise"]["start_soc"] == 0.2
+    assert report["backup"]["surprise"]["hours_by_month"]["cores_2"] == [4.0] * 12
+    assert report["backup"]["hours_by_month"]["cores_1"][0] == 11.0

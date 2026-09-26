@@ -17,7 +17,7 @@ import sys
 import duckdb
 import pandas as pd
 
-from api.app.sim.backup import KW_PER_CORE, KWH_PER_CORE, STORM_LOAD_FACTOR, hours_by_month
+from api.app.sim.backup import KW_PER_CORE, KWH_PER_CORE, RESERVE_SOC, STORM_LOAD_FACTOR, hours_by_month
 from pipeline import settings
 from pipeline.events import customer_durations, event_curve
 from pipeline.simulate import ProfileYears, event_local_date, replay_coverage
@@ -88,8 +88,10 @@ def backup_monthly(profiles: dict[str, ProfileYears], year: int = BACKUP_YEAR) -
     for fips, source in profiles.items():
         typical = [typical_day(source.month_traces(year, month)) for month in range(1, 13)]
         annual = source.annual_kwh(year)
-        for mode, factor in (("normal", 1.0), ("storm", STORM_LOAD_FACTOR)):
-            table = hours_by_month(typical, profile_annual_kwh=annual, home_annual_kwh=annual, storm_factor=factor)
+        # "surprise" is an outage nobody forecast: normal use from Base's 20% reserve.
+        for mode, factor, soc in (("normal", 1.0, 1.0), ("storm", STORM_LOAD_FACTOR, 1.0), ("surprise", 1.0, RESERVE_SOC)):
+            table = hours_by_month(typical, profile_annual_kwh=annual, home_annual_kwh=annual,
+                                   storm_factor=factor, start_soc=soc)
             for cores in CORES:
                 for month, hours in enumerate(table[f"cores_{cores}"], start=1):
                     rows.append({
@@ -126,6 +128,7 @@ def assumptions_table() -> pd.DataFrame:
         {"name": "kwh_per_core", "value": KWH_PER_CORE, "note": "Base public spec"},
         {"name": "kw_per_core", "value": KW_PER_CORE, "note": "Base public spec; help center lists 11 kW for backup"},
         {"name": "start_soc", "value": 1.0, "note": "battery starts full; storms are forecast"},
+        {"name": "reserve_soc", "value": RESERVE_SOC, "note": "Base's backup reserve; start of the surprise mode"},
         {"name": "storm_load_factor", "value": STORM_LOAD_FACTOR, "note": "labeled 30% load reduction"},
         {"name": "long_outage_hours", "value": LONG_OUTAGE_H, "note": "12-hour-plus threshold"},
         {"name": "sizing_target", "value": SIZING_TARGET, "note": "share of long outage hours covered"},

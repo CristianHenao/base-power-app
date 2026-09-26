@@ -223,6 +223,39 @@
       "start_soc": 1.0,
       "mode": "normal",
       "profile_year": 2024
+    },
+    "surprise": {
+      "start_soc": 0.2,
+      "hours_by_month": {
+        "cores_1": [
+          3.5,
+          6.6,
+          8.0,
+          8.3,
+          7.4,
+          5.2,
+          4.9,
+          4.3,
+          6.4,
+          7.4,
+          8.0,
+          5.7
+        ],
+        "cores_2": [
+          6.6,
+          11.1,
+          14.3,
+          14.8,
+          13.1,
+          10.3,
+          10.0,
+          9.1,
+          11.8,
+          13.1,
+          14.7,
+          9.6
+        ]
+      }
     }
   },
   "sizing": {
@@ -236,11 +269,10 @@
   },
   "narrative": {
     "status": "ok",
-    "headline": "Backup Power for Collin County Homes",
-    "summary": "Collin County has a moderate outlook. It sees a long outage of 12 hours or more about once every 11 years based on 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 52% of past 12-hour-plus outage hours for homes with electric heat. Base confirms sizing at install.",
+    "headline": "Power Backup Report for Collin County",
+    "summary": "Homes in Collin County face a long outage about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth waited about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth waited about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. The suggested number of Cores is 2 Cores. Two Cores cover 52% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
-      "outlook.label",
       "outlook.once_every_years",
       "outlook.years_of_data",
       "outlook.since",
@@ -255,8 +287,7 @@
       "backup.short_month_two_cores",
       "sizing.cores",
       "sizing.share",
-      "threshold.hours",
-      "home.label"
+      "threshold.hours"
     ],
     "url": null
   },

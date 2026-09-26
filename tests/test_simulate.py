@@ -28,3 +28,12 @@ def test_storm_mode_lengthens_backup():
 def test_hours_by_month_rejects_a_short_year():
     with pytest.raises(ValueError, match="12"):
         hours_by_month([np.ones(96)] * 11, profile_annual_kwh=1.0, home_annual_kwh=1.0)
+
+
+def test_hours_by_month_from_the_reserve_floor():
+    from api.app.sim.backup import RESERVE_SOC, hours_by_month
+
+    flat = [np.full(96, 0.25)] * 12  # 1 kW
+    table = hours_by_month(flat, profile_annual_kwh=1.0, home_annual_kwh=1.0, start_soc=RESERVE_SOC)
+    assert table["cores_1"] == pytest.approx([39.2 * 0.2] * 12)
+    assert table["cores_2"] == pytest.approx([78.4 * 0.2] * 12)

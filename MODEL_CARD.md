@@ -139,16 +139,18 @@ stored energy runs out.
 |---|---|---|
 | Energy per Core | 39.2 kWh | Base public spec |
 | Power per Core | 20 kW | Base public spec. The help center lists 11 kW for backup. At 11 kW, large electric-heat loads would trip the overload flag sooner. |
-| Starting charge | 100% | Assumed, since storms are forecast. Not confirmed by Base. |
-| Reserve floor | none | Unknown. A reserve would shorten every number. |
+| Starting charge | 100% | Base says the battery "holds more charge and pulls back from grid activity" before storms, so forecast storms start full. |
+| Unforecast outage ("surprise" mode) | starts at 20% | Base keeps about a 20% backup reserve (about 7.8 kWh) during grid work, so an outage nobody saw coming can start there. Reported as its own mode. |
 | Inverter and battery efficiency | 100% | Unknown. Real losses would shorten every number. |
 | Storm mode | load × 0.7 | A labeled assumption (a 30% cut from shedding big loads). Base has not published a factor. |
 | Load above inverter power | clipped and flagged | The shortfall is not counted as served. |
 
 Resulting monthly range with the normal load (2024 profile): about 16-35 h for one Core and 32-68 h
 for two in Collin; 15-44 h and 25-87 h across Harris and Travis. August is the shortest month in
-Harris and Travis, and January in Collin (electric heat). This fits Base's "about 36-72 h for 1-2
-Cores" only in mild months, and the page says so by month.
+Harris and Travis, and January in Collin (electric heat). Those worst months (15-18 h) land inside
+Base's own "about 12-18 hours for a typical home" on one Core, which is a useful cross-check. Base's
+"36-72 h for 1-2 Cores" headline is its reduced-use figure, not a typical one. From the 20% reserve
+(surprise mode), one Core lasts about 3-11 h and two about 7-19 h.
 
 Duration coverage against historical events is reported both ways. "Homes covered" is the share of
 affected homes whose whole outage fits inside the backup hours. "Hours covered" is the share of
@@ -239,6 +241,6 @@ stronger than the facts support.
   as a ranking, not a probability for one address.
 - The simulator has no weather response beyond the profile year it replays, no home-specific
   appliances, and no solar.
-- Specs we could not confirm (reserve, efficiency, backup power rating, storm mode) all push real
+- Specs we could not confirm (efficiency, backup power rating, storm mode) all push real
   backup hours down from what we show, except storm mode, which is a labeled reduction in load.
 - Persona numbers are awaiting a hand check with Alejandro (ticket A8).

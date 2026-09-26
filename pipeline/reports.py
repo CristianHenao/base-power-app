@@ -7,7 +7,7 @@ app can build on real numbers before /v1/report is served. `build_report` is the
 function the API can call per request. Fields the offline pipeline cannot know
 (tract, live alerts, grid status, Base offer) are null with a source status saying why.
 Keys beyond the contract: home, outlook.since, events[].backup_h, events[].covered_order,
-sizing.share, narrative text.
+sizing.share, backup.surprise (hours from the 20% reserve), narrative text.
 """
 from __future__ import annotations
 
@@ -69,6 +69,15 @@ def event_record(row: pd.Series, order: str = settings.LONG_OUTAGE_ORDER) -> dic
     }
 
 
+def mode_hours(monthly: pd.DataFrame, mode: str, fips: str) -> dict[str, list[float]]:
+    """cores_1 and cores_2 hour lists, January first, for one backup mode."""
+    part = monthly.loc[monthly["mode"] == mode]
+    hours = {f"cores_{n}": [round(float(h), 1) for h in part.loc[part["cores"] == n, "hours"]] for n in CORES}
+    if any(len(values) != 12 for values in hours.values()):
+        raise ValueError(f"backup_monthly for {fips} has no 12 {mode} months per Core count")
+    return hours
+
+
 def build_report(con: duckdb.DuckDBPyConnection, fips: str, zones: pd.Series) -> dict:
     """Contract report for one demo county, without the narrative."""
     if fips not in settings.DEMO_COUNTIES:
@@ -82,7 +91,7 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, zones: pd.Series) ->
         [fips, settings.REPORT_EVENTS],
     ).df()
     monthly = con.execute(
-        "select cores, month, hours from backup_monthly where county_fips = ? and mode = 'normal' order by cores, month",
+        "select mode, cores, month, hours from backup_monthly where county_fips = ? order by mode, cores, month",
         [fips],
     ).df()
     sizing = con.execute("select * from sizing where county_fips = ?", [fips]).df().iloc[0]
@@ -90,9 +99,8 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, zones: pd.Series) ->
     data_end = con.execute("select max(\"end\") from events").fetchone()[0]
 
     profile = settings.DEMO_PROFILE[fips]
-    hours = {f"cores_{n}": [round(float(h), 1) for h in monthly.loc[monthly["cores"] == n, "hours"]] for n in CORES}
-    if any(len(values) != 12 for values in hours.values()):
-        raise ValueError(f"backup_monthly for {fips} is not 12 months per Core count")
+    hours = mode_hours(monthly, "normal", fips)
+    surprise = mode_hours(monthly, "surprise", fips) if (monthly["mode"] == "surprise").any() else None
     return {
         "report_id": f"rpt_{fips}_{profile.lower()}",
         "location": {
@@ -117,6 +125,9 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, zones: pd.Series) ->
                 "kwh_per_core": assumptions["kwh_per_core"], "kw_per_core": assumptions["kw_per_core"],
                 "start_soc": assumptions["start_soc"], "mode": "normal",
                 "profile_year": int(assumptions["backup_profile_year"]),
+            },
+            "surprise": None if surprise is None else {
+                "start_soc": assumptions["reserve_soc"], "hours_by_month": surprise,
             },
         },
         "sizing": {"cores": int(sizing["cores"]), "reason": sizing["reason"],

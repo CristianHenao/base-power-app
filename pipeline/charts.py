@@ -20,21 +20,21 @@ from pipeline import settings
 WIDTH, HEIGHT = 720, 400
 FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif"
 MONTH_LETTERS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-# Base's public claim: about 36-72 h of backup for one to two Cores.
-BASE_ONE_CORE_H = 36.0
+# Base's typical-home figure for one Core (docs/battery-tech-specs.md). 36 h is its reduced-use claim.
+BASE_TYPICAL_H = (12.0, 18.0)
 PERSONAS = (("48085", "Collin, electric heat"), ("48201", "Harris, gas heat"), ("48453", "Travis, gas heat"))
 
 STYLE = """<style>
   .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
   .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
-  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .band { fill: #0b0b0b; fill-opacity: 0.06; }
   .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
   .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .dot { stroke: #fcfcfb; stroke-width: 2; }
   text { font-family: %s; }
   @media (prefers-color-scheme: dark) {
     .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
-    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .band { fill: #ffffff; fill-opacity: 0.08; }
     .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
     .dot { stroke: #1a1a19; }
   }
@@ -115,7 +115,7 @@ def backtest_svg(record: dict) -> str:
 
 
 def month_svg(hours: dict[str, list[float]]) -> str:
-    """One-Core backup hours by month for each persona, with Base's 36-hour claim as a reference line."""
+    """One-Core backup hours by month for each persona, over Base's typical-home band."""
     left, right, top_y, bottom_y = 64, WIDTH - 170, 84, HEIGHT - 70
     top = nice_max(max(max(values) for values in hours.values()) * 1.05)
     x_at = lambda m: left + (right - left) * m / 11  # noqa: E731
@@ -126,10 +126,12 @@ def month_svg(hours: dict[str, list[float]]) -> str:
         body.append(f'<text class="muted" x="{left - 8}" y="{y_at(tick) + 4:.1f}" font-size="11" text-anchor="end">{tick:.0f} h</text>')
     for m, name in enumerate(MONTH_LETTERS):
         body.append(f'<text class="muted" x="{x_at(m):.1f}" y="{bottom_y + 18}" font-size="11" text-anchor="middle">{name}</text>')
-    body.append(f'<line class="ref" x1="{left}" y1="{y_at(BASE_ONE_CORE_H):.1f}" x2="{right}" y2="{y_at(BASE_ONE_CORE_H):.1f}"/>')
-    # Summer months sit far below the line, so the label never touches a series there.
-    body.append(f'<text class="ink2" x="{x_at(6.5):.1f}" y="{y_at(BASE_ONE_CORE_H) - 6:.1f}" font-size="12" '
-                f'text-anchor="middle">Base: about 36 h for one Core</text>')
+    low_h, high_h = BASE_TYPICAL_H
+    body.insert(0, f'<rect class="band" x="{left}" y="{y_at(high_h):.1f}" width="{right - left}" '
+                   f'height="{y_at(low_h) - y_at(high_h):.1f}"/>')
+    # The band sits under the curves; its label goes at the bottom left, clear of every series.
+    body.append(f'<text class="ink2" x="{left + 8}" y="{y_at(low_h) + 16:.1f}" font-size="12">'
+                f'Shaded: Base says 12-18 h for a typical home</text>')
     label_y = spread([y_at(values[-1]) for values in hours.values()], min_gap=34)
     for i, (label, values) in enumerate(hours.items()):
         cls = f"s{i + 1}"

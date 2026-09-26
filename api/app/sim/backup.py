@@ -12,6 +12,8 @@ KW_PER_CORE = 20.0
 STEP_H = 0.25
 # Storm mode is a labeled 30% load reduction. Base has not published the factor.
 STORM_LOAD_FACTOR = 0.7
+# Base keeps about 20% in reserve during grid work, so an outage nobody forecast can start there.
+RESERVE_SOC = 0.2
 TYPICAL_DAY_HOURS = 24.0 * 14
 
 
@@ -63,7 +65,7 @@ def backup_hours(kwh_15, cores: int = 1, *, profile_annual_kwh: float,
 
 
 def hours_by_month(typical_days, *, profile_annual_kwh: float, home_annual_kwh: float,
-                   storm_factor: float = 1.0) -> dict[str, list[float]]:
+                   storm_factor: float = 1.0, start_soc: float = 1.0) -> dict[str, list[float]]:
     """Backup hours for one and two Cores, one typical day per month, January first."""
     days = list(typical_days)
     if len(days) != 12:
@@ -74,11 +76,11 @@ def hours_by_month(typical_days, *, profile_annual_kwh: float, home_annual_kwh: 
         tiled = tile_day(day)
         cores_1.append(backup_hours(
             tiled, 1, profile_annual_kwh=profile_annual_kwh,
-            home_annual_kwh=home_annual_kwh, storm_factor=storm_factor,
+            home_annual_kwh=home_annual_kwh, storm_factor=storm_factor, start_soc=start_soc,
         ))
         cores_2.append(backup_hours(
             tiled, 2, profile_annual_kwh=profile_annual_kwh,
-            home_annual_kwh=home_annual_kwh, storm_factor=storm_factor,
+            home_annual_kwh=home_annual_kwh, storm_factor=storm_factor, start_soc=start_soc,
         ))
     return {"cores_1": cores_1, "cores_2": cores_2}
 
