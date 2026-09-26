@@ -106,3 +106,20 @@ def build_facts(report: dict) -> list[Fact]:
         Fact("threshold.hours", "12 hours or longer", (12.0,), unit=HOURS),
     ]
     return facts
+
+
+def from_contract(report: dict) -> dict:
+    """Narrator input from an A-02 contract report."""
+    events = [
+        {"start": event["start"], "peak_out_pct": event["peak_out_pct"], "duration_h": event["duration_h"]}
+        for event in report["events"][:2]
+    ]
+    return {
+        "county": {"fips": report["location"]["county_fips"], "name": report["location"]["county"]},
+        "home": {"label": report["home"]["label"]},
+        "outlook": {key: report["outlook"][key]
+                    for key in ("label", "long_outages_per_year", "once_every_years", "years_of_data", "since")},
+        "events": events,
+        "backup": {"hours_by_month": report["backup"]["hours_by_month"]},
+        "sizing": {"cores": report["sizing"]["cores"], "share": report["sizing"]["share"]},
+    }
