@@ -169,7 +169,14 @@ export function ControlsPanel({
           note="Grey: peak demand not known. Change the fleet size in a utility's panel."
         />
       ) : (
-        <ScoreLegend />
+        <>
+          <ScoreLegend />
+          {activeLayers.includes("price_spikes") ? (
+            <p className="text-[11px] leading-tight text-muted-foreground">
+              Price spikes apply only inside ERCOT, so counties and utilities outside it are compared with each other.
+            </p>
+          ) : null}
+        </>
       )}
       {floodCounties.length > 0 ? <FloodZoneLegend /> : null}
     </section>

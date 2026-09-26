@@ -92,7 +92,17 @@ export function buildScoreModel(
 ): ScoreModel {
   const countyScores = new Map<string, number | null>();
   for (const c of data.counties) countyScores.set(c.fips, countyScore(c, layers));
-  const countyLevels = quintileLevels(countyScores);
+  // Price spikes only exist inside ERCOT. With that layer on, counties outside ERCOT are
+  // scored on fewer layers, so they are leveled among themselves (PRD v3 §7).
+  const outsideErcot = (c: CountyRecord) =>
+    layers.includes("price_spikes") && c.quality?.price_spikes === "not_applicable";
+  const countyLevels = new Map<string, Level | null>();
+  for (const group of [false, true]) {
+    const members = new Map(
+      data.counties.filter((c) => outsideErcot(c) === group).map((c) => [c.fips, countyScores.get(c.fips) ?? null]),
+    );
+    for (const [fips, level] of quintileLevels(members)) countyLevels.set(fips, level);
+  }
 
   const utilityScores = new Map<string, number | null>();
   for (const u of data.utilities) {
@@ -106,7 +116,15 @@ export function buildScoreModel(
       ),
     );
   }
-  const utilityLevels = quintileLevels(utilityScores);
+  const utilityOutsideErcot = (u: UtilityRecord) =>
+    layers.includes("price_spikes") && !(u.grids ?? [u.grid]).includes("ERCOT");
+  const utilityLevels = new Map<string, Level | null>();
+  for (const group of [false, true]) {
+    const members = new Map(
+      data.utilities.filter((u) => utilityOutsideErcot(u) === group).map((u) => [u.id, utilityScores.get(u.id) ?? null]),
+    );
+    for (const [id, level] of quintileLevels(members)) utilityLevels.set(id, level);
+  }
 
   const ranked = data.utilities
     .filter((u) => utilityScores.get(u.id) != null)

@@ -96,3 +96,37 @@ test("peak demand adds up across a utility's county shares like homes do", () =>
   const gamma = utility("gamma", [["48001", 50, 0.05], ["48003", 50, 0.125]], null);
   assert.equal(utilityLayerSummary(gamma, counties, "peak_demand").value, 0.05 * 1000 + 0.125 * 200);
 });
+
+test("with price spikes on, counties outside ERCOT are leveled only among themselves", () => {
+  const mk = (fips: string, rank: number, ercot: boolean): CountyRecord =>
+    ({
+      ...county(fips, rank, 100, ["u"]),
+      ranks: { outages: rank, homes: 0.5, price_spikes: ercot ? rank : null } as CountyRecord["ranks"],
+      quality: { outages: "ok", homes: "ok", price_spikes: ercot ? "ok" : "not_applicable" } as CountyRecord["quality"],
+    }) as CountyRecord;
+  // Five ERCOT counties with high scores and five outside ERCOT with low scores.
+  const counties = [
+    ...[0.6, 0.7, 0.8, 0.9, 1.0].map((r, i) => mk(`e${i}`, r, true)),
+    ...[0.0, 0.1, 0.2, 0.3, 0.4].map((r, i) => mk(`n${i}`, r, false)),
+  ];
+  const d = { counties, utilities: [] } as unknown as UtilityMapData;
+  const withSpikes = buildScoreModel(d, ["outages", "price_spikes"]);
+  assert.equal(withSpikes.county.get("n4")?.level, 5); // top of its own peer group
+  assert.equal(withSpikes.county.get("e4")?.level, 5);
+  const without = buildScoreModel(d, ["outages"]);
+  assert.equal(without.county.get("n4")?.level, 3); // statewide, the same county is mid-pack
+});
+
+test("with price spikes on, utilities outside ERCOT are leveled among themselves", () => {
+  const mkCounty = (fips: string, rank: number) =>
+    ({ ...county(fips, rank, 100, ["x"]), ranks: { outages: rank, price_spikes: null }, quality: { outages: "ok", price_spikes: "not_applicable" } }) as unknown as CountyRecord;
+  const counties = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0].map((r, i) => mkCounty(`c${i}`, r));
+  const utilities = counties.map((c, i) => ({
+    ...utility(`u${i}`, [[c.fips, 100, 1]], null),
+    grids: i < 5 ? ["SPP"] : ["ERCOT"],
+  })) as UtilityRecord[];
+  const d = { counties, utilities } as unknown as UtilityMapData;
+  const model = buildScoreModel(d, ["outages", "price_spikes"]);
+  assert.equal(model.utility.get("u4")?.level, 5); // best of the SPP five
+  assert.equal(model.utility.get("u0")?.level, 1);
+});
