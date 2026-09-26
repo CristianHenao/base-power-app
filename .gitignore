@@ -54,3 +54,6 @@ __pycache__/
 
 # raw inputs; derived parquet under data/processed is tracked
 data/raw/
+
+# 49 MB; rebuild with python -m pipeline.sources.ercot_prices --download
+data/processed/ercot_rtm_spp.parquet
