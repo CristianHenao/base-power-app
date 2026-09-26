@@ -10,30 +10,30 @@ export function ConsumerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isMapExperience = pathname.startsWith("/risk");
 
+  if (isMapExperience) {
+    return (
+      <div className="app-shell-map">
+        <SiteHeader homeHref="/risk" overlay>
+          <UserAvatarLink />
+        </SiteHeader>
+        <div className="absolute inset-0 min-h-0">{children}</div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={cn(
-        "flex flex-1 flex-col",
-        isMapExperience ? "relative h-dvh overflow-hidden" : "min-h-full",
-      )}
-    >
-      <SiteHeader
-        homeHref="/risk"
-        className={cn(
-          isMapExperience &&
-            "absolute inset-x-0 top-0 z-50 border-transparent bg-background/70 shadow-sm backdrop-blur-md",
-        )}
-      >
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <SiteHeader homeHref="/risk">
         <UserAvatarLink />
       </SiteHeader>
-
-      {isMapExperience ? (
-        <div className="absolute inset-0 min-h-0 flex-1">{children}</div>
-      ) : (
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8">
-          {children}
-        </div>
-      )}
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8",
+          "pb-[max(2rem,env(safe-area-inset-bottom))]",
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

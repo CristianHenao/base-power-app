@@ -48,7 +48,7 @@ export function CrmShell({ children }: { children: ReactNode }) {
           <SignOutButton />
         </div>
       </SiteHeader>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {children}
       </div>
     </div>

@@ -12,7 +12,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
   const onSignUp = pathname.startsWith("/sign-up");
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader>
         {onSignUp ? (
           <Link
@@ -27,7 +27,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
           </Link>
         )}
       </SiteHeader>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         {children}
       </div>
     </div>

@@ -134,7 +134,7 @@ export function RiskAnalysisDashboard() {
         )}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 pt-[4.5rem] sm:p-6 sm:pt-20">
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 pt-[calc(3.5rem+env(safe-area-inset-top)+0.75rem)] sm:p-6 sm:pt-[calc(3.5rem+env(safe-area-inset-top)+1.25rem)]">
         {!hasAddress || errorMessage ? (
           <div className="pointer-events-auto w-full max-w-sm">
             <Card className="border-border/60 bg-background/85 shadow-lg backdrop-blur-md">
@@ -162,7 +162,7 @@ export function RiskAnalysisDashboard() {
           <div />
         )}
 
-        <div className="pointer-events-none flex w-full justify-center pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+        <div className="pointer-events-none flex w-full justify-center pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <RiskBottomMenu
             primaryTab={primaryTab}
             onPrimaryTabChange={setPrimaryTab}
