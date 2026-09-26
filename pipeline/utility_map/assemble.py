@@ -95,11 +95,13 @@ LAYERS: list[dict] = [
     {"id": "weather", "group": "hazard", "label": "Weather hazard (FEMA)",
      "unit": "FEMA NRI risk score, 0-100 (mean of winter, ice, hurricane, wind, tornado, heat)",
      "period_start": None, "period_end": "2025-12-01", "source_ids": ["fema_nri"],
-     "method": "Mean of six FEMA NRI hazard risk scores. Stands in until the event-based hazard layers ship."},
-    {"id": "homes", "group": "exposure", "label": "Homes exposed",
+     "method": "Mean of six FEMA NRI hazard risk scores. Replaced in the map by the event-based hazard "
+               "layers; kept in the data for reference."},
+    {"id": "homes", "group": "exposure", "label": "Potential homes",
      "unit": "owner-occupied single-family homes (ACS 2020-2024)",
      "period_start": "2020-01-01", "period_end": "2024-12-31", "source_ids": ["acs_5yr"],
-     "method": "ACS 5-year table B25032, owner-occupied one-unit homes by county."},
+     "method": "ACS 5-year table B25032, owner-occupied one-unit homes by county: the homes that could "
+               "host a Core. Not a count of homes inside a flood zone or storm footprint."},
 ]
 LAYER_IDS = [layer["id"] for layer in LAYERS]
 HAZARD_IDS = [layer["id"] for layer in LAYERS if layer["group"] == "hazard" and layer["id"] != "weather"]
