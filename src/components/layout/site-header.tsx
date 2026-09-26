@@ -19,14 +19,31 @@ export function SiteHeader({
   return (
     <header
       className={cn(
-        "z-40 pt-[env(safe-area-inset-top)]",
+        "relative z-40",
+        /* Transparent shell — glass/fill live on absolute children for Liquid Glass */
         overlay
-          ? "absolute inset-x-0 top-0 border-transparent bg-black/45 text-white shadow-none backdrop-blur-xl backdrop-saturate-150"
-          : "sticky top-0 border-b bg-background/80 backdrop-blur-md",
+          ? "absolute inset-x-0 top-0 text-white"
+          : "sticky top-0 border-b border-border/60",
         className,
       )}
+      style={{ paddingTop: "var(--sat)" }}
     >
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
+      {overlay ? (
+        <>
+          <div aria-hidden className="frost-glass" />
+          <div
+            aria-hidden
+            className="frost-wash !bg-gradient-to-b from-black/55 via-black/35 to-transparent"
+          />
+        </>
+      ) : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-background/80 backdrop-blur-md"
+        />
+      )}
+
+      <div className="relative mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
         <Link
           href={homeHref}
           className="flex items-center gap-2 font-semibold tracking-tight"

@@ -237,7 +237,7 @@ export function RiskAnalysisDashboard() {
         )}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between pt-[calc(3.5rem+env(safe-area-inset-top)+0.75rem)]">
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between pt-[calc(3.5rem+var(--sat)+0.75rem)]">
         <div className="flex w-full flex-col items-start gap-3 px-4 sm:px-6">
           {inAnalysis ? (
             <AnalysisCloseButton onClose={closeAnalysis} />
@@ -281,7 +281,7 @@ export function RiskAnalysisDashboard() {
             onChange={handleOutageIndexChange}
           />
         ) : !inAnalysis ? (
-          <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+          <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,var(--sab))] sm:px-6">
             <RiskBottomMenu
               primaryTab={primaryTab}
               onPrimaryTabChange={handlePrimaryTabChange}
