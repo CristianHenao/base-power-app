@@ -131,6 +131,16 @@ def test_real_header_parses_utc_timestamp(tmp_path: Path):
     assert str(frame["timestamp"].iloc[0]) == "2021-02-15 06:00:00+00:00"
 
 
+def test_2023_sum_column_is_customers_out(tmp_path: Path):
+    path = tmp_path / "eaglei_outages_2023.csv"
+    path.write_text(
+        "fips_code,county,state,sum,run_start_time\n"
+        "48085,Collin,Texas,13,2023-01-01 00:00:00\n"
+    )
+    frame = read_yearly_csv(path, columns_from_settings())
+    assert frame["customers_out"].tolist() == [13]
+
+
 def test_column_map_matches_reviewed_header():
     assert columns_from_settings() == EagleiColumns(
         fips="fips_code",

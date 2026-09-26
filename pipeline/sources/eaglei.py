@@ -70,22 +70,42 @@ def _one_fips(county_fips: str) -> str:
     return str(_normalize_fips(pd.Series([county_fips], dtype="string")).iloc[0])
 
 
+# 2023 renamed the outage count. Later years went back to customers_out.
+CUSTOMERS_OUT_ALIASES = ("sum",)
+
+
+def _customers_out_source(header: pd.Index, columns: EagleiColumns) -> str:
+    if columns.customers_out in header:
+        return columns.customers_out
+    for alias in CUSTOMERS_OUT_ALIASES:
+        if alias in header:
+            return alias
+    return columns.customers_out
+
+
 def read_yearly_csv(path: Path, columns: EagleiColumns) -> pd.DataFrame:
     """Read one yearly CSV into county_fips, state, customers_out, timestamp (UTC)."""
-    header = pd.read_csv(path, nrows=0)
-    missing = [name for name in columns.names() if name not in header.columns]
+    header = pd.read_csv(path, nrows=0).columns
+    customers_out = _customers_out_source(header, columns)
+    needed = {
+        columns.fips: columns.fips,
+        columns.state: columns.state,
+        columns.customers_out: customers_out,
+        columns.timestamp: columns.timestamp,
+    }
+    missing = [name for name, source in needed.items() if source not in header]
     if missing:
         raise ValueError(f"{path.name} is missing columns: {', '.join(missing)}")
     frame = pd.read_csv(
         path,
-        usecols=list(columns.names()),
+        usecols=list(dict.fromkeys(needed.values())),
         dtype={columns.fips: "string", columns.state: "string"},
     )
     out = pd.DataFrame(
         {
             "county_fips": _normalize_fips(frame[columns.fips]),
             "state": frame[columns.state].astype("string"),
-            "customers_out": pd.to_numeric(frame[columns.customers_out], errors="coerce"),
+            "customers_out": pd.to_numeric(frame[customers_out], errors="coerce"),
             "timestamp": pd.to_datetime(frame[columns.timestamp], utc=True),
         }
     )
