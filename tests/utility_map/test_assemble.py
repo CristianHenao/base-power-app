@@ -227,3 +227,13 @@ def test_publish_copies_extra_files_listed_in_geometry(tmp_path: Path) -> None:
         (geo / name).write_text('{"type":"FeatureCollection","features":[]}')
     rid = assemble.publish(release, geo, tmp_path / "public", today="2026-09-26", expected_counties=2)
     assert (tmp_path / "public" / "releases" / rid / "flood" / "48001.geojson").exists()
+
+
+def test_event_hazard_layers_are_wired_to_their_tables_and_sources() -> None:
+    layers = {layer["id"]: layer for layer in assemble.LAYERS}
+    for layer_id, table in (("tornado", "county_tornado.parquet"), ("hurricane", "county_hurricane.parquet")):
+        assert layers[layer_id]["table"] == table
+        assert layers[layer_id]["unit"] and layers[layer_id]["method"]
+        assert set(layers[layer_id]["source_ids"]) <= {s["id"] for s in assemble.SOURCES}
+    assert {"tornado": "hazards/tornado_tracks.geojson", "hurricane": "hazards/hurricane_tracks.geojson"} == \
+        assemble.HAZARD_FILES

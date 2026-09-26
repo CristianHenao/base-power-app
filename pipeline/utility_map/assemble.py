@@ -57,9 +57,19 @@ LAYERS: list[dict] = [
      "method": "Rank = mean of the Texas ranks of NOAA flood event-days per year and FEMA NRI's flood risk score "
                "(larger of inland and coastal). Demo counties also show FEMA flood-zone maps and the share of land "
                "in the 1% annual-chance floodplain."},
-    {"id": "tornado", "group": "hazard", "label": "Tornadoes", "pending": "NOAA SPC tornado tracks (UM-4.1)"},
+    {"id": "tornado", "group": "hazard", "label": "Tornadoes", "pending": "NOAA SPC tornado tracks (UM-4.1)",
+     "unit": "EF-weighted tornado path km per thousand km² per year (2000-2025)",
+     "period_start": "2000-01-01", "period_end": "2025-12-31", "source_ids": ["spc_tornadoes"],
+     "method": "NOAA SPC tracks split between the counties they cross (straight line start to end); each km "
+               "weighted by EF rating + 1 (unknown = EF0), divided by county land area and years.",
+     "table": "county_tornado.parquet"},
     {"id": "severe_storm", "group": "hazard", "label": "Hail and wind", "pending": "NOAA SPC hail and wind reports (UM-4.2)"},
-    {"id": "hurricane", "group": "hazard", "label": "Hurricanes", "pending": "NHC HURDAT2 tracks (UM-4.3)"},
+    {"id": "hurricane", "group": "hazard", "label": "Hurricanes", "pending": "NHC HURDAT2 tracks (UM-4.3)",
+     "unit": "tropical-storm-force passes within 100 km per decade, weighted by wind (1980-2025)",
+     "period_start": "1980-01-01", "period_end": "2025-12-31", "source_ids": ["nhc_hurdat2"],
+     "method": "NHC best tracks interpolated hourly. Each storm whose 34 kt+ winds passed within 100 km of the "
+               "county's interior point counts its strongest wind there ÷ 64 kt (a hurricane-force pass = 1).",
+     "table": "county_hurricane.parquet"},
     {"id": "winter", "group": "hazard", "label": "Winter freeze", "pending": "NOAA Storm Events (UM-5.1)"},
     {"id": "heat", "group": "hazard", "label": "Extreme heat", "pending": "NOAA Storm Events (UM-5.1)"},
     {"id": "weather", "group": "hazard", "label": "Weather hazard (FEMA)",
@@ -92,6 +102,8 @@ SOURCES = [
     {"id": "base_offers", "name": "Base Power pricing and offer pages", "url": "https://www.basepowercompany.com/pricing"},
     {"id": "noaa_storm_events", "name": "NOAA NCEI Storm Events Database", "url": "https://www.ncei.noaa.gov/stormevents/"},
     {"id": "fema_nfhl", "name": "FEMA National Flood Hazard Layer (effective flood maps)", "url": "https://www.fema.gov/flood-maps/national-flood-hazard-layer"},
+    {"id": "spc_tornadoes", "name": "NOAA SPC Severe Weather Database (tornado tracks)", "url": "https://www.spc.noaa.gov/wcm/"},
+    {"id": "nhc_hurdat2", "name": "NOAA NHC HURDAT2 Atlantic best tracks", "url": "https://www.nhc.noaa.gov/data/#hurdat"},
     {"id": "ercot_load", "name": "ERCOT hourly native load by weather zone", "url": "https://www.ercot.com/gridinfo/load/load_hist"},
     {"id": "base_specs", "name": "Base Power Core specifications", "url": "https://www.basepowercompany.com/specs/core"},
 ]
@@ -147,6 +159,9 @@ def _lens(lens: dict, available: set[str]) -> dict:
         layers.append("weather")  # FEMA composite stands in until the event layers ship
     return {"id": lens["id"], "label": lens["label"], "layers": layers, "requested": lens["layers"]}
 
+
+# Map files for the Hazards mode, copied into each release when they exist.
+HAZARD_FILES = {"tornado": "hazards/tornado_tracks.geojson", "hurricane": "hazards/hurricane_tracks.geojson"}
 
 GRID_STATS = ("summer_peak_mw", "winter_peak_mw", "sales_mwh", "residential_mwh", "peak_source")
 
@@ -378,6 +393,10 @@ def main() -> int:
                       county_fields=county_fields)
     if flood_files:
         release["geometry"]["flood"] = flood_files
+    hazards = {k: v for k, v in HAZARD_FILES.items() if (settings.UTILITY_MAP_DIR / v).exists()}
+    if hazards:
+        release["geometry"]["hazards"] = hazards
+        extra_files.update({v: settings.UTILITY_MAP_DIR / v for v in hazards.values()})
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
     rid = publish(release, V1_DIR, PUBLIC_DIR, today, extra_files=extra_files)
     unverified = sum(u["base_offer"] is None for u in release["utilities"])

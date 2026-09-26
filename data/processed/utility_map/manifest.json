@@ -210,6 +210,22 @@
       "note": "Flood Hazard Zones (S_FLD_HAZ_AR) for 48201, 48167, 48453, 48085, 48355; effective maps as served."
     },
     {
+      "source_id": "nhc_hurdat2",
+      "url": "https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2025-091226.txt",
+      "files": [
+        {
+          "name": "hurdat2-1851-2025-091226.txt",
+          "sha256": "df63fabce0ad824d20447e241bd27a2a65ae36cb2f9b62aa3caacd9171c34f11",
+          "bytes": 7071568
+        }
+      ],
+      "rows": 21335,
+      "period_start": "1980-01-01",
+      "period_end": "2025-12-31",
+      "retrieved_at_utc": "2026-09-26T21:07:16Z",
+      "note": "Atlantic best tracks; hourly interpolation; 34 kt within 100 km."
+    },
+    {
       "source_id": "noaa_storm_events",
       "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/",
       "files": [
@@ -354,6 +370,22 @@
       "period_end": "2025-12-31",
       "retrieved_at_utc": "2026-09-26T20:59:24Z",
       "note": "Texas rows; zone events expanded to counties with NWS zone-county file bp16ap26; 1535 of 41036 zone events use retired zone codes and are left out."
+    },
+    {
+      "source_id": "spc_tornadoes",
+      "url": "https://www.spc.noaa.gov/wcm/data/1950-2025_actual_tornadoes.csv",
+      "files": [
+        {
+          "name": "1950-2025_actual_tornadoes.csv",
+          "sha256": "2b2679ead1920ab96eaa390baeb41aeeaeef49d067f613dfcc5e233403b82d76",
+          "bytes": 9023445
+        }
+      ],
+      "rows": 3244,
+      "period_start": "2000-01-01",
+      "period_end": "2025-12-31",
+      "retrieved_at_utc": "2026-09-26T21:05:59Z",
+      "note": "Texas tracks and Texas segments of multi-state tracks."
     }
   ]
 }
