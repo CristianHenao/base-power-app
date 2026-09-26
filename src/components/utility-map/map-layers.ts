@@ -1,4 +1,5 @@
 import type { ExpressionSpecification, GeoJSONSource, Map } from "mapbox-gl";
+import { tiltTarget } from "@/lib/utility-map/camera";
 import { LEVEL_COLORS, NO_DATA_COLOR, type Level } from "@/lib/utility-map/scoring";
 
 export const SOURCE_COUNTIES = "um-counties";
@@ -43,7 +44,8 @@ export function setView3d(map: Map, on: boolean, animate: boolean) {
   if (!map.getLayer(LAYER_COUNTY_3D)) return;
   map.setLayoutProperty(LAYER_COUNTY_3D, "visibility", on ? "visible" : "none");
   map.setLayoutProperty(LAYER_COUNTY_FILL, "visibility", on ? "none" : "visible");
-  map.easeTo({ pitch: on ? 50 : 0, bearing: on ? -12 : 0, duration: animate ? 900 : 0 });
+  const target = tiltTarget({ pitch: map.getPitch(), bearing: map.getBearing() }, on);
+  if (target) map.easeTo({ ...target, duration: animate ? 900 : 0 });
 }
 
 export function addUtilityMapLayers(
