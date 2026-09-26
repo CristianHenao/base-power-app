@@ -75,7 +75,7 @@ The mockup becomes honest: it loads the real release built from data we already 
 **Steps:**
 1. `LayerId` grows to the 13 IDs in PRD v3 §5 with a `group: "grid" | "hazard" | "exposure"`. Layers with `available: false` render disabled with "Coming in this release" and the reason.
 2. Presets become the five lenses (PRD v3 §6). Keep "Custom".
-3. Add the mode switch (Risk, Heatmap, Grid, Base fleet); only Risk works for now, others show "Loading data…" placeholders.
+3. Add the mode switch (Risk, Hazards, Grid, Base fleet) as the `ModeSwitch` component from UM-D1; only Risk works for now, others show "Coming in this release".
 **Done when:** toggling any available layer re-scores; unavailable ones can't be toggled.
 
 ---
@@ -180,20 +180,20 @@ The mockup becomes honest: it loads the real release built from data we already 
 
 ---
 
-## Phase 4: Storms, heatmap and overlap (P0/P1, ~6 h)
+## Phase 4: Storms, hazard views and overlap (P0/P1, ~6 h)
 
 ### UM-4.1 Tornadoes from SPC (P0, 1 h)
 **Source:** NOAA SPC Severe Weather Database, https://www.spc.noaa.gov/wcm/#data → `1950-2024_actual_tornadoes.csv` (columns `om,yr,mo,dy,date,time,tz,st,stf,stn,mag,inj,fat,loss,closs,slat,slon,elat,elon,len,wid,ns,sn,sg,f1,f2,f3,f4,fc`).
 **Steps:**
 1. Keep `st == "TX"`, `yr` 2000–2024, `sg in (1, -9)` (whole-track rows; avoid double counting state segments). Counties from `f1..f4` (county FIPS within state; 0 = none).
 2. County `tornado` = Σ (length_miles × (mag + 1)) per county / county land area (1,000 km²) / years. `mag == -9` (unknown) counts as EF0.
-3. Points for the heatmap: start points with weight `mag + 1` → `events_tornado.geojson`.
+3. Map files: `tornado_tracks.geojson` (one line per track: `ef`, `year`, `date`, `len_km`, `inj`, `fat`; coordinates rounded to 4 decimals) and start points for the hex grid (UM-4.6).
 4. Tests: a two-county track credits both; unknown magnitude handled.
 **Done when:** the classic North Texas/Panhandle band ranks high.
 
 ### UM-4.2 Hail and wind from SPC (P1, 1 h)
 **Source:** same page, `1955-2024_hail.csv` and `1955-2024_wind.csv`.
-**Steps:** keep TX, 2000–2024, hail `mag ≥ 1.0` inch, wind `mag ≥ 50` knots (58 mph). Assign county from `f1` (fallback: point-in-polygon on `slat/slon`). County `severe_storm` = reports per 1,000 km² per year. Heatmap points `events_severe.geojson` (weight: hail inches, or wind knots ÷ 50).
+**Steps:** keep TX, 2000–2024, hail `mag ≥ 1.0` inch, wind `mag ≥ 50` knots (58 mph). Assign county from `f1` (fallback: point-in-polygon on `slat/slon`). County `severe_storm` = reports per 1,000 km² per year. Map file `severe_reports.geojson` (points with `kind`, `mag`, `year`) for zoom ≥ 9 only; statewide it is drawn from the hex grid (UM-4.6).
 **Done when:** layer ranks exist for all counties; Panhandle and DFW show hot.
 
 ### UM-4.3 Hurricanes and storm surge (P0, 1.5 h)
@@ -201,16 +201,28 @@ The mockup becomes honest: it loads the real release built from data we already 
 **Steps:**
 1. Parse header lines (`AL092008, IKE, …`) and fix lines (date, time, status, `29.3N`, `94.7W`, max wind kt). Keep 1980–2024, status `TS` or `HU`.
 2. Interpolate each track to 1-hour points. A county "is hit" by a storm when any point with wind ≥ 34 kt lies within 100 km of the county's interior point. County `hurricane` = Σ over storms of (max wind at closest approach ÷ 64) per decade, plus Storm Surge/Tide event-days for coastal counties as a second component.
-3. Heatmap points `events_hurricane.geojson` (hourly points inside a Texas buffer, weight wind ÷ 64).
+3. Map files: `hurricane_tracks.geojson` (line segments per storm with `name`, `year`, `category` per segment) and `hurricane_swaths.geojson` (34-kt swath polygons from HURDAT2 wind radii for 2004 on, else a 150 km buffer with `approximate: true`), simplified to ≤ 3 MB.
 4. Tests: a synthetic straight track 50 km from a county hits it, 150 km away doesn't.
 **Done when:** Galveston, Harris and Nueces rank in the top fifth; Harvey, Ike and Beryl appear.
 
-### UM-4.4 Heatmap mode (P0, 1.5 h)
+### UM-4.4 Hazards mode (P0, 2 h)
+**Pairs with:** UM-D3, UM-D4.
 **Steps:**
-1. Assembler merges the hazard point files that belong to the active lens into `events.geojson` properties `{hazard, weight, year}`; each file ≤ 5 MB (thin to one point per storm-hour and round coordinates to 3 decimals).
-2. Add a Mapbox `heatmap` layer (`heatmap-weight` from `weight`, `heatmap-radius` 8→30 px by zoom, `heatmap-intensity` 0.6→2), filtered to the active hazards; colors: the style guide's warm ramp. County fills drop to 25% opacity in this mode.
-3. Legend: "Historical events 2000–2024 (hurricanes 1980–2024)". Heatmap is context, not the score.
-**Done when:** switching lens between Hurricane season and Severe storms visibly moves the heat.
+1. Add Mapbox sources and layers per PRD v3 §12.3 and the z-order in §12.7: hex fill, flood fills, hurricane swaths, hurricane and tornado track lines, severe report circles. All start hidden.
+2. `HazardPicker` state: 1 hazard → show that hazard's native layers with its own 5-step ramp; 2 → bivariate hex fill (UM-D4); 3+ → overlap-count hex fill on the orange ramp. County fills drop to 25% opacity in this mode.
+3. Lazy-load each hazard's files the first time it is picked; show a skeleton legend while loading.
+4. Legend: hazard `SequentialLegend` with units and period ("2000–2024; hurricanes 1980–2024"). Hazard views are context; the score lives in Risk mode.
+**Done when:** Tornado alone shows tracks and purple hexes; Flood + Hurricane shows the bivariate map; All hazards shows overlap counts; switching lens moves the pattern.
+
+### UM-4.6 H3 hexagon grid (P0, 1.5 h)
+**Source:** outputs of UM-3.1, UM-3.3, UM-4.1, UM-4.2, UM-4.3. Adds the Python `h3>=4` package to the `data` extra in `pyproject.toml`.
+**Steps:**
+1. `pipeline/utility_map/hexgrid.py`: cover the Texas outline with H3 resolution-5 cells (`h3.geo_to_cells`); resolution 6 for the 5 demo counties. Area per cell from `h3.cell_area(cell, "km^2")`.
+2. Per hazard per hex: tornado = EF-weighted path km (split each track at hex edges with shapely) / area / years; hail/wind = reports / area / years; flood = Storm Events flood event-days whose begin point falls in the hex (zone-only events excluded) plus SFHA share where polygons exist; hurricane = Σ over storms of (max wind in hex ÷ 64) per decade.
+3. Texas rank per hazard (same rank function as counties), `overlap` = count of ranks ≥ 0.8, and the 3×3 bivariate class for every hazard pair (tertiles).
+4. Output `public/.../hexes_r5.geojson` (≤ 2 MB: properties are short keys `t`, `h`, `f`, `u`, `o`, plus bivariate classes computed client-side from tertile ranks) and `hexes_r6_<fips>.geojson` for the demo counties.
+5. Tests: a track crossing two hexes splits its length; a hex with no events gets 0 (measured zero), not null; tertile classes are 1–3.
+**Done when:** the statewide file has about 2,800 hexes and loads in under a second locally.
 
 ### UM-4.5 Overlap count and validation (P0, 1 h)
 **Steps:**
@@ -224,7 +236,7 @@ The mockup becomes honest: it loads the real release built from data we already 
 
 ### UM-5.1 Winter and heat layers (P1, 1 h)
 **Source:** `storm_events.parquet` from UM-3.1.
-**Steps:** `winter` event-days/yr from `Winter Storm`, `Ice Storm`, `Extreme Cold/Wind Chill`, `Cold/Wind Chill`, `Frost/Freeze`, `Heavy Snow`, `Blizzard`, `Winter Weather`. `heat` event-days/yr from `Heat` and `Excessive Heat`. Event-days = unique (county, local date) so a multi-row storm counts once per day. Heatmap points: county interior points weighted by event-days (Storm Events has no lat/lon for zone events).
+**Steps:** `winter` event-days/yr from `Winter Storm`, `Ice Storm`, `Extreme Cold/Wind Chill`, `Cold/Wind Chill`, `Frost/Freeze`, `Heavy Snow`, `Blizzard`, `Winter Weather`. `heat` event-days/yr from `Heat` and `Excessive Heat`. Event-days = unique (county, local date) so a multi-row storm counts once per day. County choropleth only: these events are county/zone records, so they are never drawn as points, hexes or heatmaps (PRD v3 §12.2).
 **Done when:** February 2021 (Uri) appears for all five demo counties.
 
 ### UM-5.2 Price spikes from ERCOT prices, our own build (P1, 1 h)
@@ -259,6 +271,55 @@ The mockup becomes honest: it loads the real release built from data we already 
 
 ---
 
+## Design track: components (runs alongside Phases 0–6)
+
+These tickets build the components in PRD v3 §12.6. Each one ships with a story in the running app (mock data is fine) and is checked at 1440×900 and 1024×768. Color values come only from PRD v3 §12.5 and `base-theme.css`; run the dataviz palette validator (`node validate_palette.js`) if any color changes.
+
+### UM-D1 Controls shell: `ModeSwitch`, `LensPicker`, `LayerList`, `EvidencePopover` (P0, 1.5 h; pairs with UM-0.4, UM-0.5)
+**Steps:** segmented `ModeSwitch` (arrow keys move, `aria-pressed`, `?mode=` in URL); `LensPicker` as `bp-pill`s; `LayerList` grouped Grid / Hazards / Exposure with disabled-reason rows; `EvidencePopover` on `<details>` showing unit, source, period, estimate, ok/missing/N-A counts, method. Hazard rows use `HazardChip`.
+**Done when:** every control works by keyboard alone and every layer row opens its evidence.
+
+### UM-D2 Legends: `SequentialLegend`, `FloodZoneLegend`, `SizeLegend` (P0, 1 h; pairs with UM-3.4, UM-4.4, UM-1.5)
+**Steps:** one legend slot, bottom-left of the map, that swaps with the mode. `SequentialLegend({colors, min, max, unit})`; `FloodZoneLegend` with the hatched floodway swatch (same pattern image as the map); `SizeLegend` with three reference circles. Unit and period always printed.
+**Done when:** every visible fill or size encoding on the map has a legend.
+
+### UM-D3 Hazard styling: ramps, icons, flood hatch, track widths (P0, 1.5 h; pairs with UM-4.4)
+**Steps:**
+1. `src/lib/utility-map/hazard-style.ts`: `HAZARD_COLORS` (PRD v3 §12.5), five-step ramp per hazard (light → the identity color → darker), EF width steps, hurricane category ramp, and Mapbox paint expressions built from them. Pure, with tests (ramp lightness is monotonic; each hazard has an icon).
+2. `HazardChip` and the custom hurricane spiral SVG.
+3. Register the diagonal-hatch image with `map.addImage` for floodways.
+**Done when:** the six single-hazard views match §12.3 and pass a side-by-side screenshot review.
+
+### UM-D4 Bivariate overlap and `BivariateLegend` (P1, 1 h; pairs with UM-4.4, UM-4.6)
+**Steps:** `bivariateClass(rankA, rankB)` → 1–9 from tertiles (pure, tested); Mapbox `match` expression on the class with the Stevens palette in §12.4; `BivariateLegend` 3×3 square with the two hazard chips on its axes and "higher →" arrows.
+**Done when:** Flood × Hurricane highlights the upper coast in the dark corner color.
+
+### UM-D5 `MapTooltip` and `CountyPicker` (P0, 1 h; pairs with UM-0.3)
+**Steps:** tooltip shows name, level chip, overlap chips (icons of top-fifth hazards) and the active mode's key value; flips side near screen edges. `CountyPicker` lists the utilities serving a shared county with estimated split bars.
+**Done when:** hovering any county, hex or track shows a correct tooltip, and a shared county opens the picker.
+
+### UM-D6 `HazardFingerprint` (P1, 1 h)
+**Steps:** six rows (icon, label, rank bar in the hazard color, physical value); sorted by rank; top-fifth rows get a small "Top fifth" tag. Used in county and utility panels instead of the generic breakdown when hazard layers are active.
+**Done when:** Galveston's fingerprint leads with Hurricane and Flood.
+
+### UM-D7 `GridCard`, `FleetBar`, `FleetStats` (P0, 1.5 h; pairs with UM-1.5, UM-2.3)
+**Steps:** `GridCard` (sales, summer peak with source, local generation, gap). `FleetBar`: a horizontal bar for summer peak MW with the fleet's 2-hour MW as a lime segment and a direct label ("240 MW · 0.8% of peak"); animates between 1/5/10% (no animation with reduced motion). `FleetStats` in the `bp-dark` card.
+**Done when:** Oncor at 10% reads "≈ 2,400 MW · 7.9% of peak" and all numbers match `fleetScenario`.
+
+### UM-D8 3D overlap view and `ViewToggle` (P2, 1 h; after UM-4.6)
+**Steps:** `fill-extrusion` of hexes, height = overlap × 8 km (tune by eye), color = composite score ramp; `ViewToggle` eases pitch to 50° and back. Hidden outside Risk mode.
+**Done when:** it runs smoothly and looks right for the video's opening shot.
+
+### UM-D9 `StormSpotlight` (P1, 1.5 h; after UM-4.3, UM-2.1)
+**Steps:** picker for Harvey 2017, Ike 2008, Beryl 2024, Uri 2021. Selecting one filters tracks/swaths to that storm (Uri: county outage footprint), fits the map to it, and lists affected counties with their EAGLE-I peak customers out and hours. Clear button restores the lens.
+**Done when:** Beryl shows its track over Harris and the list shows CenterPoint counties with their outage peaks.
+
+### UM-D10 `MethodsSheet` (P1, 1 h; after UM-4.5)
+**Steps:** slide-over (existing `sheet.tsx`) with the sources table from `manifest.json`, the hazard-vs-outage correlations, and a "View as table" of the current map (top 25 counties or utilities with their values).
+**Done when:** every number on screen can be traced to a row here.
+
+---
+
 ## Phase 7: After the hackathon
 
 | Item | Why later |
@@ -267,7 +328,7 @@ The mockup becomes honest: it loads the real release built from data we already 
 | Precise utility service polygons (PUCT / HIFLD archive) | Licensing and vintage review |
 | ERCOT live grid conditions | Needs a stable machine-readable source |
 | DOE OE-417 major disturbance events as an outage cross-check | Adds credibility, not needed for the demo |
-| Storm replay timeline (Uri, Beryl) | Needs per-event time series in the release |
+| Animated storm replay (deck.gl `TripsLayer`) | Needs per-event time series; add deck.gl only then |
 | 72-hour forecast risk | Needs a trained, backtested model |
 | Present mode and phone layout | Spec already written, postponed |
 | Shared cloud storage for raw data | Team decision (PRD v2 §5) |
@@ -280,11 +341,11 @@ If time runs short, ship in this order and stop anywhere; every step leaves the 
 
 | Order | Tickets | What the demo gains |
 |---|---|---|
-| 1 | UM-0.1 → UM-0.5 | Real data, shared counties, honest labels |
-| 2 | UM-1.1 → UM-1.3, UM-2.1 → UM-2.3 | Peak demand and the Base fleet story (pitch item 2) |
-| 3 | UM-3.1 → UM-3.3 | Flood, including polygons for the 5 counties |
-| 4 | UM-4.1, UM-4.3, UM-4.4, UM-4.5 | Tornado and hurricane heatmap, overlap count |
+| 1 | UM-0.1 → UM-0.5, UM-D1, UM-D5 | Real data, shared counties, honest labels, the new controls |
+| 2 | UM-1.1 → UM-1.3, UM-2.1 → UM-2.3, UM-D7 | Peak demand and the Base fleet story |
+| 3 | UM-3.1 → UM-3.4, UM-D2 | Flood, with FEMA flood zones in the 5 counties |
+| 4 | UM-4.1, UM-4.3, UM-4.6, UM-4.4, UM-D3, UM-4.5 | Tornado and hurricane tracks, hex density, overlap count |
 | 5 | UM-6.1, UM-6.3 | Reproducible release, QA, PR |
-| 6 | UM-1.4, UM-1.5, UM-3.4, UM-4.2, Phase 5, UM-6.2 | Grid mode, flood fills, hail/wind, winter/heat, live warnings |
+| 6 | UM-D4, UM-D9, UM-D6, UM-D10, UM-4.2, Phase 5, UM-1.4, UM-1.5, UM-6.2, UM-D8 | Bivariate overlap, storm spotlight, fingerprints, methods, remaining layers, grid mode, live warnings, 3D |
 
-Rough total: P0 ≈ 22 h, all of Phases 0–6 ≈ 30 h. That is more than the time left, so the realistic Sunday demo is orders 1–3 plus as much of 4 as fits.
+Rough total: P0 ≈ 30 h, everything in Phases 0–6 plus the design track ≈ 42 h. That is about twice the time left, so the realistic Sunday demo is orders 1–3 plus as much of 4 as fits. The rest continues after the deadline on the same tickets.
