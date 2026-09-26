@@ -1,5 +1,5 @@
 import { FLEET_COLORS, fleetLevel, fleetScenario } from "./fleet.ts";
-import { formatLayerValue, type PaintContext } from "./format.ts";
+import { formatLayerValue, paintLabel, type PaintContext } from "./format.ts";
 import {
   BIVARIATE_COLORS,
   HAZARDS,
@@ -7,7 +7,6 @@ import {
   SHARE_UNKNOWN_LEVEL,
   bivariateClass,
   hazardLevel,
-  isHazard,
   outageShareLevel,
   overlapCount,
   type HazardId,
@@ -15,14 +14,12 @@ import {
 } from "./hazard-style.ts";
 import {
   LEVEL_COLORS,
-  LEVEL_LABELS,
-  offerLabel,
   utilityLayerQuality,
   utilityLayerSummary,
   type Level,
   type ScoreModel,
 } from "./scoring.ts";
-import { countyPaintState, type CountyPaintState } from "./selection.ts";
+import type { CountyPaintState } from "./selection.ts";
 import type { CountyRecord, LayerId, UtilityMapData, UtilityRecord } from "./types.ts";
 import type { ViewState } from "./view.ts";
 
@@ -60,6 +57,8 @@ export type ViewDescription = {
   colors: readonly string[];
   context: PaintContext;
   stateFor: (county: CountyRecord) => CountyPaintState;
+  /** The tooltip's words for a county, the same ones the map color stands for. */
+  labelFor: (county: CountyRecord) => string;
   table: TableSpec;
 };
 
@@ -80,6 +79,11 @@ const FIFTHS = ["Lowest", "", "Middle", "", "Top fifth"];
 const GRID_LAYERS: LayerId[] = ["peak_demand", "generation"];
 const FLEET_LAYERS: LayerId[] = ["peak_demand", "homes"];
 const TRACKED: HazardId[] = ["tornado", "hurricane", "severe_storm"];
+/** The nine layers behind the Grid Risk Index (pipeline/utility_map/risk_index.py). */
+export const RISK_HAZARDS: HazardId[] = ["flood", "tornado", "severe_storm", "hurricane", "winter", "heat"];
+export const RISK_STRESS: LayerId[] = ["outages", "price_spikes", "peak_demand"];
+export const RISK_LAYERS: LayerId[] = [...RISK_HAZARDS, ...RISK_STRESS];
+export const RISK_BANDS = ["Low", "Moderate", "Elevated", "High", "Severe"] as const;
 
 const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const oneDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -95,12 +99,12 @@ function patternsNow(state: ViewState): boolean {
 
 /** The layers that rank utilities and counties in this view. */
 export function scoreLayers(state: ViewState): LayerId[] {
-  return patternsNow(state) ? state.hazards : state.factors;
+  return patternsNow(state) ? state.hazards : RISK_LAYERS;
 }
 
 /** The layer rows the details show, the same ones the table lists. */
 export function detailLayers(state: ViewState): LayerId[] {
-  if (state.question === "opportunities") return state.factors;
+  if (state.question === "risk") return RISK_LAYERS;
   if (stormNow(state)) return [];
   if (patternsNow(state)) return state.hazards;
   if (state.question === "grid") return GRID_LAYERS;
@@ -108,7 +112,7 @@ export function detailLayers(state: ViewState): LayerId[] {
 }
 
 export function detailHeading(state: ViewState): string {
-  if (state.question === "opportunities") return "What drives the score";
+  if (state.question === "risk") return "What makes up the index";
   if (patternsNow(state)) return "Selected hazards";
   if (state.question === "grid") return "Grid";
   return "What the fleet math uses";
@@ -121,12 +125,12 @@ export function hazardHighlights(
 ): { scope: HazardId[]; high: HazardId[]; label: string } | null {
   const scope = patternsNow(state)
     ? state.hazards
-    : state.question === "opportunities"
-      ? (state.factors.filter(isHazard) as HazardId[])
+    : state.question === "risk"
+      ? RISK_HAZARDS
       : [];
   if (scope.length === 0) return null;
   const high = scope.filter((h) => (county.ranks[h] ?? 0) >= 0.8);
-  const noun = patternsNow(state) ? "selected hazards" : "hazard factors";
+  const noun = patternsNow(state) ? "selected hazards" : "hazards";
   return { scope, high, label: `High in ${high.length} of ${scope.length} ${noun}` };
 }
 
@@ -146,10 +150,8 @@ export function overlays(state: ViewState): {
     plants: grid && state.plants,
     tracks: patterns ? state.hazards.filter((h) => TRACKED.includes(h)) : [],
     stormTrack: stormNow(state) ? state.storm : null,
-    flood: patterns
-      ? state.hazards.includes("flood")
-      : state.question === "opportunities" && state.factors.includes("flood"),
-    view3d: state.question === "opportunities",
+    flood: patterns && state.hazards.includes("flood"),
+    view3d: state.question === "risk",
   };
 }
 
@@ -168,20 +170,18 @@ function withSelection(
 function utilityRows(
   input: DescribeInput,
   layers: LayerId[],
-  levelOf: (u: UtilityRecord) => number | null,
+  firstCell: (u: UtilityRecord) => string,
   scoreOf: (u: UtilityRecord) => number | null,
 ): TableSpec["rows"] {
   const { data, countiesByFips } = input;
   return [...data.utilities]
     .sort((a, b) => (scoreOf(b) ?? -Infinity) - (scoreOf(a) ?? -Infinity) || a.name.localeCompare(b.name))
     .map((u) => {
-      const level = levelOf(u);
       return {
         id: u.id,
         name: u.name,
         cells: [
-          level == null ? "—" : `${level} · ${LEVEL_LABELS[level as Level]}`,
-          offerLabel(u),
+          firstCell(u),
           ...layers.map((id) => {
             const meta = data.layers.find((l) => l.id === id)!;
             return formatLayerValue(meta, utilityLayerSummary(u, countiesByFips, id).value, utilityLayerQuality(u, countiesByFips, id));
@@ -194,30 +194,31 @@ function utilityRows(
 const layerLabel = (data: UtilityMapData, id: LayerId) => data.layers.find((l) => l.id === id)?.label ?? id;
 
 export function describeView(state: ViewState, input: DescribeInput): ViewDescription {
+  const core = describeCore(state, input);
+  return {
+    ...core,
+    labelFor: core.labelFor ?? ((county: CountyRecord) => paintLabel(core.context, core.stateFor(county).level)),
+  };
+}
+
+function describeCore(
+  state: ViewState,
+  input: DescribeInput,
+): Omit<ViewDescription, "labelFor"> & { labelFor?: ViewDescription["labelFor"] } {
   const { data, model, utilitiesById, countiesByFips } = input;
   const byScore = (u: UtilityRecord) => model.utility.get(u.id)?.score ?? null;
-  const byLevel = (u: UtilityRecord) => model.utility.get(u.id)?.level ?? null;
-  // Hazard patterns rank utilities by their average Texas rank, never with the screening levels' colors or words.
+  // Hazard patterns rank utilities by their average Texas rank across the picked hazards.
   const averageRank = (u: UtilityRecord) => {
     const score = byScore(u);
     return score == null ? "—" : `${Math.round(score * 100)}%`;
   };
-  const scoreTable = (caption: string, layers: LayerId[]): TableSpec => {
-    const patterns = patternsNow(state);
-    const rows = utilityRows(input, layers, byLevel, byScore);
-    if (patterns) {
-      for (const row of rows) row.cells[0] = averageRank(utilitiesById.get(row.id)!);
-    }
-    return {
-      caption: patterns
-        ? `All ${data.utilities.length} utilities by average Texas rank across ${caption} (customer-weighted)`
-        : `All ${data.utilities.length} utilities · ${caption}`,
-      rowKind: "utility",
-      columns: [patterns ? "Average Texas rank" : "Level", "Base offer", ...layers.map((id) => layerLabel(data, id))],
-      primary: 0,
-      rows,
-    };
-  };
+  const scoreTable = (caption: string, layers: LayerId[]): TableSpec => ({
+    caption: `All ${data.utilities.length} utilities by average Texas rank across ${caption} (customer-weighted)`,
+    rowKind: "utility",
+    columns: ["Average Texas rank", ...layers.map((id) => layerLabel(data, id))],
+    primary: 0,
+    rows: utilityRows(input, layers, averageRank, byScore),
+  });
 
   if (stormNow(state)) {
     const storm = input.storms.find((s) => s.name === state.storm);
@@ -442,36 +443,48 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
     };
   }
 
-  // Find opportunities: the screening score over the scenario's factors.
-  const factors = state.factors;
-  if (factors.length === 0) {
-    return {
-      caption: { title: "Screening score", qualifier: "Pick at least one factor" },
-      legend: { kind: "empty", message: "Pick at least one factor to rank utilities." },
-      colors: PLAIN_COLORS,
-      context: { kind: "plain", label: "Pick at least one factor" },
-      stateFor: withSelection(state, utilitiesById, () => null),
-      table: { caption: "Pick at least one factor to list utilities.", rowKind: "utility", columns: [], primary: 0, rows: [] },
-    };
-  }
-  const names = factors.map((id) => layerLabel(data, id));
+  // Grid Risk Index: the published 1-100 score, counties colored by their own index band.
+  const levelOf = (index: number | null | undefined) => (index == null ? null : Math.min(5, Math.floor((index - 1) / 20) + 1));
+  const bandOf = (index: number) => RISK_BANDS[levelOf(index)! - 1];
+  const num = (value: number | null | undefined) => (value == null ? "—" : String(value));
   return {
     caption: {
-      title: "Screening score",
-      qualifier: `Average Texas rank of ${factors.length} factors: ${names.join(", ")}. Not an outage forecast.`,
+      title: "Grid Risk Index",
+      qualifier: "1–100 against Texas: half hazard exposure, half grid stress. Higher is more at risk.",
     },
     legend: {
       kind: "sequential",
-      title: "Screening level (Texas fifths)",
+      title: "Grid Risk Index, by county",
       colors: SCORE_COLORS,
-      labels: ["1 Low", "2 Moderate", "3 Elevated", "4 High", "5 Very high"],
-      note: factors.includes("price_spikes")
-        ? "Price spikes apply only inside ERCOT, so utilities outside it are leveled among themselves."
-        : undefined,
+      labels: ["1–20 Low", "21–40 Moderate", "41–60 Elevated", "61–80 High", "81–100 Severe"],
+      note: "Each county against the other 253. Select a utility for its own index.",
     },
     colors: SCORE_COLORS,
-    context: { kind: "risk" },
-    stateFor: (county) => countyPaintState(county, utilitiesById, state.utility, model),
-    table: scoreTable(names.join(", "), factors),
+    context: { kind: "index" },
+    stateFor: withSelection(state, utilitiesById, (c) => levelOf(c.risk?.index)),
+    labelFor: (c) =>
+      c.risk?.index == null ? "Grid Risk Index: no data" : `Grid Risk Index ${c.risk.index} of 100 · ${bandOf(c.risk.index)}`,
+    table: {
+      caption: `All ${data.utilities.length} utilities ranked by Grid Risk Index (1 = most at risk)`,
+      rowKind: "utility",
+      columns: ["Grid Risk Index", "Band", "Hazard exposure", "Grid stress", "Sources"],
+      primary: 0,
+      rows: [...data.utilities]
+        .sort(
+          (a, b) =>
+            (a.risk?.rank ?? Infinity) - (b.risk?.rank ?? Infinity) || a.name.localeCompare(b.name),
+        )
+        .map((u) => ({
+          id: u.id,
+          name: u.name,
+          cells: [
+            num(u.risk?.index),
+            u.risk?.index == null ? "—" : bandOf(u.risk.index),
+            num(u.risk?.hazard),
+            num(u.risk?.stress),
+            u.risk ? `${u.risk.sources} of ${u.risk.sources_total}` : "—",
+          ],
+        })),
+    },
   };
 }

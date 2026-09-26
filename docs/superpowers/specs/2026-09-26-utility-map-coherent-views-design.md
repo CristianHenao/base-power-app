@@ -80,3 +80,15 @@ Search, lazy-layer error states, mobile drawer/bottom sheet, saved meeting brief
 `view.test.ts`: URL round-trip for every view, legacy `mode`, invalid values fall back, storm ↔ patterns memory,
 empty hazards state, grid switches drive layer visibility, and per view: caption subject, legend, detail rows and
 table columns agree; the table holds every utility (or every county hit, for a storm).
+
+## Update: Grid Risk Index replaces Find opportunities (2026-09-26)
+The map is also shown to utilities, so the sales-framed first question is gone. It is now **Grid Risk
+Index** ("How at risk is each grid?"): a standardized 1-100 score per county and utility, computed in the
+pipeline (`pipeline/utility_map/risk_index.py`, published as `risk` on every record, gated 1-100). Half
+hazard exposure (flood, tornado, hail and wind, hurricane, winter freeze, extreme heat), half grid stress
+(long outages, price spikes in ERCOT, summer peak demand); missing layers are left out, not zero. Counties
+are ranked across the 254 counties; utilities by customer-weighted county scores across the 150 utilities.
+Bands: Low, Moderate, Elevated, High, Severe (fifths). Every utility and county panel opens with a score
+card: index, band, rank, both halves, top three drivers, long outages, high-risk hazards, worst storm on
+record, floodplain share, summer peak, customers, current warnings, and sources used. Scenarios, custom
+factors and the Base-offer groupings are removed; old `q=opportunities` links open the index.

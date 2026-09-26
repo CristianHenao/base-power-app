@@ -35,6 +35,12 @@ export function MethodsSheet({ data, described }: { data: UtilityMapData; descri
         </div>
         {tab === "sources" ? (
           <ul className="space-y-4">
+            {data.scoring?.risk_index ? (
+              <li className="space-y-1 border-b pb-3 text-[13px] leading-[19px]">
+                <p className="text-[15px] font-semibold">Grid Risk Index</p>
+                <p className="text-muted-foreground">{data.scoring.risk_index}</p>
+              </li>
+            ) : null}
             {data.layers.map((layer) => (
               <li key={layer.id} className="space-y-1 border-b pb-3 text-[13px] leading-[19px]">
                 <p className="text-[15px] font-semibold">

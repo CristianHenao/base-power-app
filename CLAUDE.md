@@ -23,9 +23,13 @@ Full plan: https://claude.ai/artifact/5uJY9qNnrtjKM9MfZRT9q3 (sheets A-02 contra
 
 ## Utility map (Base sales)
 A map of Texas utilities and counties for Base sales: where hazards and grid stress overlap, where
-storms actually hit, how big each grid is, and what a Base fleet would add. Four questions (Find
-opportunities, Explore hazards, Understand the grid, Model Base impact), five scenarios, 12 layers from
-public data. Spec: docs/utility-map-prd-v3.md; tickets and status: docs/utility-map-roadmap.md.
+storms actually hit, how big each grid is, and what a Base fleet would add. It is also shown to
+utilities, so it speaks in risk, not sales. Four questions (Grid Risk Index, Explore hazards, Understand
+the grid, Model Base impact), 12 layers from public data.
+- Grid Risk Index (`pipeline/utility_map/risk_index.py`): 1-100 per county and utility, half hazard
+  exposure (six hazards), half grid stress (long outages, price spikes, summer peak), re-ranked across
+  Texas peers; utilities use customer-weighted counties. Every utility and county panel opens with its
+  score card (`score-card.tsx`). Homes, generation and the FEMA composite are context, not in the index. Spec: docs/utility-map-prd-v3.md; tickets and status: docs/utility-map-roadmap.md.
 - One view state (`src/lib/utility-map/view.ts`) drives everything; `describe-view.ts` turns it into the
   caption, legend, county fill, detail rows and table, so they always answer the same question. The URL
   holds the whole view (question, scenario, hazards, storm, share, utility, county): reloads and shared

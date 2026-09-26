@@ -83,7 +83,8 @@ export type PaintContext =
   | { kind: "bivariate"; first: string; second: string }
   | { kind: "overlap"; of: number }
   | { kind: "storm"; name: string }
-  | { kind: "plain"; label: string };
+  | { kind: "plain"; label: string }
+  | { kind: "index" };
 
 const RISK_LABELS = ["Low", "Moderate", "Elevated", "High", "Very high"];
 const FLEET_BINS_TEXT = ["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"];
@@ -97,6 +98,8 @@ export function paintLabel(context: PaintContext, level: number | null): string 
   switch (context.kind) {
     case "risk":
       return `Level ${level} · ${RISK_LABELS[level - 1]}`;
+    case "index":
+      return `Grid Risk Index: ${["1–20 Low", "21–40 Moderate", "41–60 Elevated", "61–80 High", "81–100 Severe"][level - 1]}`;
     case "fleet":
       return `${FLEET_BINS_TEXT[level - 1]} of summer peak`;
     case "grid":

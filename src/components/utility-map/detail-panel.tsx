@@ -3,24 +3,24 @@
 import { ChevronLeft, CloudAlert, Zap } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
-import { LevelChip } from "@/components/utility-map/controls-panel";
 import { CountyPicker } from "@/components/utility-map/county-picker";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { FleetCard, GridCard } from "@/components/utility-map/fleet-card";
 import { HazardChip } from "@/components/utility-map/hazard-chip";
 import { HazardFingerprint } from "@/components/utility-map/hazard-fingerprint";
-import { detailHeading, detailLayers, hazardHighlights, overlays, type ViewDescription } from "@/lib/utility-map/describe-view";
+import { ScoreCard } from "@/components/utility-map/score-card";
+import {
+  RISK_LAYERS,
+  detailHeading,
+  detailLayers,
+  hazardHighlights,
+  overlays,
+  type ViewDescription,
+} from "@/lib/utility-map/describe-view";
 import { HAZARD_IDS, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, generationSummary, liveSummary, paintLabel } from "@/lib/utility-map/format";
-import {
-  RANK_GROUPS,
-  offerLabel,
-  rankGroup,
-  utilityLayerQuality,
-  utilityLayerSummary,
-  type ScoreModel,
-} from "@/lib/utility-map/scoring";
+import { utilityLayerQuality, utilityLayerSummary, type ScoreModel } from "@/lib/utility-map/scoring";
 import { pickerOptions } from "@/lib/utility-map/selection";
 import type { CountyRecord, LayerId, Quality, UtilityMapData, UtilityRecord } from "@/lib/utility-map/types";
 import type { FleetShare, ViewState } from "@/lib/utility-map/view";
@@ -48,6 +48,7 @@ type DetailPanelProps = {
   view: ViewState;
   described: ViewDescription;
   storm: SpotlightStorm | null;
+  storms: SpotlightStorm[];
   countiesByFips: Map<string, CountyRecord>;
   utilitiesById: Map<string, UtilityRecord>;
   selectedUtility: UtilityRecord | null;
@@ -78,8 +79,6 @@ export function DetailPanel(props: DetailPanelProps) {
           <CountyView {...props} county={selectedCounty} utility={selectedUtility} />
         ) : selectedUtility ? (
           <UtilityView {...props} utility={selectedUtility} />
-        ) : props.view.question === "opportunities" ? (
-          <RankedList {...props} />
         ) : (
           <ResultList {...props} />
         )}
@@ -93,84 +92,6 @@ function Heading({ title, children }: { title: string; children?: ReactNode }) {
     <div className="space-y-1">
       <h2 className="text-[20px] leading-[27px]">{title}</h2>
       {children ? <p className="text-[14px] leading-[21px] text-muted-foreground">{children}</p> : null}
-    </div>
-  );
-}
-
-/** Find opportunities and hazard patterns: utilities grouped by Base offer, ranked by the view's score. */
-function RankedList({ data, model, view, described, onSelectUtility }: DetailPanelProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const patterns = view.question === "hazards";
-  const title = patterns ? "Utilities by the selected hazards" : "Where to focus";
-  if (described.legend.kind === "empty") {
-    return <Heading title={title}>{described.legend.message}</Heading>;
-  }
-  const sortByScore = (a: UtilityRecord, b: UtilityRecord) =>
-    (model.utility.get(b.id)?.score ?? -1) - (model.utility.get(a.id)?.score ?? -1);
-
-  return (
-    <div className="space-y-6">
-      <Heading title={title}>
-        {model.scoredUtilityCount} Texas utilities, ranked within each group by{" "}
-        {patterns ? "their average Texas rank across the selected hazards" : "screening score"}. Select one or click
-        the map.
-      </Heading>
-
-      {RANK_GROUPS.map((group) => {
-        const members = data.utilities
-          .filter((u) => rankGroup(u, model.utility.get(u.id)?.level ?? null) === group.id)
-          .sort(sortByScore);
-        const open = expanded.has(group.id);
-        const shown = open ? members : members.slice(0, GROUP_PREVIEW);
-        return (
-          <div key={group.id} className="space-y-2">
-            <div>
-              <h3 className="text-[16px] leading-[24px]">
-                {group.label} <span className="font-medium text-muted-foreground">({members.length})</span>
-              </h3>
-              <p className="text-[12px] leading-[18px] text-muted-foreground">{group.hint}</p>
-            </div>
-            {members.length === 0 ? (
-              <p className="rounded-2xl border border-dashed px-4 py-3 text-[14px] leading-[21px] text-muted-foreground">
-                None in this view.
-              </p>
-            ) : (
-              <>
-                <ul className="bp-row-list">
-                  {shown.map((u) => (
-                    <li key={u.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectUtility(u.id)}
-                        className="bp-row flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                      >
-                        <span className="min-w-0">
-                          <span className="block truncate text-[14px] leading-[21px] font-semibold">{u.name}</span>
-                          <span className="block text-[12px] leading-[18px] font-medium text-muted-foreground">
-                            {offerLabel(u)}
-                            {u.eligible_homes != null ? ` · ${number.format(u.eligible_homes)} potential homes` : ""}
-                          </span>
-                        </span>
-                        <LevelChip level={model.utility.get(u.id)?.level ?? null} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                {members.length > GROUP_PREVIEW ? (
-                  <ShowAll open={open} count={members.length} onToggle={() =>
-                    setExpanded((prev) => {
-                      const next = new Set(prev);
-                      if (open) next.delete(group.id);
-                      else next.add(group.id);
-                      return next;
-                    })
-                  } />
-                ) : null}
-              </>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -388,7 +309,6 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
   const { data, model, view, described, storm, countiesByFips, utility, onShare, onSelectUtility, onSelectCounty } = props;
   const [allCounties, setAllCounties] = useState(false);
   const scored = model.utility.get(utility.id);
-  const ranked = view.question === "opportunities";
   const patterns = view.question === "hazards" && view.hazardSub === "patterns";
   const counties = utility.counties
     .map((fips) => countiesByFips.get(fips))
@@ -427,18 +347,8 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
               {grid}
             </Badge>
           ))}
-          <Badge variant="secondary">{offerLabel(utility)}</Badge>
         </div>
-        {ranked ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <LevelChip level={scored?.level ?? null} />
-            {scored?.rank ? (
-              <span className="text-[14px] leading-[21px] text-muted-foreground">
-                #{scored.rank} of {model.scoredUtilityCount} Texas utilities
-              </span>
-            ) : null}
-          </div>
-        ) : patterns && scored?.rank ? (
+        {patterns && scored?.rank ? (
           <p className="text-[14px] leading-[21px] text-muted-foreground">
             #{scored.rank} of {model.scoredUtilityCount} Texas utilities by average rank across the selected hazards
           </p>
@@ -448,6 +358,19 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
           {utility.counties.length} {utility.counties.length === 1 ? "county" : "counties"} (EIA-861)
         </p>
       </div>
+
+      <ScoreCard
+        data={data}
+        kind="utility"
+        risk={utility.risk}
+        ranks={Object.fromEntries(RISK_LAYERS.map((id) => [id, utilityLayerSummary(utility, countiesByFips, id).rank]))}
+        values={Object.fromEntries(RISK_LAYERS.map((id) => [id, utilityLayerSummary(utility, countiesByFips, id).value]))}
+        quality={Object.fromEntries(RISK_LAYERS.map((id) => [id, utilityLayerQuality(utility, countiesByFips, id)]))}
+        fips={utility.counties}
+        storms={props.storms}
+        customers={utility.customers}
+        summerPeakMw={utility.grid_stats?.summer_peak_mw ?? null}
+      />
 
       {view.question === "fleet" ? fleetCard : null}
       {view.question === "grid" ? <GridCard utility={utility} /> : null}
@@ -521,6 +444,19 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         </p>
       </div>
 
+      <ScoreCard
+        data={data}
+        kind="county"
+        risk={county.risk}
+        ranks={county.ranks}
+        values={county.values}
+        quality={county.quality}
+        fips={[county.fips]}
+        storms={props.storms}
+        customers={county.customers}
+        floodplainPct={county.sfha_land_pct ?? null}
+      />
+
       {view.question === "fleet" ? (
         <>
           <p className="text-[14px] leading-[21px] text-muted-foreground">
@@ -565,7 +501,7 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         </p>
       ) : null}
 
-      {county.sfha_land_pct != null && (view.question === "hazards" || view.factors.includes("flood")) ? (
+      {county.sfha_land_pct != null && view.question === "hazards" ? (
         <p className="bp-info px-4 py-3 text-[14px] leading-[21px]">
           {Math.round(county.sfha_land_pct)}% of this county&apos;s land is in FEMA&apos;s 1% annual-chance floodplain
           (effective flood maps).{" "}

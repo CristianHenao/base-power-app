@@ -2,25 +2,16 @@
 
 import { useRef, type KeyboardEvent } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { HazardPicker } from "@/components/utility-map/hazard-chip";
 import { StormList } from "@/components/utility-map/storm-spotlight";
-import { FLEET_SHARES, QUESTIONS, selectableFactors, type FleetShare, type Question, type ViewState } from "@/lib/utility-map/view";
+import { FLEET_SHARES, QUESTIONS, type FleetShare, type Question, type ViewState } from "@/lib/utility-map/view";
 import type { HazardId, SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { LEVEL_COLORS, LEVEL_LABELS, type Level } from "@/lib/utility-map/scoring";
-import type { LayerGroup, LayerId, MapLayerMeta, Preset, SourceRef, UtilityMapData } from "@/lib/utility-map/types";
+import type { UtilityMapData } from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
-
-const GROUPS: { id: LayerGroup; label: string }[] = [
-  { id: "hazard", label: "Hazards" },
-  { id: "grid", label: "Grid stress" },
-  { id: "exposure", label: "Market size" },
-];
 
 export type ControlsActions = {
   onQuestion: (question: Question) => void;
-  onScenario: (preset: Preset) => void;
-  onFactor: (id: LayerId, on: boolean) => void;
   onHazard: (hazard: HazardId) => void;
   onStorm: (name: string) => void;
   onPatterns: () => void;
@@ -52,7 +43,7 @@ export function ControlsPanel(props: ControlsPanelProps) {
         <QuestionPicker question={view.question} onChange={props.onQuestion} />
       </div>
 
-      {view.question === "opportunities" ? <OpportunityControls {...props} /> : null}
+      {view.question === "risk" ? <RiskControls {...props} /> : null}
       {view.question === "hazards" ? <HazardControls {...props} /> : null}
       {view.question === "grid" ? <GridControls {...props} /> : null}
       {view.question === "fleet" ? <FleetControls {...props} /> : null}
@@ -125,73 +116,32 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">{children}</p>;
 }
 
-function OpportunityControls({ view, data, onScenario, onFactor, view3d, onView3d }: ControlsPanelProps) {
-  const factors = selectableFactors(data.layers);
-  const applied = view.factors.map((id) => data.layers.find((l) => l.id === id)).filter((l): l is MapLayerMeta => !!l);
+function RiskControls({ data, view3d, onView3d }: ControlsPanelProps) {
   return (
     <>
-      <div className="space-y-2">
-        <SectionLabel>Scenario</SectionLabel>
-        <div className="flex flex-wrap gap-2">
-          {data.presets.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              aria-pressed={preset.id === view.scenario}
-              onClick={() => onScenario(preset)}
-              className="bp-pill"
-            >
-              {preset.label}
-            </button>
-          ))}
-          {view.scenario == null ? <span className="bp-pill border-dashed text-muted-foreground">Custom</span> : null}
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <SectionLabel>Scored on {applied.length} factors, equally weighted</SectionLabel>
-        <ul className="space-y-0.5">
-          {applied.map((layer) => (
-            <li key={layer.id} className="flex items-center justify-between gap-2 text-[14px] leading-[21px]">
-              <span className="font-semibold">{layer.label}</span>
-              <EvidencePopover meta={layer} sources={data.sources} />
-            </li>
-          ))}
+      <div className="space-y-2 text-[13px] leading-[19px]">
+        <p>
+          One standardized score, 1–100, for every Texas county and utility. Higher means more at risk, against the
+          rest of Texas.
+        </p>
+        <ul className="space-y-1 text-muted-foreground">
+          <li>
+            <span className="font-semibold text-foreground">Hazard exposure (half):</span> flood, tornadoes, hail and
+            wind, hurricanes, winter freeze, extreme heat.
+          </li>
+          <li>
+            <span className="font-semibold text-foreground">Grid stress (half):</span> long outages, price spikes,
+            summer peak demand.
+          </li>
         </ul>
         <p className="text-[12px] leading-[18px] text-muted-foreground">
-          Each factor is a county&apos;s rank against Texas (0 to 100%). The score is their average: a screening aid,
-          not an outage forecast.
+          Built from {data.sources.length} public sources. Historical relative risk, not a forecast. Select a utility
+          or county for its score card.
         </p>
       </div>
-
-      <details className="group space-y-2">
-        <summary className="bp-link cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-          <span className="group-open:hidden">Customize factors</span>
-          <span className="hidden group-open:inline">Hide factors</span>
-        </summary>
-        {GROUPS.map((group) => {
-          const members = data.layers.filter((l) => l.group === group.id && factors.includes(l.id));
-          if (members.length === 0) return null;
-          return (
-            <fieldset key={group.id} className="space-y-1 pt-2">
-              <legend className="mb-1 text-[12px] leading-[18px] font-semibold text-muted-foreground">{group.label}</legend>
-              {members.map((layer) => (
-                <LayerRow
-                  key={layer.id}
-                  layer={layer}
-                  sources={data.sources}
-                  checked={view.factors.includes(layer.id)}
-                  onToggle={(on) => onFactor(layer.id, on)}
-                />
-              ))}
-            </fieldset>
-          );
-        })}
-      </details>
-
       <div className="flex items-center justify-between gap-3">
         <p className="text-[12px] leading-[18px] text-muted-foreground">
-          3D raises each county by its screening level. A presentation aid, not extra evidence.
+          3D raises each county by its risk band. A presentation aid, not extra evidence.
         </p>
         <button type="button" aria-pressed={view3d} onClick={() => onView3d(!view3d)} className="bp-pill !px-2.5 !py-0.5 !text-[12px]">
           3D
@@ -295,30 +245,6 @@ function FleetControls({ view, data, onShare }: ControlsPanelProps) {
         for backup, dispatched over {b.dispatch_window_h} hours. Eligible homes are owner-occupied single-family homes.
         Idealized ceilings, not a forecast.
       </p>
-    </div>
-  );
-}
-
-function LayerRow({
-  layer,
-  sources,
-  checked,
-  onToggle,
-}: {
-  layer: MapLayerMeta;
-  sources: SourceRef[];
-  checked: boolean;
-  onToggle: (on: boolean) => void;
-}) {
-  const id = `layer-${layer.id}`;
-  return (
-    <div className="bp-row flex items-start gap-3 rounded-lg px-2 py-1.5">
-      <Checkbox id={id} className="mt-0.5" checked={checked} onCheckedChange={(value) => onToggle(value === true)} />
-      <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer space-y-0.5">
-        <span className="block text-[14px] leading-[21px] font-semibold">{layer.label}</span>
-        <span className="block text-[12px] leading-[18px] text-muted-foreground">{layer.unit}</span>
-      </label>
-      <EvidencePopover meta={layer} sources={sources} />
     </div>
   );
 }

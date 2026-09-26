@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { describeView, detailLayers, hazardHighlights, overlays, scoreLayers } from "./describe-view.ts";
+import { RISK_LAYERS, describeView, detailLayers, hazardHighlights, overlays, scoreLayers } from "./describe-view.ts";
 import { HAZARDS, outageShareLevel, type SpotlightStorm } from "./hazard-style.ts";
 import { buildScoreModel } from "./scoring.ts";
 import { paintLabel } from "./format.ts";
-import type { CountyRecord, LayerId, MapLayerMeta, UtilityMapData, UtilityRecord } from "./types.ts";
+import type { CountyRecord, LayerId, MapLayerMeta, RiskIndex, UtilityMapData, UtilityRecord } from "./types.ts";
 import {
   defaultViewState,
   selectUtility,
@@ -33,31 +33,38 @@ const LAYERS = IDS.map(
     }) as unknown as MapLayerMeta,
 );
 
-function county(fips: string, rank: number, utilities: string[]): CountyRecord {
+const risk = (index: number, rank: number, of: number) => ({
+  index, level: Math.min(5, Math.floor((index - 1) / 20) + 1), band: "x", rank, of,
+  hazard: index, stress: index, raw: index / 100, sources: 9, sources_total: 9,
+}) as RiskIndex;
+
+function county(fips: string, rank: number, utilities: string[], index: number, place: number): CountyRecord {
   const ranks = Object.fromEntries(IDS.map((id) => [id, rank])) as Record<LayerId, number>;
   const values = Object.fromEntries(IDS.map((id) => [id, rank * 100])) as Record<LayerId, number>;
   const quality = Object.fromEntries(IDS.map((id) => [id, "ok"])) as CountyRecord["quality"];
   return {
     fips, name: `C${fips}`, utilities, primary_utility: utilities[0], customers: 1000, load_zone: null,
     load_zone_method: null, grid_status: "ercot", centroid: [-97, 31], values, ranks, quality,
+    risk: risk(index, place, 3),
   };
 }
 // Harris-like county is high in every hazard; the other two are low and middle.
-const HIGH = county("48201", 0.9, ["cnp"]);
-const MID = county("48453", 0.5, ["aen", "cnp"]);
-const LOW = county("48001", 0.1, ["aen"]);
+const HIGH = county("48201", 0.9, ["cnp"], 95, 1);
+const MID = county("48453", 0.5, ["aen", "cnp"], 50, 2);
+const LOW = county("48001", 0.1, ["aen"], 5, 3);
 
-function utility(id: string, counties: [string, number][], peak: number | null): UtilityRecord {
+function utility(id: string, counties: [string, number][], peak: number | null, index: number, place: number): UtilityRecord {
   return {
     id, name: id.toUpperCase(), grid: "ERCOT", grids: ["ERCOT"], scored: true, base_offer: "energy_only",
     offer_verification: "listed", counties: counties.map(([f]) => f),
     county_weights: counties.map(([fips, share]) => ({ fips, customers_est: share * 1000, share })),
     customers: 1000, eligible_homes: 500, label_point: [-97, 31], core_coverage_hours: null,
     grid_stats: { summer_peak_mw: peak, winter_peak_mw: null, sales_mwh: null, residential_mwh: null, peak_source: "eia861" },
+    risk: risk(index, place, 2),
   };
 }
-const CNP = utility("cnp", [["48201", 1], ["48453", 0.5]], 20000);
-const AEN = utility("aen", [["48453", 0.5], ["48001", 1]], 3000);
+const CNP = utility("cnp", [["48201", 1], ["48453", 0.5]], 20000, 90, 1);
+const AEN = utility("aen", [["48453", 0.5], ["48001", 1]], 3000, 20, 2);
 
 const DATA = {
   layers: LAYERS,
@@ -72,7 +79,6 @@ const DATA = {
 } as unknown as UtilityMapData;
 
 const CTX: ViewContext = {
-  presets: DATA.presets,
   layers: LAYERS,
   utilityIds: new Set(["cnp", "aen"]),
   countyFips: new Set(["48201", "48453", "48001"]),
@@ -97,23 +103,32 @@ function describe(state: ViewState) {
     stormsStatus: "ok",
   });
 }
-const label = (id: LayerId) => LAYERS.find((l) => l.id === id)!.label;
-const start = () => defaultViewState(DATA.presets);
+const start = () => defaultViewState();
 const hazards = (...picks: (keyof typeof HAZARDS)[]) =>
   picks.reduce<ViewState>((s, h) => toggleHazard(s, h), { ...setQuestion(start(), "hazards", CTX), hazards: [] });
 
 test("what ranks utilities follows the question", () => {
-  assert.deepEqual(scoreLayers(start()), ["winter", "outages", "price_spikes", "homes"]);
+  assert.deepEqual(scoreLayers(start()), RISK_LAYERS);
   assert.deepEqual(scoreLayers(hazards("flood", "hurricane")), ["flood", "hurricane"]);
 });
 
-test("Find opportunities: caption, details and table all use the scenario's factors", () => {
+test("Grid Risk Index: map, tooltip and table all use the published index", () => {
   const s = start();
   const d = describe(s);
-  assert.match(d.caption.title, /Screening score/);
-  assert.match(d.caption.qualifier, /4 factors/);
-  assert.deepEqual(detailLayers(s), s.factors);
-  assert.deepEqual(d.table.columns.slice(2), s.factors.map(label));
+  assert.equal(d.caption.title, "Grid Risk Index");
+  assert.deepEqual(detailLayers(s), RISK_LAYERS);
+  // Counties are colored by their own index band, 1-20 Low ... 81-100 Severe.
+  assert.equal(d.stateFor(HIGH).level, 5);
+  assert.equal(d.stateFor(LOW).level, 1);
+  assert.equal(d.labelFor(HIGH), "Grid Risk Index 95 of 100 · Severe");
+  assert.deepEqual(d.table.rows.map((r) => r.id), ["cnp", "aen"]);
+  assert.equal(d.table.columns[d.table.primary], "Grid Risk Index");
+  assert.equal(d.table.rows[0].cells[d.table.primary], "90");
+  assert.equal(d.table.rows.length, DATA.utilities.length);
+});
+
+test("Grid Risk Index: the county line counts high hazards out of all six", () => {
+  assert.equal(hazardHighlights(start(), HIGH)!.label, "High in 6 of 6 hazards");
 });
 
 test("one hazard: legend, details and table name that hazard", () => {
@@ -122,7 +137,7 @@ test("one hazard: legend, details and table name that hazard", () => {
   assert.equal(d.legend.kind, "sequential");
   assert.match(d.caption.title, /Flood/);
   assert.deepEqual(detailLayers(s), ["flood"]);
-  assert.deepEqual(d.table.columns.slice(2), ["Flood"]);
+  assert.deepEqual(d.table.columns.slice(1), ["Flood"]);
 });
 
 test("two hazards: the bivariate legend, details and table use the same two, in order", () => {
@@ -130,7 +145,7 @@ test("two hazards: the bivariate legend, details and table use the same two, in 
   const d = describe(s);
   assert.deepEqual(d.legend, { kind: "bivariate", first: "Hurricanes", second: "Flood" });
   assert.deepEqual(detailLayers(s), ["hurricane", "flood"]);
-  assert.deepEqual(d.table.columns.slice(2), ["Hurricanes", "Flood"]);
+  assert.deepEqual(d.table.columns.slice(1), ["Hurricanes", "Flood"]);
 });
 
 test("three hazards: the county line counts and names exactly the selected hazards", () => {
@@ -167,6 +182,7 @@ test("past storm: map, caption and table all describe that storm's outages", () 
 test("grid: demand shading and plants follow their switches", () => {
   const on = setQuestion(start(), "grid", CTX);
   assert.deepEqual(overlays(on), { demand: true, plants: true, tracks: [], stormTrack: null, flood: false, view3d: false });
+  assert.equal(overlays(start()).view3d, true);
   const off = setGridLayer(on, "demand", false);
   const d = describe(off);
   assert.equal(overlays(off).demand, false);
@@ -194,7 +210,7 @@ test("fleet: caption names the share and the table covers every utility, sorted 
 });
 
 test("the table holds every utility, not a top slice", () => {
-  const d = describe(start());
+  const d = describe(hazards("flood"));
   assert.equal(d.table.rows.length, DATA.utilities.length);
 });
 

@@ -28,7 +28,7 @@ import {
 import { describeView, overlays, scoreLayers } from "@/lib/utility-map/describe-view";
 import { HAZARDS, isHazard, type HazardId, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { mergeFetched, toFetch } from "@/lib/utility-map/fetch-cache";
-import { dataModeLabel, paintLabel } from "@/lib/utility-map/format";
+import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { buildScoreModel } from "@/lib/utility-map/scoring";
 import { clickTarget, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
@@ -36,14 +36,12 @@ import type { UtilityMapData } from "@/lib/utility-map/types";
 import {
   defaultViewState,
   selectCounty,
-  selectScenario,
   selectUtility as selectUtilityIn,
   setGridLayer,
   setQuestion,
   setShare,
   showPatterns,
   showStorm,
-  toggleFactor,
   toggleHazard,
   viewFromUrl,
   viewToUrl,
@@ -110,7 +108,7 @@ export function UtilityMapExperience() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [map, setMap] = useState<Map | null>(null);
   // The one analytical state: question, its settings, and the place in focus (see lib/utility-map/view.ts).
-  const [view, setView] = useState<ViewState>(() => defaultViewState([]));
+  const [view, setView] = useState<ViewState>(() => defaultViewState());
   const [showWarnings, setShowWarnings] = useState(false);
   const [view3d, setView3dOn] = useState(false);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -129,7 +127,6 @@ export function UtilityMapExperience() {
     () =>
       data
         ? {
-            presets: data.presets,
             layers: data.layers,
             utilityIds: new Set(data.utilities.map((u) => u.id)),
             countyFips: new Set(data.counties.map((c) => c.fips)),
@@ -153,7 +150,6 @@ export function UtilityMapExperience() {
         const { data: d } = result;
         setView(
           viewFromUrl(search, {
-            presets: d.presets,
             layers: d.layers,
             utilityIds: new Set(d.utilities.map((u) => u.id)),
             countyFips: new Set(d.counties.map((c) => c.fips)),
@@ -174,7 +170,7 @@ export function UtilityMapExperience() {
     if (!data) return;
     const url = new URL(window.location.href);
     for (const key of VIEW_KEYS) url.searchParams.delete(key);
-    for (const [key, value] of viewToUrl(view, data.presets)) url.searchParams.set(key, value);
+    for (const [key, value] of viewToUrl(view)) url.searchParams.set(key, value);
     if (url.href !== window.location.href) window.history.replaceState(null, "", url);
   }, [data, view]);
 
@@ -207,7 +203,7 @@ export function UtilityMapExperience() {
   // Labeled storms, fetched the first time Explore hazards opens.
   useEffect(() => {
     const file = loaded?.data.geometry.hazards?.storms;
-    if (!loaded || view.question !== "hazards" || stormsStatus !== "loading") return;
+    if (!loaded || (view.question !== "hazards" && !view.utility) || stormsStatus !== "loading") return;
     let cancelled = false;
     if (!file) {
       Promise.resolve().then(() => !cancelled && setStormsStatus("failed"));
@@ -230,7 +226,7 @@ export function UtilityMapExperience() {
     return () => {
       cancelled = true;
     };
-  }, [loaded, view.question, stormsStatus]);
+  }, [loaded, view.question, view.utility, stormsStatus]);
 
   // Live NWS warnings every 60 s while the tab is visible (not in the dummy mockup).
   useEffect(() => {
@@ -386,11 +382,11 @@ export function UtilityMapExperience() {
         ...(state.inSelection || (d.context.kind !== "risk" && d.context.kind !== "fleet")
           ? {
               title: `${county.name} County`,
-              detail: `${paintLabel(d.context, state.level)}${state.inSelection ? "" : ` · ${utilityName}${others > 0 ? ` + ${others} more` : ""}`}`,
+              detail: `${d.labelFor(county)}${state.inSelection ? "" : ` · ${utilityName}${others > 0 ? ` + ${others} more` : ""}`}`,
             }
           : {
               title: `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
-              detail: `${paintLabel(d.context, state.level)} · ${county.name} County`,
+              detail: `${d.labelFor(county)} · ${county.name} County`,
             }),
       });
     };
@@ -636,8 +632,6 @@ export function UtilityMapExperience() {
               showWarnings={showWarnings}
               warningsStatus={warningsStatus}
               onQuestion={(q) => setView((v) => setQuestion(v, q, ctx))}
-              onScenario={(preset) => setView((v) => selectScenario(v, preset))}
-              onFactor={(id, on) => setView((v) => toggleFactor(v, id, on, ctx))}
               onHazard={(h) => setView((v) => toggleHazard(v, h))}
               onStorm={onStorm}
               onPatterns={() => setView(showPatterns)}
@@ -663,6 +657,7 @@ export function UtilityMapExperience() {
               view={view}
               described={described}
               storm={storm}
+              storms={storms}
               countiesByFips={countiesByFips}
               utilitiesById={utilitiesById}
               pickerFips={pickerFips}

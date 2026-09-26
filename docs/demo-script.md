@@ -55,7 +55,7 @@ Open `/utility-map` at laptop width. Everything on screen is from public data; t
 
 | Time | On screen | Say |
 |---|---|---|
-| 0:00-0:10 | Find opportunities, Winter freeze scenario, 3D on | "Every Texas county, screened on real outage history, hazards and grid stress. Taller is a higher screening level." |
+| 0:00-0:10 | Grid Risk Index, 3D on, open CenterPoint | "Every Texas county and utility gets one Grid Risk Index, 1 to 100, from nine public sources: half hazard exposure, half grid stress. CenterPoint: 98, fourth of 150." |
 | 0:10-0:25 | Explore hazards → Historical patterns: turn off Winter freeze, pick Tornadoes + Hurricanes | "Tornado tracks from NOAA, hurricane tracks since 1980. The dark corner is where both run high: East Texas and the upper coast." |
 | 0:25-0:35 | Explore hazards → Past storms: Hurricane Beryl | "Beryl put 1.66 million Harris County customers in the dark, 91% of them. That's EAGLE-I, county by county." |
 | 0:35-0:45 | Explore hazards → Historical patterns, Flood, open CenterPoint → Harris | "FEMA flood zones for Harris and Galveston; 60% of Galveston is in the 100-year floodplain." |
