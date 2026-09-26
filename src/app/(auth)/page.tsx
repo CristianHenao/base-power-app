@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -6,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SignInPage() {
   return (
@@ -17,7 +19,9 @@ export default function SignInPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <SignInForm />
+        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <SignInForm />
+        </Suspense>
       </CardContent>
     </Card>
   );

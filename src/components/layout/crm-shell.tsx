@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { LayoutDashboard, Users } from "lucide-react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ export function CrmShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
+          <SignOutButton />
         </div>
       </SiteHeader>
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6">
