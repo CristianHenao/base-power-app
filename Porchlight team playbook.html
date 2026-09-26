@@ -1030,6 +1030,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="small"><strong>Test:</strong> backup hours for a typical home by month and weather zone, plus the February 2021 and July 2024 storm weeks.</p>
       <p class="small"><strong>Win:</strong> one chart that tells Base what to say to members in August and in a freeze.</p>
       <p class="small"><strong>If it's weak:</strong> it can't be flat; the size of the gap is the finding.</p>
+      <p class="small"><strong>Shipped</strong> <code>d3ff3a0</code>: <code>python -m pipeline.insights</code> writes <code>data/processed/insights.json</code> with backup hours by month for all 8 weather zones and both heat types (2024 profiles), plus the Uri and Beryl weeks. With gas heat, one Core lasts 15 to 20 hours in August and 38 to 56 hours in the best month, a 2.5 to 3 times gap in every zone. With electric heat, January is often the shortest month. In the Uri week, one Core lasts 6 to 12 hours for an electric-heat home and 21 to 71 hours for a gas-heat home. In the Beryl week it lasts 17 to 26 hours.</p>
     </div>
     <div class="card">
       <h3>Official reliability leaves out the storms</h3>
@@ -1042,6 +1043,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="small"><strong>Test:</strong> share of each county's customer outage hours since 2018 that came from its five worst events.</p>
       <p class="small"><strong>Win:</strong> a handful of nights is most of the darkness, so backup is sold on hours, not averages.</p>
       <p class="small"><strong>If it's weak:</strong> if outages are spread out, pivot the message to frequency.</p>
+      <p class="small"><strong>Shipped</strong> <code>d3ff3a0</code>: the five largest events hold a median 56% of a county's event customer-hours since 2018, and more than half in 168 of 254 counties. Harris is 88% (5 of 1,764 events), Travis 84% and Collin 61%. The per-county table is <code>data/processed/tail_share.parquet</code>.</p>
     </div>
     <div class="card">
       <h3>Where a Core pays twice</h3>
@@ -1092,7 +1094,7 @@ def shrink_rates(events, years, floor_cv=0.25):
         <li><input type="checkbox" checked disabled aria-label="done"><span>4. Sizing rule and features.duckdb <code>aba5c77</code>. Serving it from <code>/v1/report</code> is Victor's.</span></li>
         <li><input type="checkbox" disabled aria-label="open"><span>5. Narrator with validators, fallback and 24 evals. Guardrails and harness <code>fd414b5</code>; model outputs and the README table wait on a provider and key.</span></li>
         <li><input type="checkbox" checked disabled aria-label="done"><span>6. Grid value by load zone (P1). <code>8e69a00</code></span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>7. Insight charts with Alejandro.</span></li>
+        <li><input type="checkbox" disabled aria-label="open"><span>7. Insight charts with Alejandro. Tail share and month-by-zone data <code>d3ff3a0</code>; EIA-861 chart help still open.</span></li>
         <li><input type="checkbox" checked disabled aria-label="done"><span>8. MODEL_CARD.md. <code>dc9f16d</code></span></li>
       </ul>
     </div>
@@ -1160,7 +1162,7 @@ flowchart LR
       <tr><td><strong>Skeleton</strong><br>Fri 8 PM to 2 AM</td><td>Landing, persona chips, report page on fixtures; outlook badge</td><td><code>/v1/report</code> on Census and NWS with caching and <code>sources[]</code>; generated TS client</td><td>Events and duration bounds for 3 counties shipped in <code>5588e51</code> (Feb 2021 and Harris Jul 2024 are in the top events). Monthly backup hours shipped in <code>63afbd4</code>.</td><td>Texas outage parquet; crosswalks (county to weather zone and load zone, ZIP to utility, utility to Base offer); features v0</td><td class="gatecell">1:30 AM: type Sally's address, see her county's real past outages</td></tr>
       <tr><td><strong>Sleep</strong><br>Sat 2 to 7:30 AM</td><td colspan="4">Alejandro starts the full Texas rebuild and price downloads before bed. Everyone sleeps.</td><td class="gatecell">Overnight jobs finish</td></tr>
       <tr><td><strong>Real data</strong><br>Sat 7:30 AM to 1 PM</td><td>Replay chart, backup by month, sizing, link to Base; mobile layout</td><td>Features mounted read-only; degraded paths; funnel events; pick deploy target</td><td>Statewide outlook with empirical Bayes and backtest (<code>3d4a56c</code>, zones <code>213b752</code>); sizing rule and features.duckdb (<code>aba5c77</code>); simulator tests in <code>63afbd4</code>, storm replay in <code>947fb55</code></td><td>NRI, EIA-861 and ACS into features; label marquee storms; hand-check every persona number</td><td class="gatecell">1 PM: three persona reports fully real, no mocks on the MVP path</td></tr>
-      <tr><td><strong>Depth</strong><br>Sat 1 to 7 PM</td><td>Pays twice map and ranked table; empty and error states</td><td>ERCOT snapshot worker; circuit breakers; k6 load test; live URL</td><td>Narrator, validators, eval harness (<code>fd414b5</code>, model outputs open); grid value by load zone (<code>8e69a00</code>); model card (<code>dc9f16d</code>)</td><td>Insight charts with Nolan; demo script v1; README skeleton; second Base check-in</td><td class="gatecell">7 PM: timed full demo run-through</td></tr>
+      <tr><td><strong>Depth</strong><br>Sat 1 to 7 PM</td><td>Pays twice map and ranked table; empty and error states</td><td>ERCOT snapshot worker; circuit breakers; k6 load test; live URL</td><td>Narrator, validators, eval harness (<code>fd414b5</code>, model outputs open); grid value by load zone (<code>8e69a00</code>); model card (<code>dc9f16d</code>); insight data (<code>d3ff3a0</code>)</td><td>Insight charts with Nolan; demo script v1; README skeleton; second Base check-in</td><td class="gatecell">7 PM: timed full demo run-through</td></tr>
       <tr><td><strong>Freeze</strong><br>Sat 7 to 11 PM</td><td>Polish; clean screen recordings</td><td>Failure-injection clip; latency table; clean-clone <code>make demo</code></td><td>Edge cases; export eval and backtest charts</td><td>Record the full safety video by 10:30 PM; upload unlisted</td><td class="gatecell">11 PM: feature freeze, tag v0.9, safety video exists</td></tr>
       <tr><td><strong>Sleep</strong><br>Sat 11 PM to Sun 5:30 AM</td><td colspan="4">Everyone sleeps. Nothing new gets built after the freeze.</td><td class="gatecell">Rested voices</td></tr>
       <tr><td><strong>Ship</strong><br>Sun 5:30 to 11 AM</td><td colspan="4">6:00 rehearsal. 6:30 to 8:30 record. 8:30 to 9:45 edit and captions. 9:45 final README pass. 10:15 submit. Then rehearse the 3-minute live version for awards.</td><td class="gatecell">10:15 AM: submitted</td></tr>
