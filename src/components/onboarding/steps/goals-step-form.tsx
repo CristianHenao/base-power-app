@@ -37,6 +37,8 @@ export function GoalsStepForm() {
     toFormState(draft.goals),
   );
   const [seedKey, setSeedKey] = useState(() => JSON.stringify(draft.goals));
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const nextSeedKey = JSON.stringify(draft.goals);
   if (nextSeedKey !== seedKey) {
@@ -55,6 +57,8 @@ export function GoalsStepForm() {
 
   function onFinish(event: React.FormEvent) {
     event.preventDefault();
+    setError(null);
+    setSubmitting(true);
     void (async () => {
       const next = updateDraft({
         goals: {
@@ -67,13 +71,22 @@ export function GoalsStepForm() {
       try {
         const supabase = createClient();
         const user = await getCurrentUser(supabase);
-        if (user) {
-          await completeOnboarding(supabase, user.id, next);
+        if (!user) {
+          throw new Error("Your session ended. Sign in again to finish.");
         }
-      } catch {
-        // Local draft is saved; user can still view risk offline.
+        await completeOnboarding(supabase, user.id, next);
+      } catch (err) {
+        // The /risk guard needs onboarding_completed_at, so stay here until it is saved.
+        setError(
+          err instanceof Error ? err.message : "We couldn't save your answers. Try again.",
+        );
+        setSubmitting(false);
+        return;
       }
 
+      // A /risk prefetch from before onboarding finished can hold the proxy's
+      // redirect back to step 1; refresh clears the router cache first.
+      router.refresh();
       router.push("/risk");
     })();
   }
@@ -151,6 +164,12 @@ export function GoalsStepForm() {
         />
       </div>
 
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       <div className="flex items-center justify-between gap-3 pt-2">
         <Button
           type="button"
@@ -159,8 +178,8 @@ export function GoalsStepForm() {
         >
           Back
         </Button>
-        <Button type="submit" disabled={!form.primaryGoal}>
-          Finish &amp; see risk analysis
+        <Button type="submit" disabled={!form.primaryGoal || submitting}>
+          {submitting ? "Saving…" : "Finish & see risk analysis"}
         </Button>
       </div>
     </form>
