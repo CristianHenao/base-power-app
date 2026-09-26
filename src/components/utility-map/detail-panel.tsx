@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, CloudAlert, Zap } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { CountyPicker } from "@/components/utility-map/county-picker";
@@ -19,7 +19,7 @@ import {
 } from "@/lib/utility-map/describe-view";
 import { HAZARD_IDS, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
-import { formatLayerValue, generationSummary, liveSummary, paintLabel } from "@/lib/utility-map/format";
+import { formatLayerValue, generationSummary, paintLabel } from "@/lib/utility-map/format";
 import { utilityLayerQuality, utilityLayerSummary, type ScoreModel } from "@/lib/utility-map/scoring";
 import { pickerOptions } from "@/lib/utility-map/selection";
 import type { CountyRecord, LayerId, Quality, UtilityMapData, UtilityRecord } from "@/lib/utility-map/types";
@@ -31,16 +31,6 @@ const LIST_PREVIEW = 12;
 
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
-
-function formatAsOf(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", {
-    timeZone: "America/Chicago",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 type DetailPanelProps = {
   data: UtilityMapData;
@@ -155,29 +145,6 @@ function BackButton({ label, onClick }: { label: string; onClick: () => void }) 
       <ChevronLeft className="size-4" aria-hidden />
       {label}
     </button>
-  );
-}
-
-function RightNow({ data, fips }: { data: UtilityMapData; fips: string[] }) {
-  const { live } = data;
-  return (
-    <div className="bp-info space-y-1.5 p-4">
-      <p className="text-[14px] leading-[21px] font-semibold">Right now</p>
-      <p className="flex items-start gap-2 text-[14px] leading-[21px]">
-        <CloudAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-        {liveSummary(live, fips)}
-      </p>
-      {live.status === "ok" && live.ercot ? (
-        <p className="flex items-start gap-2 text-[14px] leading-[21px]">
-          <Zap className="mt-0.5 size-4 shrink-0" aria-hidden />
-          ERCOT conditions: {live.ercot}
-        </p>
-      ) : null}
-      <p className="text-[12px] leading-[18px]">
-        {live.status === "ok" && live.as_of ? `As of ${formatAsOf(live.as_of)} CT. ` : ""}
-        Not part of the analysis.
-      </p>
-    </div>
   );
 }
 
@@ -371,9 +338,12 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
         storms={props.storms}
         customers={utility.customers}
         summerPeakMw={utility.grid_stats?.summer_peak_mw ?? null}
+        baseChapter={fleetCard}
       />
 
-      {view.question === "fleet" ? fleetCard : null}
+      <p className="border-t pt-5 text-[12px] leading-[18px] font-semibold tracking-wide text-muted-foreground uppercase">
+        More for this view
+      </p>
       {view.question === "grid" ? <GridCard utility={utility} /> : null}
       {storm ? <StormImpact storm={storm} counties={utility.counties} countiesByFips={countiesByFips} /> : null}
 
@@ -411,10 +381,8 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
         ) : null}
       </div>
 
-      {view.question !== "fleet" ? fleetCard : null}
       {view.question !== "grid" ? <GridCard utility={utility} /> : null}
       {patterns ? fingerprint : <LongTerm open={false}>{fingerprint}</LongTerm>}
-      <RightNow data={data} fips={utility.counties} />
     </div>
   );
 }
@@ -457,23 +425,27 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         storms={props.storms}
         customers={county.customers}
         floodplainPct={county.sfha_land_pct ?? null}
+        baseChapter={
+          <>
+            <p className="text-[13px] leading-[19px] text-muted-foreground">
+              Fleet numbers are for {utility.name}, the utility in focus. Pick another from &ldquo;Served by&rdquo; on
+              the map.
+            </p>
+            <FleetCard
+              data={data}
+              utility={utility}
+              fleet={fleetScenario(utility, countiesByFips, view.share, data.battery)}
+              share={view.share}
+              onShare={onShare}
+              spikeHours={utilityLayerSummary(utility, countiesByFips, "price_spikes").value}
+            />
+          </>
+        }
       />
 
-      {view.question === "fleet" ? (
-        <>
-          <p className="text-[14px] leading-[21px] text-muted-foreground">
-            Fleet numbers are for {utility.name}, the utility in focus. Pick another from &ldquo;Served by&rdquo; on the map.
-          </p>
-          <FleetCard
-            data={data}
-            utility={utility}
-            fleet={fleetScenario(utility, countiesByFips, view.share, data.battery)}
-            share={view.share}
-            onShare={onShare}
-            spikeHours={utilityLayerSummary(utility, countiesByFips, "price_spikes").value}
-          />
-        </>
-      ) : null}
+      <p className="border-t pt-5 text-[12px] leading-[18px] font-semibold tracking-wide text-muted-foreground uppercase">
+        More for this view
+      </p>
 
       {storm ? <StormImpact storm={storm} counties={[county.fips]} countiesByFips={countiesByFips} /> : null}
 
@@ -525,7 +497,6 @@ function CountyView(props: DetailPanelProps & { county: CountyRecord; utility: U
         }))}
       />
       {view.question === "hazards" && view.hazardSub === "patterns" ? fingerprint : <LongTerm open={false}>{fingerprint}</LongTerm>}
-      <RightNow data={data} fips={[county.fips]} />
       <p className="text-[12px] leading-[18px] text-muted-foreground">
         Homes in this county, not any single home. Every value is an estimate.
       </p>

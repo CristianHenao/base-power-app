@@ -71,3 +71,44 @@ test("factors split into what raises the risk and what keeps it down, strongest 
   assert.deepEqual(lowering.map((f) => f.id), ["outages", "peak_demand", "heat"]);
   assert.equal(raising[0].percentile, 79);
 });
+
+import { riskSummary } from "./score-card.ts";
+
+const fmt = (id: string) =>
+  ({ peak_demand: "20,697 MW", price_spikes: "41 h / yr", hurricane: "2.7 passes / decade", winter: "0.5 event days / yr", outages: "11 h per customer / yr" })[id] ?? "?";
+
+test("the summary says where the risk comes from, what drives it, and what happened", () => {
+  const text = riskSummary({
+    name: "CenterPoint Energy",
+    kind: "utility",
+    risk: { hazard: 78, stress: 98 },
+    ranks: { peak_demand: 0.98, hurricane: 0.97, price_spikes: 0.96, winter: 0.19, outages: 0.9 },
+    format: fmt,
+    storm: { name: "Hurricane Beryl 2024", peakOut: 2589770, peakPct: null, customerHours: 2.0e8 },
+    outagesHours: 11.2,
+  });
+  assert.deepEqual(text, [
+    "CenterPoint Energy's risk comes more from its grid than from the weather.",
+    "Its peak demand (20,697 MW) and hurricanes (2.7 passes / decade) rank among the highest in Texas.",
+    "Winter freeze (0.5 event days / yr) is lower than most of Texas.",
+    "Hurricane Beryl 2024 left 2,589,770 customers in its counties without power at peak.",
+    "Customers in its counties average 11 hours of long outages a year.",
+  ]);
+});
+
+test("a county whose weather and grid are both low says neither stands out", () => {
+  const text = riskSummary({
+    name: "Coleman County",
+    kind: "county",
+    risk: { hazard: 27, stress: 32 },
+    ranks: { price_spikes: 0.79, outages: 0.04 },
+    format: (id) => (({ price_spikes: "40 h / yr", outages: "0.3 h per customer / yr" }) as Record<string, string>)[id] ?? "?",
+    storm: null,
+    outagesHours: 0.32,
+  });
+  assert.equal(text[0], "Neither weather nor the grid stands out in Coleman County compared with the rest of Texas.");
+  assert.equal(text[1], "Its price spikes (40 h / yr) are above most of Texas.");
+  assert.equal(text[2], "Long outages (0.3 h per customer / yr) are lower than most of Texas.");
+  assert.equal(text[3], "Homes in this county average 0.3 hours of long outages a year.");
+  assert.equal(text.length, 4);
+});

@@ -5,7 +5,15 @@ import { HazardChip } from "@/components/utility-map/hazard-chip";
 import { RISK_BANDS, RISK_HAZARDS } from "@/lib/utility-map/describe-view";
 import { formatLayerValue, liveSummary } from "@/lib/utility-map/format";
 import type { SpotlightStorm } from "@/lib/utility-map/hazard-style";
-import { bandMeaning, halfReading, rankSentence, scoreFactors, worstStorm, type Driver } from "@/lib/utility-map/score-card";
+import {
+  bandMeaning,
+  halfReading,
+  rankSentence,
+  riskSummary,
+  scoreFactors,
+  worstStorm,
+  type Driver,
+} from "@/lib/utility-map/score-card";
 import { LEVEL_COLORS, type Level } from "@/lib/utility-map/scoring";
 import type { LayerId, Quality, RiskIndex, UtilityMapData } from "@/lib/utility-map/types";
 
@@ -27,6 +35,8 @@ export type ScoreCardProps = {
   customers: number | null;
   summerPeakMw?: number | null;
   floodplainPct?: number | null;
+  /** Chapter 5, "What could Base add?": the fleet card for this place. */
+  baseChapter?: React.ReactNode;
 };
 
 /**
@@ -44,6 +54,7 @@ export function ScoreCard(props: ScoreCardProps) {
   const storm = worstStorm(storms, fips);
   const highHazards = RISK_HAZARDS.filter((h) => (ranks[h] ?? 0) >= 0.8);
   const meta = (id: LayerId) => data.layers.find((l) => l.id === id)!;
+  const show = (id: LayerId) => formatLayerValue(meta(id), values[id] ?? null, quality[id] ?? "missing");
   const factorLine = (f: Driver, up: boolean) => {
     const value = formatLayerValue(meta(f.id), values[f.id] ?? null, quality[f.id] ?? "missing");
     const compare =
@@ -73,8 +84,7 @@ export function ScoreCard(props: ScoreCardProps) {
       className="space-y-5 rounded-[20px] border-2 bg-white p-5"
       style={{ borderColor: color }}
     >
-      {/* 1. The score and where it stands */}
-      <div className="space-y-3">
+      <Chapter n={1} title="How at risk is it?">
         <div
           className="flex items-end justify-between gap-3 rounded-2xl px-5 py-4"
           style={{ backgroundColor: color, color: ink }}
@@ -98,10 +108,24 @@ export function ScoreCard(props: ScoreCardProps) {
         </p>
         <IndexScale index={risk.index} level={level} />
         <p className="text-[12px] leading-[18px] text-muted-foreground">{bandMeaning(level, kind)}</p>
-      </div>
+        <div className="space-y-1.5 rounded-2xl bg-[var(--bp-grey-5)] p-4">
+          <p className="text-[12px] leading-[18px] font-semibold tracking-wide text-muted-foreground uppercase">In short</p>
+          <p className="text-[14px] leading-[22px]">
+            {riskSummary({
+              name,
+              kind,
+              risk: { hazard: risk.hazard, stress: risk.stress },
+              ranks,
+              format: show,
+              storm,
+              outagesHours: values.outages ?? null,
+            }).join(" ")}
+          </p>
+        </div>
+      </Chapter>
 
-      {/* 2. Why it scores this way */}
-      <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+      <Chapter n={2} title="Why does it score this way?">
+      <div className="grid gap-4 sm:grid-cols-2">
         <FactorList
           title="Raising the risk"
           icon={<ArrowUp className="size-4" aria-hidden />}
@@ -116,9 +140,8 @@ export function ScoreCard(props: ScoreCardProps) {
         />
       </div>
 
-      {/* 3. The two halves */}
-      <div className="space-y-3 border-t pt-4">
-        <p className="text-[14px] leading-[21px] font-semibold">Made of two equal halves</p>
+      <div className="space-y-3">
+        <p className="text-[14px] leading-[21px] font-semibold">Two equal halves</p>
         <HalfBar
           label="Hazard exposure"
           hint="Flood, tornadoes, hail and wind, hurricanes, winter freeze, extreme heat"
@@ -133,8 +156,10 @@ export function ScoreCard(props: ScoreCardProps) {
         />
       </div>
 
-      {/* 4. On the record */}
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-[13px] leading-[19px]">
+      </Chapter>
+
+      <Chapter n={3} title="What has happened here?">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px] leading-[19px]">
         <Fact label={kind === "county" ? "Worst storm on record" : "Worst storm on record in its counties (all utilities)"} wide>
           {storm
             ? `${storm.name}: ${whole.format(storm.peakOut)} customers out at peak${
@@ -163,10 +188,22 @@ export function ScoreCard(props: ScoreCardProps) {
         ) : null}
         {props.summerPeakMw != null ? <Fact label="Summer peak (2024)">{whole.format(props.summerPeakMw)} MW</Fact> : null}
         {props.customers != null ? <Fact label="Customers">{whole.format(props.customers)}</Fact> : null}
-        <Fact label="Right now">{liveSummary(data.live, fips)}</Fact>
       </dl>
+      </Chapter>
 
-      {/* 5. How it's computed */}
+      <Chapter n={4} title="What's happening right now?">
+        <p className="text-[14px] leading-[21px] font-semibold">{liveSummary(data.live, fips)}</p>
+        <p className="text-[12px] leading-[18px] text-muted-foreground">
+          Live National Weather Service warnings, checked every minute. Not part of the index.
+        </p>
+      </Chapter>
+
+      {props.baseChapter ? (
+        <Chapter n={5} title="What could Base add?">
+          {props.baseChapter}
+        </Chapter>
+      ) : null}
+
       <details className="group text-[12px] leading-[18px] text-muted-foreground">
         <summary className="cursor-pointer list-none underline [&::-webkit-details-marker]:hidden">
           Based on {risk.sources} of {risk.sources_total} sources · how the index is computed
@@ -181,6 +218,21 @@ export function ScoreCard(props: ScoreCardProps) {
         </p>
       </details>
     </section>
+  );
+}
+
+/** A numbered step in the card's story. */
+function Chapter({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3 border-t pt-4 first:border-t-0 first:pt-0">
+      <h3 className="flex items-center gap-2 text-[16px] leading-[24px] font-semibold">
+        <span className="flex size-6 items-center justify-center rounded-full bg-[var(--bp-grey-100)] text-[12px] leading-none text-white">
+          {n}
+        </span>
+        {title}
+      </h3>
+      {children}
+    </div>
   );
 }
 
