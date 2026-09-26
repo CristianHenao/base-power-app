@@ -31,6 +31,7 @@ import {
   hasHomeCoordinates,
 } from "@/lib/onboarding/storage";
 import { countyHistoryToSliderEvents } from "@/lib/fixtures/county-history";
+import { useCountyOutages } from "@/lib/report/use-county-outages";
 import {
   generateSyntheticWeatherHazards,
   hazardsToHeatmapGeoJSON,
@@ -181,7 +182,9 @@ export function RiskAnalysisDashboard() {
     [weatherHazards],
   );
 
-  const sliderEvents = useMemo(() => countyHistoryToSliderEvents(), []);
+  // Real county outages from the Porchlight report; the fixture shows until the report arrives.
+  const fixtureEvents = useMemo(() => countyHistoryToSliderEvents(), []);
+  const { events: sliderEvents } = useCountyOutages(formatAddressLine(address), fixtureEvents);
 
   const inAnalysis = activeAnalysisId != null;
   const showWeatherAnalysis = activeAnalysisId === "weather";
