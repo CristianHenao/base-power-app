@@ -1,0 +1,106 @@
+# What Base offers in each utility area. Hand-built from Base's pricing page.
+# No prices here on purpose: Base says availability, pricing and offers vary by
+# address, so the app links to `url` for anything beyond the offer type.
+#
+# offer:
+#   energy_plus_backup  Base can be the retail electric provider and install a Core
+#   energy_only         Base sells electricity plans only (competitive area, no Core offer)
+#   backup_only         Core through a utility or co-op program; the utility still sells the power
+#   none                no Base offer listed (any utility not in this file)
+#
+# eia_utility_id is filled from EIA-861 in ticket A6.
+
+source: https://www.basepowercompany.com/pricing
+as_of: 2026-09-26
+note: Availability varies by address inside a utility area. Always let the user confirm.
+
+utilities:
+  - key: centerpoint
+    name: CenterPoint Energy
+    region: Greater Houston
+    state: TX
+    market: ERCOT competitive
+    offer: energy_plus_backup
+    also: [energy_only]
+    url: https://www.basepowercompany.com/centerpoint#pricing
+
+  - key: oncor
+    name: Oncor
+    region: Central & North Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_plus_backup
+    also: [energy_only]
+    url: https://www.basepowercompany.com/oncor#pricing
+
+  - key: aep_texas_central
+    name: AEP Texas Central
+    region: Corpus Christi & South Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: aep_texas_north
+    name: AEP Texas North
+    region: West & Northern Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: tnmp
+    name: Texas-New Mexico Power
+    region: Gulf Coast & West Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: gvec
+    name: Guadalupe Valley Electric Cooperative
+    region: Guadalupe Valley
+    state: TX
+    market: co-op
+    offer: backup_only
+    url: https://www.basepowercompany.com/gvec#pricing
+
+  - key: coserv
+    name: CoServ
+    region: Denton & Collin counties
+    state: TX
+    market: co-op
+    offer: backup_only
+    url: https://www.basepowercompany.com/coserv#pricing
+
+  - key: farmers_ec
+    name: Farmers Electric Cooperative
+    region: North Texas
+    state: TX
+    market: co-op
+    offer: backup_only
+    url: https://www.basepowercompany.com/farmers#pricing
+
+  - key: austin_energy
+    name: Austin Energy
+    region: Austin
+    state: TX
+    market: municipal
+    offer: backup_only
+    url: https://www.basepowercompany.com/austinenergy#pricing
+
+  - key: el_paso_electric
+    name: El Paso Electric
+    region: El Paso & far West Texas
+    state: TX
+    market: non-ERCOT (WECC)
+    offer: backup_only
+    url: https://www.basepowercompany.com/epelectric#pricing
+
+  - key: comed
+    name: ComEd
+    region: Chicago & Northern Illinois
+    state: IL
+    market: Illinois retail choice
+    offer: unconfirmed
+    url: https://www.basepowercompany.com/illinois#pricing
