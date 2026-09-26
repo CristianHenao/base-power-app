@@ -8,17 +8,25 @@ const millions = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 /** Pick a labeled storm to see which counties it darkened (EAGLE-I, 2018 on). One storm at a time. */
 export function StormList({
   storms,
+  status,
   selected,
   countyName,
   onSelect,
 }: {
   storms: SpotlightStorm[];
+  status: "loading" | "ok" | "failed";
   selected: SpotlightStorm | null;
   countyName: (fips: string) => string;
   onSelect: (name: string) => void;
 }) {
   if (storms.length === 0) {
-    return <p className="text-[12px] leading-[18px] text-muted-foreground">Loading storms with outage records.</p>;
+    return (
+      <p className="text-[12px] leading-[18px] text-muted-foreground">
+        {status === "failed"
+          ? "Couldn't load the storm records. Refresh the page, or use Historical patterns."
+          : "Loading storms with outage records."}
+      </p>
+    );
   }
   return (
     <div className="space-y-2">
@@ -61,7 +69,7 @@ export function StormList({
         </div>
       ) : (
         <p className="text-[12px] leading-[18px] text-muted-foreground">
-          Loading storms with outage records (2018 on).
+          Pick a storm to see its outages, county by county (EAGLE-I, 2018 on).
         </p>
       )}
     </div>

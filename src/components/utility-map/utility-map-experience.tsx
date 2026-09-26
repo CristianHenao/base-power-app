@@ -122,6 +122,7 @@ export function UtilityMapExperience() {
   const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
   const [storms, setStorms] = useState<SpotlightStorm[]>([]);
+  const [stormsStatus, setStormsStatus] = useState<"loading" | "ok" | "failed">("loading");
 
   const data = loaded?.data ?? null;
   const ctx = useMemo<ViewContext | null>(
@@ -132,6 +133,7 @@ export function UtilityMapExperience() {
             layers: data.layers,
             utilityIds: new Set(data.utilities.map((u) => u.id)),
             countyFips: new Set(data.counties.map((c) => c.fips)),
+            utilityCounties: new globalThis.Map(data.utilities.map((u) => [u.id, u.counties])),
           }
         : null,
     [data],
@@ -155,6 +157,7 @@ export function UtilityMapExperience() {
             layers: d.layers,
             utilityIds: new Set(d.utilities.map((u) => u.id)),
             countyFips: new Set(d.counties.map((c) => c.fips)),
+            utilityCounties: new globalThis.Map(d.utilities.map((u) => [u.id, u.counties])),
           }),
         );
       })
@@ -195,25 +198,39 @@ export function UtilityMapExperience() {
 
   const described = useMemo(
     () =>
-      data && model ? describeView(view, { data, model, countiesByFips, utilitiesById, storms }) : null,
-    [data, model, view, countiesByFips, utilitiesById, storms],
+      data && model
+        ? describeView(view, { data, model, countiesByFips, utilitiesById, storms, stormsStatus })
+        : null,
+    [data, model, view, countiesByFips, utilitiesById, storms, stormsStatus],
   );
 
   // Labeled storms, fetched the first time Explore hazards opens.
   useEffect(() => {
     const file = loaded?.data.geometry.hazards?.storms;
-    if (!loaded || view.question !== "hazards" || storms.length || !file) return;
+    if (!loaded || view.question !== "hazards" || stormsStatus !== "loading") return;
     let cancelled = false;
+    if (!file) {
+      Promise.resolve().then(() => !cancelled && setStormsStatus("failed"));
+      return () => {
+        cancelled = true;
+      };
+    }
     fetch(`${loaded.base}/${file}`)
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((body: { storms: SpotlightStorm[] } | null) => {
-        if (!cancelled && body) setStorms(body.storms);
+        if (cancelled) return;
+        if (body?.storms) {
+          setStorms(body.storms);
+          setStormsStatus("ok");
+        } else {
+          setStormsStatus("failed");
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [loaded, view.question, storms.length]);
+  }, [loaded, view.question, stormsStatus]);
 
   // Live NWS warnings every 60 s while the tab is visible (not in the dummy mockup).
   useEffect(() => {
@@ -365,8 +382,16 @@ export function UtilityMapExperience() {
           width: canvas.clientWidth,
           height: canvas.clientHeight,
         }),
-        title: state.inSelection ? `${county.name} County` : `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
-        detail: `${paintLabel(d.context, state.level)}${state.inSelection ? "" : ` · ${county.name} County`}`,
+        // Screening and fleet color a county by its utility; every other view by the county's own value.
+        ...(state.inSelection || (d.context.kind !== "risk" && d.context.kind !== "fleet")
+          ? {
+              title: `${county.name} County`,
+              detail: `${paintLabel(d.context, state.level)}${state.inSelection ? "" : ` · ${utilityName}${others > 0 ? ` + ${others} more` : ""}`}`,
+            }
+          : {
+              title: `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
+              detail: `${paintLabel(d.context, state.level)} · ${county.name} County`,
+            }),
       });
     };
 
@@ -574,13 +599,13 @@ export function UtilityMapExperience() {
       ) : null}
 
       {mapKey ? (
-        <div className="pointer-events-auto absolute bottom-8 left-[calc(22rem+env(safe-area-inset-left))] z-10 hidden w-80 lg:block">
+        <div className="pointer-events-auto absolute bottom-8 left-[calc(22rem+env(safe-area-inset-left))] z-10 hidden w-[min(20rem,calc(100vw-22rem-432px))] lg:block">
           {mapKey}
         </div>
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
-        <div className="pointer-events-auto max-h-[46dvh] w-full shrink-0 space-y-3 overflow-y-auto lg:max-h-full lg:w-80">
+        <div className="pointer-events-auto max-h-[34dvh] w-full shrink-0 space-y-3 overflow-y-auto lg:max-h-full lg:w-80">
           <p className="rounded-xl bg-white px-3 py-2 text-[12px] leading-[18px] text-muted-foreground lg:hidden">
             The utility map is built for desktop screens. On a narrow screen, scroll this panel and the details below.
           </p>
@@ -600,6 +625,7 @@ export function UtilityMapExperience() {
               data={data}
               availableHazards={availableHazards}
               storms={storms}
+              stormsStatus={stormsStatus}
               countyName={(fips) => countiesByFips.get(fips)?.name ?? fips}
               view3d={view3d}
               showWarnings={showWarnings}
@@ -620,7 +646,7 @@ export function UtilityMapExperience() {
           )}
         </div>
 
-        <div className="pointer-events-auto mt-auto flex min-h-[40dvh] w-full flex-1 lg:mt-0 lg:max-h-full lg:min-h-0 lg:w-[400px] lg:flex-none">
+        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full lg:mt-0 lg:max-h-full lg:w-[400px]">
           {loadError ? (
             <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">{loadError}</p>
           ) : data && model && described ? (

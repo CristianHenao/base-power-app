@@ -35,6 +35,7 @@ type ControlsPanelProps = ControlsActions & {
   data: UtilityMapData;
   availableHazards: HazardId[];
   storms: SpotlightStorm[];
+  stormsStatus: "loading" | "ok" | "failed";
   countyName: (fips: string) => string;
   view3d: boolean;
   showWarnings: boolean;
@@ -200,7 +201,16 @@ function OpportunityControls({ view, data, onScenario, onFactor, view3d, onView3
   );
 }
 
-function HazardControls({ view, availableHazards, storms, countyName, onHazard, onStorm, onPatterns }: ControlsPanelProps) {
+function HazardControls({
+  view,
+  availableHazards,
+  storms,
+  stormsStatus,
+  countyName,
+  onHazard,
+  onStorm,
+  onPatterns,
+}: ControlsPanelProps) {
   const sub = view.hazardSub;
   const tabs = [
     { id: "patterns", label: "Historical patterns", hint: "Where each hazard runs high, 2000 on" },
@@ -219,7 +229,7 @@ function HazardControls({ view, availableHazards, storms, countyName, onHazard, 
               role="radio"
               aria-checked={on}
               title={tab.hint}
-              disabled={tab.id === "storm" && storms.length === 0}
+              disabled={tab.id === "storm" && storms.length === 0 && view.hazardSub !== "storm"}
               onClick={() => (tab.id === "patterns" ? onPatterns() : onStorm(view.storm ?? storms[0]?.name))}
               className={cn(
                 "rounded-full px-2 py-1.5 text-[13px] leading-[18px] font-semibold transition-colors disabled:opacity-50",
@@ -234,7 +244,7 @@ function HazardControls({ view, availableHazards, storms, countyName, onHazard, 
       {sub === "patterns" ? (
         <HazardPicker available={availableHazards} picked={view.hazards} onToggle={onHazard} />
       ) : (
-        <StormList storms={storms} selected={selected} countyName={countyName} onSelect={onStorm} />
+        <StormList storms={storms} status={stormsStatus} selected={selected} countyName={countyName} onSelect={onStorm} />
       )}
     </>
   );

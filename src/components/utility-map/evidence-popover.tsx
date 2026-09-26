@@ -2,7 +2,7 @@
 
 import { Popover } from "@base-ui/react/popover";
 import { Info } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useRef } from "react";
 import { formatPeriod } from "@/lib/utility-map/format";
 import type { MapLayerMeta, SourceRef } from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
@@ -23,11 +23,15 @@ export function EvidencePopover({
 }) {
   const named = meta.source_ids.map((id) => sources.find((s) => s.id === id) ?? { id, name: id, url: "" });
   const { ok, missing, not_applicable: notApplicable } = meta.coverage;
-  const [container, setContainer] = useState<HTMLElement | null>(null);
+  // The themed page root, found once from the trigger; a stable ref avoids re-rendering on every update.
+  const container = useRef<HTMLElement | null>(null);
+  const findRoot = useCallback((el: HTMLButtonElement | null) => {
+    if (el) container.current = el.closest<HTMLElement>(".bp-theme");
+  }, []);
   return (
     <Popover.Root>
       <Popover.Trigger
-        ref={(el: HTMLButtonElement | null) => setContainer(el?.closest<HTMLElement>(".bp-theme") ?? null)}
+        ref={findRoot}
         className={cn(
           "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-[var(--bp-grey-5)] hover:text-foreground data-[popup-open]:bg-[var(--bp-grey-5)]",
           className,

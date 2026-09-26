@@ -59,6 +59,7 @@ export type DescribeInput = {
   countiesByFips: Map<string, CountyRecord>;
   utilitiesById: Map<string, UtilityRecord>;
   storms: SpotlightStorm[];
+  stormsStatus: "loading" | "ok" | "failed";
 };
 
 const SCORE_COLORS = [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]] as const;
@@ -186,13 +187,27 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
   const { data, model, utilitiesById, countiesByFips } = input;
   const byScore = (u: UtilityRecord) => model.utility.get(u.id)?.score ?? null;
   const byLevel = (u: UtilityRecord) => model.utility.get(u.id)?.level ?? null;
-  const scoreTable = (caption: string, layers: LayerId[]): TableSpec => ({
-    caption: `All ${data.utilities.length} utilities · ${caption}`,
-    rowKind: "utility",
-    columns: ["Level", "Base offer", ...layers.map((id) => layerLabel(data, id))],
-    primary: 0,
-    rows: utilityRows(input, layers, byLevel, byScore),
-  });
+  // Hazard patterns rank utilities by their average Texas rank, never with the screening levels' colors or words.
+  const averageRank = (u: UtilityRecord) => {
+    const score = byScore(u);
+    return score == null ? "—" : `${Math.round(score * 100)}%`;
+  };
+  const scoreTable = (caption: string, layers: LayerId[]): TableSpec => {
+    const patterns = patternsNow(state);
+    const rows = utilityRows(input, layers, byLevel, byScore);
+    if (patterns) {
+      for (const row of rows) row.cells[0] = averageRank(utilitiesById.get(row.id)!);
+    }
+    return {
+      caption: patterns
+        ? `All ${data.utilities.length} utilities by average Texas rank across ${caption} (customer-weighted)`
+        : `All ${data.utilities.length} utilities · ${caption}`,
+      rowKind: "utility",
+      columns: [patterns ? "Average Texas rank" : "Level", "Base offer", ...layers.map((id) => layerLabel(data, id))],
+      primary: 0,
+      rows,
+    };
+  };
 
   if (stormNow(state)) {
     const storm = input.storms.find((s) => s.name === state.storm);
@@ -208,7 +223,15 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
             labels: ["< 5%", "5–15%", "15–30%", "30–50%", "50%+"],
             note: "Grey: no outage event labeled with this storm.",
           }
-        : { kind: "empty", message: "Loading storm records." },
+        : {
+            kind: "empty",
+            message:
+              input.stormsStatus === "failed"
+                ? "Couldn't load storm records. Refresh the page, or pick Historical patterns."
+                : input.stormsStatus === "ok"
+                  ? `${state.storm} isn't in this release. Pick another storm or Historical patterns.`
+                  : "Loading storm records.",
+          },
       colors: SCORE_COLORS,
       context: { kind: "storm", name: title },
       stateFor: withSelection(state, utilitiesById, (c) => {

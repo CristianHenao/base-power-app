@@ -93,6 +93,7 @@ function describe(state: ViewState) {
     countiesByFips: new Map(DATA.counties.map((c) => [c.fips, c])),
     utilitiesById: new Map(DATA.utilities.map((u) => [u.id, u])),
     storms: [BERYL],
+    stormsStatus: "ok",
   });
 }
 const label = (id: LayerId) => LAYERS.find((l) => l.id === id)!.label;
@@ -201,4 +202,28 @@ test("a selected utility's counties show county levels; others are dimmed", () =
   const d = describe(s);
   assert.deepEqual(d.stateFor(LOW), { level: 1, dim: false, inSelection: true });
   assert.equal(d.stateFor(HIGH).dim, true);
+});
+
+test("hazard patterns never borrow the screening score's levels in the table", () => {
+  const d = describe(hazards("flood"));
+  assert.equal(d.table.columns[0], "Average Texas rank");
+  assert.ok(d.table.rows.every((r) => !/Low|Moderate|Elevated|High/.test(r.cells[0])), d.table.rows[0].cells[0]);
+});
+
+test("a storm missing from the release says so instead of loading forever", () => {
+  const s = showStorm(hazards("winter"), "Hurricane Ghost");
+  const input = {
+    data: DATA,
+    model: buildScoreModel(DATA, scoreLayers(s)),
+    countiesByFips: new Map(DATA.counties.map((c) => [c.fips, c])),
+    utilitiesById: new Map(DATA.utilities.map((u) => [u.id, u])),
+    storms: [BERYL],
+  };
+  const missing = describeView(s, { ...input, stormsStatus: "ok" });
+  assert.equal(missing.legend.kind, "empty");
+  assert.match((missing.legend as { message: string }).message, /isn't in this release/);
+  const failed = describeView(s, { ...input, storms: [], stormsStatus: "failed" });
+  assert.match((failed.legend as { message: string }).message, /Couldn't load/);
+  const loading = describeView(s, { ...input, storms: [], stormsStatus: "loading" });
+  assert.match((loading.legend as { message: string }).message, /Loading/);
 });

@@ -34,6 +34,10 @@ const CTX: ViewContext = {
   layers: LAYERS,
   utilityIds: new Set(["austin-energy", "centerpoint"]),
   countyFips: new Set(["48453", "48201"]),
+  utilityCounties: new Map([
+    ["austin-energy", ["48453"]],
+    ["centerpoint", ["48201", "48453"]],
+  ]),
 };
 
 const start = () => defaultViewState(PRESETS);
@@ -168,4 +172,10 @@ test("opening Explore hazards by link initializes the same way as navigating the
   const byLink = viewFromUrl(new URLSearchParams("q=hazards"), CTX);
   const byNav = setQuestion(start(), "hazards", CTX);
   assert.deepEqual(byLink, byNav);
+});
+
+test("a county the utility doesn't serve is dropped from a link", () => {
+  const s = viewFromUrl(new URLSearchParams("utility=austin-energy&county=48201"), CTX);
+  assert.equal(s.utility, "austin-energy");
+  assert.equal(s.county, null);
 });

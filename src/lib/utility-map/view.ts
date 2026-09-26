@@ -43,6 +43,8 @@ export type ViewContext = {
   layers: Pick<MapLayerMeta, "id" | "available">[];
   utilityIds: Set<string>;
   countyFips: Set<string>;
+  /** Counties each utility serves; a linked county must belong to the linked utility. */
+  utilityCounties?: Map<string, string[]>;
 };
 
 /** Superseded by the event-based hazards; never offered as a factor. */
@@ -194,7 +196,10 @@ export function viewFromUrl(search: URLSearchParams, ctx: ViewContext): ViewStat
   if (utility && ctx.utilityIds.has(utility)) {
     state = selectUtility(state, utility);
     const county = search.get("county");
-    if (county && ctx.countyFips.has(county)) state = selectCounty(state, county);
+    const served = ctx.utilityCounties?.get(utility);
+    if (county && ctx.countyFips.has(county) && (!served || served.includes(county))) {
+      state = selectCounty(state, county);
+    }
   }
 
   const question = (search.get("q") ?? LEGACY_MODES[search.get("mode") ?? ""]) as Question | undefined;

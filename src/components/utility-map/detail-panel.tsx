@@ -78,7 +78,7 @@ export function DetailPanel(props: DetailPanelProps) {
           <CountyView {...props} county={selectedCounty} utility={selectedUtility} />
         ) : selectedUtility ? (
           <UtilityView {...props} utility={selectedUtility} />
-        ) : props.view.question === "opportunities" || (props.view.question === "hazards" && props.view.hazardSub === "patterns") ? (
+        ) : props.view.question === "opportunities" ? (
           <RankedList {...props} />
         ) : (
           <ResultList {...props} />
@@ -372,7 +372,8 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
   const { data, model, view, described, storm, countiesByFips, utility, onShare, onSelectUtility, onSelectCounty } = props;
   const [allCounties, setAllCounties] = useState(false);
   const scored = model.utility.get(utility.id);
-  const ranked = view.question === "opportunities" || (view.question === "hazards" && view.hazardSub === "patterns");
+  const ranked = view.question === "opportunities";
+  const patterns = view.question === "hazards" && view.hazardSub === "patterns";
   const counties = utility.counties
     .map((fips) => countiesByFips.get(fips))
     .filter((c): c is CountyRecord => c != null)
@@ -421,6 +422,10 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
               </span>
             ) : null}
           </div>
+        ) : patterns && scored?.rank ? (
+          <p className="text-[14px] leading-[21px] text-muted-foreground">
+            #{scored.rank} of {model.scoredUtilityCount} Texas utilities by average rank across the selected hazards
+          </p>
         ) : null}
         <p className="text-[14px] leading-[21px] text-muted-foreground">
           {utility.customers != null ? `${number.format(utility.customers)} customers across ` : ""}
@@ -468,7 +473,7 @@ function UtilityView(props: DetailPanelProps & { utility: UtilityRecord }) {
 
       {view.question !== "fleet" ? fleetCard : null}
       {view.question !== "grid" ? <GridCard utility={utility} /> : null}
-      {ranked && view.question === "hazards" ? fingerprint : <LongTerm open={false}>{fingerprint}</LongTerm>}
+      {patterns ? fingerprint : <LongTerm open={false}>{fingerprint}</LongTerm>}
       <RightNow data={data} fips={utility.counties} />
     </div>
   );
