@@ -12,6 +12,14 @@
   "counties": 254,
   "zero_train_counties_with_test_outages": 5,
   "methods": {
+    "covariate_bayes": {
+      "poisson_deviance": 123.2831,
+      "spearman": 0.3272
+    },
+    "covariate_glm": {
+      "poisson_deviance": 125.4119,
+      "spearman": 0.2881
+    },
     "empirical_bayes": {
       "poisson_deviance": 122.5005,
       "spearman": 0.4153

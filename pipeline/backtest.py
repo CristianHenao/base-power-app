@@ -9,10 +9,12 @@ import json
 import sys
 from pathlib import Path
 
+import duckdb
 import numpy as np
 import pandas as pd
 
 from pipeline import settings
+from pipeline.covariates import county_covariates, design
 from pipeline.events import EventConfig
 from pipeline.outlook import backtest_outlook, county_outlook, zone_dispersion
 from pipeline.sources.eaglei import (
@@ -85,7 +87,8 @@ def statewide_events(frame: pd.DataFrame, customers: dict[str, float], cfg: Even
     return events_frame(series, customers, cfg)
 
 
-def run_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series) -> tuple[pd.DataFrame, int]:
+def run_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series,
+                 covariates: pd.DataFrame | None = None) -> tuple[pd.DataFrame, int]:
     """Scores, and how many counties had no long outages in training but some in testing.
 
     Those counties make the raw rate's deviance infinite.
@@ -101,7 +104,12 @@ def run_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series) -> tu
     stamps = pd.to_datetime(events["start"], utc=True)
     train_rows = events.loc[(stamps >= _utc(train_start)) & (stamps < _utc(train_end))]
     phi = zone_dispersion(train_rows, zones, col)
-    scores = backtest_outlook(train, train_years[usable], test, test_years[usable], zones[usable], phi)
+    x = None
+    if covariates is not None:
+        usable = usable[usable.isin(covariates.index)]
+        train, test = train.reindex(usable), test.reindex(usable)
+        x = design(covariates.reindex(usable), tuple(settings.WEATHER_ZONES))
+    scores = backtest_outlook(train, train_years[usable], test, test_years[usable], zones[usable], phi, x)
     surprises = int(((train == 0) & (test > 0)).sum())
     return scores, surprises
 
@@ -163,7 +171,13 @@ def main() -> int:
     settings.OUTLOOK_PARQUET.parent.mkdir(parents=True, exist_ok=True)
     outlook.to_parquet(settings.OUTLOOK_PARQUET)
 
-    scores, surprises = run_backtest(events, first, zones)
+    covariates = None
+    if settings.COUNTY_UTILITY_CSV.exists() and settings.FEATURES_DUCKDB.exists():
+        try:
+            covariates = county_covariates(settings.FEATURES_DUCKDB, settings.COUNTY_UTILITY_CSV, customers)
+        except duckdb.Error as error:  # county_layers is built later by pipeline.map_layers
+            print(f"no covariates ({error}); scoring without the covariate model")
+    scores, surprises = run_backtest(events, first, zones, covariates)
     record = backtest_record(scores, scope, int(len(first)), surprises)
     settings.BACKTEST_JSON.write_text(json.dumps(record, indent=2) + "\n")
 

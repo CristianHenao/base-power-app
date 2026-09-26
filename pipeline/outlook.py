@@ -54,6 +54,52 @@ def shrink_rates(events, years, floor_cv: float = 0.25, phi: float = 1.0):
     return a_post / b_post, lo, hi
 
 
+def poisson_glm(x: np.ndarray, counts: np.ndarray, exposure: np.ndarray, ridge: float = 1.0) -> np.ndarray:
+    """Coefficients of log(rate) = x.beta for fractional counts with exposure in years.
+
+    A small ridge penalty (not on the intercept) keeps zone dummies stable in thin zones.
+    """
+    from scipy.optimize import minimize
+
+    penalty = np.full(x.shape[1], ridge)
+    penalty[0] = 0.0
+
+    def nll(beta: np.ndarray) -> tuple[float, np.ndarray]:
+        eta = np.clip(x @ beta, -30, 30)
+        mu = exposure * np.exp(eta)
+        value = float((mu - counts * eta).sum() + 0.5 * (penalty * beta ** 2).sum())
+        grad = x.T @ (mu - counts) + penalty * beta
+        return value, grad
+
+    start = np.zeros(x.shape[1])
+    start[0] = np.log(max(counts.sum(), 1e-9) / exposure.sum())
+    result = minimize(nll, start, jac=True, method="L-BFGS-B")
+    if not result.success:
+        raise RuntimeError(f"Poisson GLM failed: {result.message}")
+    return result.x
+
+
+def covariate_shrink(events, years, prior_rate, floor_cv: float = 0.25, phi: float = 1.0):
+    """Gamma-Poisson shrinkage toward a per-county prior mean (the GLM) instead of one zone mean.
+
+    The between-county spread around the prior is a common coefficient of variation, fit by
+    moments with the same quasi-Poisson noise and floor as `shrink_rates`.
+    Returns (posterior mean, 5th pct, 95th pct).
+    """
+    events, years, prior = (np.asarray(v, float) for v in (events, years, prior_rate))
+    if np.any(years <= 0) or np.any(prior <= 0):
+        raise ValueError("years and prior rates must be positive")
+    rate = events / years
+    noise = phi * prior / years
+    cv2 = np.average(((rate - prior) ** 2 - noise) / prior ** 2, weights=years)
+    cv2 = max(cv2, floor_cv ** 2)
+    alpha = 1.0 / cv2
+    beta = alpha / prior
+    a_post, b_post = alpha + events / phi, beta + years / phi
+    lo, hi = stats.gamma.ppf([[0.05], [0.95]], a_post, scale=1.0 / b_post)
+    return a_post / b_post, lo, hi
+
+
 def zone_dispersion(events: pd.DataFrame, zone: pd.Series, col: str) -> pd.Series:
     """`dispersion` of the per-event shares within each weather zone."""
     zones = events["county_fips"].map(zone)
@@ -125,6 +171,7 @@ def backtest_outlook(
     test_years: pd.Series,
     zone: pd.Series,
     phi: pd.Series | None = None,
+    covariates: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Score 2023–2024 counts from a prior fit on 2018–2022.
 
@@ -161,7 +208,16 @@ def backtest_outlook(
         eb_rate.loc[members] = posterior
         zone_rate.loc[members] = np.average(raw_rate.loc[members], weights=aligned["train_years"].loc[members])
     statewide = float(np.average(raw_rate.to_numpy(), weights=aligned["train_years"].to_numpy()))
-    forecasts = {
+    forecasts = {}
+    if covariates is not None:
+        exposure = aligned["train_years"].to_numpy()
+        beta = poisson_glm(covariates, aligned["train_events"].to_numpy(), exposure)
+        glm_rate = pd.Series(np.exp(covariates @ beta), index=idx)
+        phi_all = 1.0 if phi is None else float(np.average(phi.reindex(aligned["zone"]).fillna(1.0)))
+        post, _, _ = covariate_shrink(aligned["train_events"], exposure, glm_rate, phi=phi_all)
+        forecasts["covariate_bayes"] = pd.Series(post, index=idx)
+        forecasts["covariate_glm"] = glm_rate
+    forecasts |= {
         "empirical_bayes": eb_rate,
         "zone_mean": zone_rate,
         "statewide_mean": pd.Series(statewide, index=idx),
