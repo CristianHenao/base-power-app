@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, CloudSun, Home, LineChart, Zap } from "lucide-react";
+import { Activity, CloudSun, Home, LineChart, ScanLine, Zap } from "lucide-react";
 import { FrostPanel } from "@/components/risk/frost-panel";
 import type { WeatherHazardKind } from "@/lib/risk/synthetic-weather";
 import { WEATHER_HAZARD_META } from "@/lib/risk/synthetic-weather";
@@ -54,6 +54,8 @@ type RiskBottomMenuProps = {
   onAnalysisChange: (id: RiskAnalysisItemId) => void;
   /** Property-facing weather risks shown under Weather analysis */
   weatherRiskBadges?: WeatherRiskBadge[];
+  /** When set, shows a scan FAB to the right of the tab island */
+  onScanPress?: () => void;
   className?: string;
 };
 
@@ -63,9 +65,11 @@ export function RiskBottomMenu({
   activeAnalysisId,
   onAnalysisChange,
   weatherRiskBadges = [],
+  onScanPress,
   className,
 }: RiskBottomMenuProps) {
   const showAnalysisList = primaryTab === "analysis";
+  const showScanFab = Boolean(onScanPress);
 
   return (
     <div
@@ -132,34 +136,47 @@ export function RiskBottomMenu({
         </FrostPanel>
       ) : null}
 
-      <FrostPanel>
-        <nav aria-label="Risk map views" className="p-1.5">
-          <ul className="grid grid-cols-2 gap-1">
-            {RISK_PRIMARY_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const active = tab.id === primaryTab;
-              return (
-                <li key={tab.id}>
-                  <button
-                    type="button"
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => onPrimaryTabChange(tab.id)}
-                    className={cn(
-                      "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="size-4.5" aria-hidden />
-                    {tab.label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </FrostPanel>
+      <div className="flex items-end gap-2.5">
+        <FrostPanel className="min-w-0 flex-1">
+          <nav aria-label="Risk map views" className="p-1.5">
+            <ul className="grid grid-cols-2 gap-1">
+              {RISK_PRIMARY_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const active = tab.id === primaryTab;
+                return (
+                  <li key={tab.id}>
+                    <button
+                      type="button"
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => onPrimaryTabChange(tab.id)}
+                      className={cn(
+                        "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="size-4.5" aria-hidden />
+                      {tab.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </FrostPanel>
+
+        {showScanFab ? (
+          <button
+            type="button"
+            aria-label="Scan a device"
+            onClick={onScanPress}
+            className="mb-0.5 inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-amber-400 text-amber-950 shadow-[0_8px_24px_rgba(251,191,36,0.45)] transition-transform hover:scale-[1.03] hover:bg-amber-300 active:scale-95"
+          >
+            <ScanLine className="size-6" aria-hidden />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

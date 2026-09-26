@@ -54,3 +54,7 @@ __pycache__/
 
 # raw inputs; derived parquet under data/processed is tracked
 data/raw/
+
+# Runtime device outline thumbnails from My Home scans
+public/home/scans/*
+!public/home/scans/.gitkeep
