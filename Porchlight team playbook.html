@@ -122,6 +122,8 @@ td code{white-space:nowrap}
 .tag.mvp{background:var(--green-soft);color:var(--green);border:1px solid var(--green)}
 .tag.p1{background:var(--signal);color:var(--signal-ink)}
 .tag.p2{border:1px solid var(--line);color:var(--muted)}
+.tag.done{background:var(--green);color:var(--paper)}
+td.is-done{background:var(--green-soft)}
 .gatecell{font-weight:600;color:var(--ink-strong)}
 
 details{border:1px solid var(--line);border-radius:6px;background:var(--surface);margin:12px 0}
@@ -861,7 +863,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="role">Platform and reliability</p>
       <dl>
         <dt>Owns</dt><dd>Repo, compose, FastAPI service, adapters (Census, NWS, ERCOT), Redis cache, Postgres funnel events, CI, deploy, load test.</dd>
-        <dt>First two hours</dt><dd>Repo skeleton, compose up with health checks, <code>/v1/report</code> serving the fixture, CI green.</dd>
+        <dt>First two hours</dt><dd><span class="tag done">Done</span> Repo skeleton, compose up with health checks. Still open: <code>/v1/report</code> serving the fixture, CI green.</dd>
         <dt>Done means</dt><dd>Kill NWS or the LLM mid-demo and the report still renders with honest status chips; <code>make demo</code> works from a clean clone.</dd>
         <dt>What Base sees</dt><dd>The same instincts Base describes for its own fleet: stale data is flagged, not trusted.</dd>
       </dl>
@@ -907,7 +909,7 @@ def shrink_rates(events, years, floor_cv=0.25):
   <div class="table-wrap"><table class="wide">
     <thead><tr><th>When</th><th>Christian</th><th>Victor</th><th>Nolan</th><th>Alejandro</th><th>Gate</th></tr></thead>
     <tbody>
-      <tr><td><strong>Lock</strong><br>Fri 6 to 8 PM</td><td>Wireframes; Next.js scaffold with a mocks folder</td><td>Repo, compose (web, api, worker, redis, postgres), health checks, CI stub</td><td>Contract and fixtures with the team (30 min); start Texas pull from EAGLE-I</td><td>Kick off downloads; ERCOT API account; three questions to Base engineers; anchor addresses</td><td class="gatecell">8 PM: contract committed, repo builds, downloads running</td></tr>
+      <tr><td><strong>Lock</strong><br>Fri 6 to 8 PM</td><td>Wireframes; Next.js scaffold with a mocks folder</td><td class="is-done"><span class="tag done">Done</span> Repo, compose (web, api, worker, redis, postgres), health checks, CI stub</td><td>Contract and fixtures with the team (30 min); start Texas pull from EAGLE-I</td><td>Kick off downloads; ERCOT API account; three questions to Base engineers; anchor addresses</td><td class="gatecell">8 PM: contract committed, repo builds, downloads running</td></tr>
       <tr><td><strong>Skeleton</strong><br>Fri 8 PM to 2 AM</td><td>Landing, persona chips, report page on fixtures; outlook badge</td><td><code>/v1/report</code> on Census and NWS with caching and <code>sources[]</code>; generated TS client</td><td>Events and duration bounds for 3 counties shipped in <code>5588e51</code> (Feb 2021 and Harris Jul 2024 are in the top events). Monthly backup hours shipped in <code>63afbd4</code>.</td><td>Texas outage parquet; crosswalks (county to weather zone and load zone, ZIP to utility, utility to Base offer); features v0</td><td class="gatecell">1:30 AM: type Sally's address, see her county's real past outages</td></tr>
       <tr><td><strong>Sleep</strong><br>Sat 2 to 7:30 AM</td><td colspan="4">Alejandro starts the full Texas rebuild and price downloads before bed. Everyone sleeps.</td><td class="gatecell">Overnight jobs finish</td></tr>
       <tr><td><strong>Real data</strong><br>Sat 7:30 AM to 1 PM</td><td>Replay chart, backup by month, sizing, link to Base; mobile layout</td><td>Features mounted read-only; degraded paths; funnel events; pick deploy target</td><td>Statewide outlook with empirical Bayes and backtest (<code>3d4a56c</code>); sizing rule; simulator tests in <code>63afbd4</code>, storm replay in <code>947fb55</code></td><td>NRI, EIA-861 and ACS into features; label marquee storms; hand-check every persona number</td><td class="gatecell">1 PM: three persona reports fully real, no mocks on the MVP path</td></tr>
