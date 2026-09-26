@@ -4,7 +4,6 @@ import type { MapLayerMeta, Quality, UtilityMapData } from "./types.ts";
 
 const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const oneDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
-const twoDecimals = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function formatLayerValue(meta: MapLayerMeta, value: number | null, quality: Quality): string {
@@ -14,7 +13,7 @@ export function formatLayerValue(meta: MapLayerMeta, value: number | null, quali
   if (value == null) return "No data";
   switch (meta.id) {
     case "outages":
-      return `${twoDecimals.format(value)} per home / yr`;
+      return `${value < 10 ? oneDecimal.format(value) : whole.format(value)} h per customer / yr`;
     case "price_spikes":
       return `${whole.format(value)} h / yr`;
     case "homes":

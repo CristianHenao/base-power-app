@@ -58,6 +58,8 @@ export type CountyRecord = {
   values: Record<LayerId, number | null>;
   ranks: Record<LayerId, number | null>;
   quality: Record<LayerId, Quality>;
+  /** Share of long-outage dark hours a Core's ~12 h of backup would cover (EAGLE-I estimate). */
+  outage_coverage_12h?: number | null;
 };
 
 /** A utility's estimated customers in one county (EIA-861 membership, modeled split). */

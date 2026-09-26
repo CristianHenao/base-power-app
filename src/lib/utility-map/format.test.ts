@@ -11,7 +11,7 @@ function meta(id: MapLayerMeta["id"], extra: Partial<MapLayerMeta> = {}): MapLay
 }
 
 test("values read in their own unit", () => {
-  assert.equal(formatLayerValue(meta("outages"), 0.2745, "ok"), "0.27 per home / yr");
+  assert.equal(formatLayerValue(meta("outages"), 13.038, "ok"), "13 h per customer / yr");
   assert.equal(formatLayerValue(meta("price_spikes"), 12.4, "ok"), "12 h / yr");
   assert.equal(formatLayerValue(meta("homes"), 1533623, "ok"), "1,533,623 homes");
   assert.equal(formatLayerValue(meta("flood"), 41.26, "ok"), "41.3 / 100");
@@ -20,7 +20,7 @@ test("values read in their own unit", () => {
 test("missing and not-applicable values say so instead of showing zero", () => {
   assert.equal(formatLayerValue(meta("price_spikes"), null, "not_applicable"), "Not applicable outside ERCOT");
   assert.equal(formatLayerValue(meta("flood"), null, "missing"), "No data");
-  assert.equal(formatLayerValue(meta("outages"), 0, "ok"), "0 per home / yr");
+  assert.equal(formatLayerValue(meta("outages"), 0, "ok"), "0 h per customer / yr");
 });
 
 test("periods print as years", () => {

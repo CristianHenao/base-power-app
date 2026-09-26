@@ -45,9 +45,12 @@ LAYERS: list[dict] = [
      "method": "Mean annual hours with real-time settlement point price >= $1,000/MWh per load zone. "
                "County load zones are approximate."},
     {"id": "outages", "group": "grid", "label": "Long outages",
-     "unit": "12h+ outages per typical home per year (estimate)",
+     "unit": "hours per customer per year in outages lasting 12 hours or more (estimate)",
      "period_start": "2018-01-01", "period_end": "2025-12-31", "source_ids": ["eaglei"],
-     "method": "Empirical-Bayes rate of outages lasting 12 hours or more per typical home, by county."},
+     "method": "EAGLE-I 15-minute county outage counts cut into events; per-home durations assume the same "
+               "homes stay dark while the count is above them. All dark hours of outages lasting 12 h or more, "
+               "divided by modeled customers and years reporting.",
+     "table": "county_outages.parquet"},
     {"id": "flood", "group": "hazard", "label": "Flood",
      "unit": "FEMA NRI flood risk score, 0-100 (larger of inland and coastal)",
      "period_start": None, "period_end": "2025-12-01", "source_ids": ["fema_nri"],
@@ -158,6 +161,7 @@ def upgrade(
     offers: dict[int, str],
     tables: dict[str, pd.Series] | None = None,
     utility_grid: pd.DataFrame | None = None,
+    county_fields: dict[str, pd.Series] | None = None,
 ) -> dict:
     """Turn the phase-0 contract into the PRD v3 shape. Pure: no files touched.
 
@@ -165,6 +169,7 @@ def upgrade(
     those layers become available and are ranked across Texas here.
     """
     tables = tables or {}
+    county_fields = county_fields or {}
     fips_index = [c["fips"] for c in v1["counties"]]
     extra_ranks = {
         layer: percentile_ranks(series.reindex(fips_index).astype(float)) for layer, series in tables.items()
@@ -198,6 +203,8 @@ def upgrade(
             "values": values,
             "ranks": ranks,
             "quality": quality,
+            **{name: (None if pd.isna(series.get(fips)) else float(series.get(fips)))
+               for name, series in county_fields.items()},
         })
 
     utilities = []
@@ -325,9 +332,17 @@ def main() -> int:
         if "table" in meta and path.exists():
             frame = pd.read_parquet(path)
             tables[meta["id"]] = frame.set_index("county_fips").iloc[:, 0]
+    county_fields = {}
+    outages_path = settings.UTILITY_MAP_DIR / "county_outages.parquet"
+    if outages_path.exists():
+        outages = pd.read_parquet(outages_path).set_index("county_fips")
+        ok = outages["quality"] == "ok"
+        tables["outages"] = outages["long_hours_per_customer_year"].where(ok)
+        county_fields["outage_coverage_12h"] = outages["coverage_12h"].where(ok)
     grid_path = settings.UTILITY_MAP_DIR / "utility_grid.parquet"
     utility_grid = pd.read_parquet(grid_path) if grid_path.exists() else None
-    release = upgrade(v1, crosswalk, load_offers(), tables=tables, utility_grid=utility_grid)
+    release = upgrade(v1, crosswalk, load_offers(), tables=tables, utility_grid=utility_grid,
+                      county_fields=county_fields)
     today = pd.Timestamp.now(tz="America/Chicago").date().isoformat()
     rid = publish(release, V1_DIR, PUBLIC_DIR, today)
     unverified = sum(u["base_offer"] is None for u in release["utilities"])

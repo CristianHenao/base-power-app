@@ -192,3 +192,17 @@ def test_utilities_carry_their_grid_numbers() -> None:
     assert alpha["grid_stats"] == {"summer_peak_mw": 900.0, "winter_peak_mw": 800.0, "sales_mwh": 5e6,
                                    "residential_mwh": 2e6, "peak_source": "eia861"}
     assert beta["grid_stats"] is None
+
+
+def test_a_table_replaces_a_phase0_layer_and_county_fields_are_attached() -> None:
+    tables = {"outages": pd.Series({"48001": 13.0, "48003": None})}
+    fields = {"outage_coverage_12h": pd.Series({"48001": 0.16})}
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS, tables=tables, county_fields=fields)
+    by_fips = {c["fips"]: c for c in release["counties"]}
+    assert by_fips["48001"]["values"]["outages"] == 13.0
+    assert by_fips["48003"]["values"]["outages"] is None
+    assert by_fips["48003"]["quality"]["outages"] == "missing"
+    assert by_fips["48001"]["outage_coverage_12h"] == 0.16
+    assert by_fips["48003"]["outage_coverage_12h"] is None
+    layers = {layer["id"]: layer for layer in release["layers"]}
+    assert "12 hours or more" in layers["outages"]["unit"]
