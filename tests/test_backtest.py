@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from pipeline import settings
 from pipeline.backtest import first_seen, load_zones, long_counts, years_in_window
 
 
@@ -47,6 +48,12 @@ def test_missing_crosswalk_falls_back_to_one_statewide_group(tmp_path: Path):
     zones, scope = load_zones(tmp_path / "missing.csv", pd.Index(["48085", "48201"]))
     assert scope == "statewide"
     assert set(zones) == {"TX"}
+
+
+def test_demo_zones_match_the_crosswalk():
+    zones, scope = load_zones(settings.COUNTY_WEATHER_ZONE_CSV, pd.Index(list(settings.DEMO_FIPS)))
+    assert scope == "weather_zone"
+    assert zones.to_dict() == settings.DEMO_WEATHER_ZONE
 
 
 def test_crosswalk_must_cover_every_county(tmp_path: Path):

@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from openpyxl import load_workbook
 
 from pipeline import settings
@@ -117,6 +118,79 @@ def profile_days_by_month(source: Path, profile_type: str, weather_zone: str) ->
             days[month] = _days_on_sheet(sheet, code)
     finally:
         workbook.close()
+    return days
+
+
+def profile_days_many(source: Path, codes: set[str]) -> dict[str, list[tuple[date, np.ndarray]]]:
+    """Every day of several profiles in one pass over every sheet.
+
+    Sheets are matched by the dates in them, not their names. The 2025 workbook
+    has a 29-day "September" and a 30-day "Sep"; for each month the sheet with
+    the most days of that profile wins.
+    """
+    workbook = _workbook(source)
+    by_sheet: dict[str, dict[str, list[tuple[date, np.ndarray]]]] = {}
+    try:
+        for name in workbook.sheetnames:
+            rows = workbook[name].iter_rows(values_only=True)
+            header = next(rows, None)
+            if header is None:
+                continue
+            header = list(header)
+            found = by_sheet.setdefault(name, {code: [] for code in codes})
+            for row in rows:
+                if row[0] not in found:
+                    continue
+                day = _as_date(row[1])
+                if day is not None:
+                    found[row[0]].append((day, intervals_from_row(header, list(row))))
+    finally:
+        workbook.close()
+    merged: dict[str, list[tuple[date, np.ndarray]]] = {code: [] for code in codes}
+    for code in codes:
+        best: dict[tuple[int, int], list[tuple[date, np.ndarray]]] = {}
+        for sheet in by_sheet.values():
+            months: dict[tuple[int, int], list[tuple[date, np.ndarray]]] = {}
+            for day, trace in sheet[code]:
+                months.setdefault((day.year, day.month), []).append((day, trace))
+            for key, days in months.items():
+                if len(days) > len(best.get(key, [])):
+                    best[key] = days
+        merged[code] = sorted((pair for days in best.values() for pair in days), key=lambda pair: pair[0])
+    return merged
+
+
+def cached_days_by_month(
+    year: int,
+    profile_type: str,
+    weather_zone: str,
+    also: tuple[str, ...] = (),
+    directory: Path = settings.RAW_ERCOT_DIR,
+    cache_dir: Path = settings.ERCOT_CACHE_DIR,
+) -> dict[int, list[tuple[date, np.ndarray]]]:
+    """Profile days for one year, read from a parquet cache written on first use.
+
+    `also` names other profile codes to pull on the same pass, since parsing a
+    workbook is the slow step.
+    """
+    code = profile_code(profile_type, weather_zone)
+    path = cache_dir / f"profiles_{year}.parquet"
+    table = pd.read_parquet(path) if path.exists() else pd.DataFrame(columns=["code", "date", "kwh"])
+    have = set(table["code"])
+    if code not in have:
+        wanted = ({code} | set(also)) - have
+        found = profile_days_many(yearly_zip(year, directory), wanted)
+        new = pd.DataFrame(
+            [{"code": name, "date": day, "kwh": trace.tolist()} for name, days in found.items() for day, trace in days],
+            columns=["code", "date", "kwh"],
+        )
+        table = pd.concat([table, new], ignore_index=True) if len(table) else new
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        table.to_parquet(path, index=False)
+    days: dict[int, list[tuple[date, np.ndarray]]] = {month: [] for month in range(1, 13)}
+    for row in table.loc[table["code"] == code].itertuples(index=False):
+        day = pd.Timestamp(row.date).date()
+        days[day.month].append((day, np.asarray(row.kwh, dtype=float)))
     return days
 
 

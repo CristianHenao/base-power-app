@@ -8,13 +8,13 @@
     "2025-01-01"
   ],
   "metric": "12h+ outages per typical home (LIFO durations)",
-  "prior_scope": "statewide",
+  "prior_scope": "weather_zone",
   "counties": 254,
   "zero_train_counties_with_test_outages": 5,
   "methods": {
     "empirical_bayes": {
-      "poisson_deviance": 528.9459,
-      "spearman": 0.2955
+      "poisson_deviance": 550.8997,
+      "spearman": 0.3768
     },
     "statewide_mean": {
       "poisson_deviance": 708.2031,

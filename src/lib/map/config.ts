@@ -19,15 +19,18 @@ export const MAP_DEFAULTS = {
   zoom: 11,
   homeZoom: 16.5,
   /** Close zoom while scrubbing an outage that hit the home block */
-  outageHomeZoom: 17.4,
-  /** Closer side-angle view when revealing Base Power on the home */
-  batteryRevealZoom: 19.85,
+  outageHomeZoom: 17.55,
+  /** FitBounds caps while paging outage cards (closer than full radius) */
+  cardScrubMaxZoom: 17.55,
+  cardScrubMinZoom: 16.55,
+  /** Neighborhood pullback during battery capacity focus */
+  batteryRevealZoom: 16.05,
   pitch: 60,
   bearing: -20,
-  /** Pitch looking at the home facade for battery placement */
-  batteryRevealPitch: 72,
-  /** Orbit to expose the left side wall of the home */
-  batteryRevealBearing: 48,
+  /** Shallower pitch so the block and nearby streets read clearly */
+  batteryRevealPitch: 52,
+  /** Mild angle over the neighborhood in capacity mode */
+  batteryRevealBearing: -10,
   antialias: true,
   basemap: {
     lightPreset: "dusk",
