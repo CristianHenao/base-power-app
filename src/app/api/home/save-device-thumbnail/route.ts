@@ -1,6 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
+import { uploadHomeDeviceThumbnail } from "@/lib/home/device-storage";
+import { createClient } from "@/lib/supabase/server";
 
 const MAX_BASE64_CHARS = 2_500_000;
 
@@ -44,14 +44,29 @@ export async function POST(request: Request) {
     : rawBase64;
 
   try {
-    const dir = path.join(process.cwd(), "public", "home", "scans");
-    await mkdir(dir, { recursive: true });
-    const filename = `${deviceId}.png`;
-    const filePath = path.join(dir, filename);
-    await writeFile(filePath, Buffer.from(imageBase64, "base64"));
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Sign in to save device images." },
+        { status: 401 },
+      );
+    }
+
+    const uploaded = await uploadHomeDeviceThumbnail(supabase, {
+      userId: user.id,
+      deviceId,
+      imageBase64,
+      contentType: "image/png",
+    });
 
     return NextResponse.json({
-      thumbnailUrl: `/home/scans/${filename}`,
+      thumbnailUrl: uploaded.thumbnailUrl,
+      storagePath: uploaded.storagePath,
     });
   } catch (error) {
     const message =
