@@ -1,4 +1,11 @@
-/** Proposed frontend contract v0.1. Normalized app models, not provider schemas. */
+/**
+ * Proposed frontend contract v0.1. Normalized app models, not provider schemas.
+ *
+ * What the API serves today is `Report` in src/lib/report/types.ts, which mirrors
+ * api/app/schemas.py (tests/test_contract_drift.py keeps them equal). This file is the
+ * broader proposal used by the fixtures; docs/data-models/README.md maps its sections to
+ * the served report and lists what is not served yet.
+ */
 import type { Address } from "./domain";
 
 export type IsoDateTime = string; // ISO 8601 UTC, e.g. 2026-09-26T12:00:00Z
