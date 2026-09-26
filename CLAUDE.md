@@ -22,17 +22,20 @@ Full plan: https://claude.ai/artifact/5uJY9qNnrtjKM9MfZRT9q3 (sheets A-02 contra
 - api/app/narrator/       LLM summary with validators and template fallback; evals/ harness
 
 ## Utility map (Base sales)
-A map of Texas utilities and counties colored by grid stress. Reps toggle evidence layers (outages,
-weather hazard, flood, grid scarcity, homes exposed), drill from utility to county, and see what a
-Base fleet would add. Current spec: docs/utility-map-prd-v3.md; tickets: docs/utility-map-roadmap.md
-(v1 and v2 PRDs kept for history).
-- Data build: `pipeline/utility_map/` (Alejandro). Raw downloads are read from `settings.RAW_DIR`; in a
-  worktree without `data/raw`, `export PORCHLIGHT_RAW_DIR=~/Desktop/base-power-app/data/raw`.
-- Route `src/app/utility-map/`; components `src/components/utility-map/`; pure scoring and fleet math
-  `src/lib/utility-map/` (percentile ranks, equal weights, customer-weighted utility score, quintile levels).
-- Data contract: three precomputed files (`utility-map.json`, `counties.geojson`, `territories.geojson`).
-  The app reads `public/utility-map/mock/` today (dummy data, built by `scripts/utility-map/build_mock_data.py`).
-  Real data replaces that folder; switch `DATA_BASE` in `utility-map-experience.tsx`.
+A map of Texas utilities and counties for Base sales: where hazards and grid stress overlap, where
+storms actually hit, how big each grid is, and what a Base fleet would add. Four modes (Risk,
+Hazards, Grid, Base fleet), five lenses, 12 layers from public data. Spec: docs/utility-map-prd-v3.md;
+tickets and status: docs/utility-map-roadmap.md (v1/v2 PRDs kept for history).
+- Data build: `pipeline/utility_map/` (Alejandro). `make map-download` then `make export-map` rebuilds
+  every table and publishes `public/utility-map/releases/<id>/` + `current.json` only if all gates
+  pass (gate-report.json in each release; current + previous release kept). Raw files come from
+  `settings.RAW_DIR`; in a worktree, `export PORCHLIGHT_RAW_DIR=~/Desktop/base-power-app/data/raw`.
+- The app reads `public/utility-map/current.json`; the old dummy mockup loads only with `?data=mock`.
+- Route `src/app/utility-map/`; live NWS warnings `src/app/api/utility-map/live/`; components
+  `src/components/utility-map/`; pure logic with Node tests in `src/lib/utility-map/` (`npm run test:web`).
+- Counties are served by several utilities: every utility-level number uses its estimated share of
+  each county (EIA-861 membership, modeled split). Unverified Base offers read "Offer not verified".
+- Hazard colors come from the validated palette in PRD v3 §12.5 and always travel with an icon.
 - Styling: the Base style guide (docs/base-power-styleguide.md) is applied to this route only, via the
   `.bp-theme` wrapper and `src/app/utility-map/base-theme.css`. Don't restyle shared components for it.
 - The route is behind Supabase sign-in. To preview locally without signing in, comment out the
