@@ -290,20 +290,25 @@ export function RiskAnalysisDashboard() {
                 </Link>
               </div>
             </FrostPanel>
-          ) : activeOutage ? (
-            <OutageBatteryCallout
-              event={activeOutage}
-              showBasePower={showBasePower}
-            />
           ) : null}
         </div>
 
         {showWeatherAnalysis && sliderEvents.length ? (
-          <OutageTimelineSlider
-            events={sliderEvents}
-            activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
-            onChange={handleOutageIndexChange}
-          />
+          <div className="flex w-full flex-col gap-2 px-3 pb-0 sm:px-4">
+            {activeOutage ? (
+              <OutageBatteryCallout
+                event={activeOutage}
+                showBasePower={showBasePower}
+                className="w-full max-w-none"
+              />
+            ) : null}
+            <OutageTimelineSlider
+              className="!px-0 !pt-0"
+              events={sliderEvents}
+              activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
+              onChange={handleOutageIndexChange}
+            />
+          </div>
         ) : !inAnalysis ? (
           <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,var(--sab))] sm:px-6">
             <RiskBottomMenu
