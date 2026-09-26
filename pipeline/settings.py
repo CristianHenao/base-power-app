@@ -31,6 +31,9 @@ INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 PAYS_TWICE_CSV = REPO_ROOT / "data" / "processed" / "pays_twice.csv"
 # Alejandro's NOAA Storm Events for Texas (built by pipeline/utility_map/storm_events.py on ale-dev).
 STORM_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "utility_map" / "storm_events.parquet"
+# Duration model inputs (large, local only) and the fitted model with its backtest.
+DURATION_SAMPLES_PARQUET = REPO_ROOT / "data" / "processed" / "duration_samples.parquet"
+DURATION_MODEL_JSON = REPO_ROOT / "data" / "processed" / "duration_model.json"
 REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
 # Exported charts land where the web app serves static files.
 INSIGHTS_CHART_DIR = REPO_ROOT / "public" / "insights"

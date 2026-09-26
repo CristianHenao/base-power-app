@@ -50,6 +50,8 @@ export interface LoadItem {
   watts?: number;
   hoursPerDay?: number;
   label?: string;
+  /** Must stay on (medical devices, the fridge): the household answer also runs these alone. */
+  priority?: boolean;
 }
 
 export interface CoreRuntime {

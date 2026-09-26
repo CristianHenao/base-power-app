@@ -118,6 +118,30 @@ class Sizing(BaseModel):
     share: float | None
 
 
+class GapSeason(BaseModel):
+    season: Literal["winter", "spring", "summer", "fall"]
+    outages_per_year: float
+    outages_lo: float
+    outages_hi: float
+    p50_hours: float | None
+    p90_hours: float | None
+    survival: list[float]
+
+
+class TypicalHomeGap(BaseModel):
+    dark_hours: dict[Literal["none", "one_core", "two_cores", "one_core_reserve", "two_cores_reserve"], float]
+    gap_chance: dict[Literal["one_core", "two_cores"], float]
+    interval_scale: tuple[float, float]
+
+
+class HouseholdGap(BaseModel):
+    """Expected hours a year this home is dark, and the per-season survival curves on hours_grid."""
+
+    typical_home: TypicalHomeGap
+    hours_grid: list[float]
+    seasons: list[GapSeason]
+
+
 class Alert(BaseModel):
     event: str | None
     severity: str | None
@@ -169,6 +193,7 @@ class Report(BaseModel):
     events: list[Event]
     backup: Backup
     sizing: Sizing
+    household_gap: HouseholdGap | None
     live: Live
     narrative: Narrative
     sources: list[Source]

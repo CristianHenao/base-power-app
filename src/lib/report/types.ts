@@ -109,6 +109,30 @@ export interface Sizing {
   share: number | null;
 }
 
+export interface GapSeason {
+  season: "winter" | "spring" | "summer" | "fall";
+  outages_per_year: number;
+  outages_lo: number;
+  outages_hi: number;
+  p50_hours: number | null;
+  p90_hours: number | null;
+  /** P(an outage lasts longer than hours_grid[i]) */
+  survival: number[];
+}
+
+export interface TypicalHomeGap {
+  dark_hours: Record<"none" | "one_core" | "two_cores" | "one_core_reserve" | "two_cores_reserve", number>;
+  gap_chance: Record<"one_core" | "two_cores", number>;
+  interval_scale: [number, number];
+}
+
+/** Expected hours a year this home is dark, and per-season survival curves for a household answer. */
+export interface HouseholdGap {
+  typical_home: TypicalHomeGap;
+  hours_grid: number[];
+  seasons: GapSeason[];
+}
+
 export interface Alert {
   event: string | null;
   severity: string | null;
@@ -159,6 +183,7 @@ export interface Report {
   events: Event[];
   backup: Backup;
   sizing: Sizing;
+  household_gap: HouseholdGap | null;
   live: Live;
   narrative: Narrative;
   sources: Source[];

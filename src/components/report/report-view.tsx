@@ -6,6 +6,7 @@ import { trackEvent } from "@/lib/report/client";
 import type { Event, Report, Source } from "@/lib/report/types";
 import { cn } from "@/lib/utils";
 import { BackupChart } from "./backup-chart";
+import { HouseholdGapCard } from "./household-gap-card";
 import { band, centralDate, centralTime, hours, percent } from "./format";
 
 const OFFER_TEXT: Record<Report["base_offer"]["product"], string> = {
@@ -125,6 +126,8 @@ export function ReportView({ report, narrative }: { report: Report; narrative: {
         </CardHeader>
         <CardContent><BackupChart backup={report.backup} /></CardContent>
       </Card>
+
+      {report.household_gap && <HouseholdGapCard gap={report.household_gap} county={location.county} />}
 
       <Card>
         <CardHeader>
