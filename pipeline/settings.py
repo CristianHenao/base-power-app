@@ -11,9 +11,9 @@ TEXAS_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events_texas.parquet"
 OUTLOOK_PARQUET = REPO_ROOT / "data" / "processed" / "outlook.parquet"
 BACKTEST_JSON = REPO_ROOT / "data" / "processed" / "backtest.json"
 FEATURES_DUCKDB = REPO_ROOT / "data" / "features.duckdb"
-# Alejandro's crosswalk, columns county_fips and weather_zone. Until it exists the
+# Alejandro's crosswalk (pipeline/sources/crosswalk.py). Without it the
 # empirical-Bayes prior is fit statewide.
-COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "raw" / "reference" / "county_weather_zone.csv"
+COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zone.csv"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
 RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
@@ -34,7 +34,7 @@ DEMO_COUNTIES: dict[str, str] = {
 }
 DEMO_FIPS: tuple[str, ...] = tuple(DEMO_COUNTIES)
 
-# ERCOT weather zones for the demo counties. Confirm against Alejandro's crosswalk.
+# ERCOT weather zones for the demo counties. tests/test_backtest.py checks them against the crosswalk.
 DEMO_WEATHER_ZONE: dict[str, str] = {
     "48085": "NCENT",
     "48201": "COAST",
