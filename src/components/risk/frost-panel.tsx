@@ -9,8 +9,8 @@ type FrostPanelProps = {
 };
 
 /**
- * Frosted glass shell. Outer node stays free of backdrop-filter so iOS Liquid
- * Glass status/toolbar sampling is not polluted by fixed overlays.
+ * Light Liquid Glass shell. Outer node stays free of backdrop-filter so iOS
+ * status/toolbar sampling is not polluted by fixed overlays.
  */
 export function FrostPanel({
   children,
@@ -20,7 +20,7 @@ export function FrostPanel({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.35)]",
+        "relative overflow-hidden rounded-2xl border border-black/8 text-foreground shadow-[0_8px_28px_rgba(0,0,0,0.12)]",
         className,
       )}
     >
@@ -36,7 +36,7 @@ export function FrostPanel({
 
 type FrostControlProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
-/** Round control — glass lives on a child, not the interactive button itself. */
+/** Round light-glass control — blur lives on a child. */
 export function FrostControl({
   children,
   className,
@@ -47,13 +47,13 @@ export function FrostControl({
     <button
       type={type}
       className={cn(
-        "relative inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-opacity hover:opacity-90",
+        "relative inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 text-foreground shadow-[0_6px_18px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90",
         className,
       )}
       {...props}
     >
       <span aria-hidden className="frost-glass rounded-full" />
-      <span aria-hidden className="frost-wash rounded-full !bg-black/55" />
+      <span aria-hidden className="frost-wash rounded-full" />
       <span className="relative z-[1]">{children}</span>
     </button>
   );
