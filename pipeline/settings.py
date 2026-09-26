@@ -10,12 +10,19 @@ EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events.parquet"
 TEXAS_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events_texas.parquet"
 OUTLOOK_PARQUET = REPO_ROOT / "data" / "processed" / "outlook.parquet"
 BACKTEST_JSON = REPO_ROOT / "data" / "processed" / "backtest.json"
-# Alejandro's crosswalk, columns county_fips and weather_zone. Until it exists the
+FEATURES_DUCKDB = REPO_ROOT / "data" / "features.duckdb"
+# Alejandro's crosswalk (pipeline/sources/crosswalk.py). Without it the
 # empirical-Bayes prior is fit statewide.
-COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "raw" / "reference" / "county_weather_zone.csv"
+COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zone.csv"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
 RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
+ERCOT_CACHE_DIR = RAW_ERCOT_DIR / "cache"
+RAW_PRICES_DIR = REPO_ROOT / "data" / "raw" / "ercot_prices"
+GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
+TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
+INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
+PRICE_YEARS = tuple(range(2019, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
 RATES_START = "2018-01-01"
@@ -32,7 +39,7 @@ DEMO_COUNTIES: dict[str, str] = {
 }
 DEMO_FIPS: tuple[str, ...] = tuple(DEMO_COUNTIES)
 
-# ERCOT weather zones for the demo counties. Confirm against Alejandro's crosswalk.
+# ERCOT weather zones for the demo counties. tests/test_backtest.py checks them against the crosswalk.
 DEMO_WEATHER_ZONE: dict[str, str] = {
     "48085": "NCENT",
     "48201": "COAST",
@@ -54,3 +61,13 @@ EAGLEI_FIPS_COL = "fips_code"
 EAGLEI_STATE_COL = "state"
 EAGLEI_CUSTOMERS_OUT_COL = "customers_out"
 EAGLEI_TIMESTAMP_COL = "run_start_time"
+
+# ERCOT weather zones and residential profile types in the backcasted workbooks.
+WEATHER_ZONES: tuple[str, ...] = ("COAST", "EAST", "FWEST", "NCENT", "NORTH", "SCENT", "SOUTH", "WEST")
+PROFILE_TYPES: tuple[str, ...] = ("RESLOWR", "RESHIWR")
+# Storm weeks replayed for every zone, as Central start dates.
+STORM_WEEKS: dict[str, str] = {
+    "Winter Storm Uri": "2021-02-14",
+    "Hurricane Beryl": "2024-07-08",
+}
+TAIL_EVENTS = 5

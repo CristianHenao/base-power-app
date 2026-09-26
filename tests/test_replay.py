@@ -39,9 +39,13 @@ def test_profile_week_crosses_new_year(tmp_path: Path):
     }
     _year_zip(tmp_path, 2021, days)
     _year_zip(tmp_path, 2022, days)
-    profiles = ProfileYears("RESLOWR", "COAST", tmp_path)
-    assert profiles.span(date(2021, 12, 31), 2).tolist() == [1.0, 1.0, 2.0, 2.0]
-    assert profiles.annual_kwh(2021) == pytest.approx(2.0)
+    for cache in (None, tmp_path / "cache"):
+        profiles = ProfileYears("RESLOWR", "COAST", tmp_path, cache_dir=cache)
+        assert profiles.span(date(2021, 12, 31), 2).tolist() == [1.0, 1.0, 2.0, 2.0]
+        assert profiles.annual_kwh(2021) == pytest.approx(2.0)
+    assert (tmp_path / "cache" / "profiles_2022.parquet").exists()
+    reread = ProfileYears("RESLOWR", "COAST", tmp_path / "no-zips", cache_dir=tmp_path / "cache")
+    assert reread.span(date(2022, 1, 1), 1).tolist() == [2.0, 2.0]
 
 
 def test_event_local_date_is_central_time():
