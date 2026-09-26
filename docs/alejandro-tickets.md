@@ -9,12 +9,12 @@ every source with license and as-of date.
 | A1 | EAGLE-I download + Texas-only parquet + 3-county subset | Nolan (events, outlook) | done: 0abef63 (Alejandro), 5c1b178 (Nolan: 2023 `sum` column, outputs built) |
 | A2 | ERCOT RTM load-zone prices 2018-2025 via gridstatus (DST-safe) | Nolan (grid value) | done by Nolan: 8e69a00, 27843d5 (LZ only, not LZEW; hubs; 2018) |
 | A3 | County crosswalk: FIPS -> ERCOT weather zone, load zone | Nolan, Victor | weather zone done: 2427ba0; load zone todo (demo counties in pipeline/settings.py) |
-| A4 | Base availability YAML: utility -> Base offer, with source URL and date | report page | todo |
-| A5 | ZIP -> utility lookup (NREL/OpenEI 2024) | Victor (address flow) | todo |
-| A6 | EIA-861 service territory crosswalk + real territory shapes (replace P-04 mock) | Christian (/utility-map) | todo |
-| A7 | NRI, EIA-861 reliability, ACS into data/features.duckdb | map layers, outlook prior | todo |
-| A8 | Marquee storm labels + persona anchor addresses; hand-check persona numbers | 1 PM gate | storm labels done by Nolan: 073112e (settings.STORM_LABELS); addresses and hand check todo |
-| A9 | `make data` target + DATA_SOURCES.md | done criterion | todo |
+| A4 | Base availability YAML: utility -> Base offer, with source URL and date | report page | done: e05c1a5 (Alejandro); used by /v1/report in 19e060e |
+| A5 | ZIP -> utility lookup (NREL/OpenEI 2024) | Victor (address flow) | done: d1692cd (Alejandro); used by /v1/report in 19e060e |
+| A6 | EIA-861 service territory crosswalk + real territory shapes (replace P-04 mock) | Christian (/utility-map) | done: 4960784 (Alejandro) |
+| A7 | NRI, EIA-861 reliability, ACS into data/features.duckdb | map layers, outlook prior | map layers done: 9d224b2 (Alejandro); multi-year SAIDI with/without MED: 3ea7129 (Nolan). Map reliability drops Oncor and TNMP (non-IEEE) |
+| A8 | Marquee storm labels + persona anchor addresses; hand-check persona numbers | 1 PM gate | done: 070ac7d (Alejandro: storms.yaml, personas.yaml, persona_check, 50 of 50 pass). Reports use storms.yaml since 19e060e |
+| A9 | `make data` target + DATA_SOURCES.md | done criterion | done: f9113d1 (Alejandro); reports, charts and reliability added to `make build` in 182fb92 |
 | A10 | Story: H-01 questions to Base, insight charts with Nolan, demo script, README skeleton, safety video, submit | video | todo (human) |
 
 ## A1 EAGLE-I
