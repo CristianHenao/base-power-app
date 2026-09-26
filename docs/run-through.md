@@ -46,6 +46,9 @@ curl -X POST localhost:8000/v1/debug/faults -H 'content-type: application/json' 
 ```
 
 ## If something breaks live
+- **The Python API is down, or you are on the deployed site:** the three persona addresses still load their
+  saved reports (built by `python -m pipeline.reports`), with the chip "Live data: unavailable (saved report)".
+  Other addresses need the API.
 - **No network:** Census, NWS, ERCOT and Grok all degrade, and the report still renders from
   `features.duckdb`. Type a county instead of an address only through the API
   (`{"county_fips": "48201"}`); the page needs an address with a Texas ZIP.

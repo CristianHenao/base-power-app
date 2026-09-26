@@ -24,6 +24,7 @@ const SOURCE_NAMES: Record<string, string> = {
   nws: "Weather alerts",
   ercot_live: "Grid now",
   llm: "Summary",
+  live_api: "Live data",
 };
 
 function SourceChips({ sources }: { sources: Source[] }) {
