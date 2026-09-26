@@ -1,0 +1,57 @@
+import type { MapLayerMeta, Quality, UtilityMapData } from "./types.ts";
+
+/** Display strings for the utility map. Unknown is always said out loud, never shown as zero. */
+
+const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const oneDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+const twoDecimals = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatLayerValue(meta: MapLayerMeta, value: number | null, quality: Quality): string {
+  if (quality === "not_applicable") {
+    return meta.id === "price_spikes" ? "Not applicable outside ERCOT" : "Not applicable";
+  }
+  if (value == null) return "No data";
+  switch (meta.id) {
+    case "outages":
+      return `${twoDecimals.format(value)} per home / yr`;
+    case "price_spikes":
+      return `${whole.format(value)} h / yr`;
+    case "homes":
+      return `${whole.format(value)} homes`;
+    case "flood":
+    case "weather":
+      return `${oneDecimal.format(value)} / 100`;
+    case "peak_demand":
+    case "generation":
+      return `${whole.format(value)} MW`;
+    default:
+      return oneDecimal.format(value);
+  }
+}
+
+export function formatPeriod(meta: MapLayerMeta): string {
+  const year = (iso: string) => iso.slice(0, 4);
+  if (meta.period_start && meta.period_end) {
+    const [a, b] = [year(meta.period_start), year(meta.period_end)];
+    return a === b ? a : `${a}–${b}`;
+  }
+  if (meta.period_end) {
+    return `as of ${MONTHS[Number(meta.period_end.slice(5, 7)) - 1]} ${year(meta.period_end)}`;
+  }
+  return "period not recorded";
+}
+
+export function dataModeLabel(mode: UtilityMapData["data_mode"]): string {
+  if (mode === "mock") return "Mockup · dummy data";
+  if (mode === "partial") return "Partial release · estimates";
+  return "Real data · estimates";
+}
+
+export function liveSummary(live: UtilityMapData["live"], fips: string[]): string {
+  if (live.status !== "ok") return "Live warnings unavailable";
+  const alerts = live.alerts.filter((a) => fips.includes(a.fips));
+  if (alerts.length === 0) return "No active NWS warnings";
+  const events = [...new Set(alerts.map((a) => a.event))];
+  return `${alerts.length} ${alerts.length === 1 ? "county" : "counties"} under ${events.join(", ")}`;
+}

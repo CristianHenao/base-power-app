@@ -16,10 +16,12 @@ import {
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
+import { dataModeLabel } from "@/lib/utility-map/format";
+import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
-import type { LayerId, Preset, UtilityMapData } from "@/lib/utility-map/types";
+import { clickTarget, countyPaintState } from "@/lib/utility-map/selection";
+import type { LayerId, Preset } from "@/lib/utility-map/types";
 
-const DATA_BASE = "/utility-map/mock";
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
   [-106.65, 25.84],
   [-93.51, 36.5],
@@ -39,11 +41,7 @@ const FLAT_BASEMAP = {
   showPlaceLabels: true,
 } as const;
 
-type Loaded = {
-  data: UtilityMapData;
-  counties: GeoJSON.FeatureCollection;
-  territories: GeoJSON.FeatureCollection;
-};
+type Loaded = LoadedMap;
 
 type Tooltip = { x: number; y: number; title: string; detail: string };
 
@@ -82,22 +80,24 @@ export function UtilityMapExperience() {
   const [showWarnings, setShowWarnings] = useState(false);
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
+  const [pickerFips, setPickerFips] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    const get = (file: string) =>
-      fetch(`${DATA_BASE}/${file}`, { signal: controller.signal }).then((r) => {
-        if (!r.ok) throw new Error(`Couldn't load ${file} (${r.status}).`);
+    const fetchJson = (url: string) =>
+      fetch(url, { signal: controller.signal }).then((r) => {
+        if (!r.ok) throw new Error(`Couldn't load ${url} (${r.status}).`);
         return r.json();
       });
-    get("utility-map.json")
-      .then(async (data: UtilityMapData) => {
-        const [counties, territories] = await Promise.all([
-          get(data.geometry.counties),
-          get(data.geometry.territories),
-        ]);
-        setLoaded({ data, counties, territories });
+    loadUtilityMap(new URLSearchParams(window.location.search), fetchJson)
+      .then((result) => {
+        setLoaded(result);
+        const lens = result.data.presets.find((p) => p.id === "winter") ?? result.data.presets[0];
+        if (lens) {
+          setActiveLayers(lens.layers);
+          setActivePresetId(lens.id);
+        }
       })
       .catch((err: unknown) => {
         if (!controller.signal.aborted) {
@@ -116,13 +116,17 @@ export function UtilityMapExperience() {
     () => new globalThis.Map((data?.counties ?? []).map((c) => [c.fips, c])),
     [data],
   );
-  const selectedUtility = data?.utilities.find((u) => u.id === selectedUtilityId) ?? null;
+  const utilitiesById = useMemo(
+    () => new globalThis.Map((data?.utilities ?? []).map((u) => [u.id, u])),
+    [data],
+  );
+  const selectedUtility = selectedUtilityId ? utilitiesById.get(selectedUtilityId) ?? null : null;
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
-  const latest = useRef({ model, countiesByFips, data, selectedUtilityId });
+  const latest = useRef({ model, countiesByFips, utilitiesById, data, selectedUtilityId });
   useEffect(() => {
-    latest.current = { model, countiesByFips, data, selectedUtilityId };
+    latest.current = { model, countiesByFips, utilitiesById, data, selectedUtilityId };
   });
 
   const fitUtility = useCallback(
@@ -147,6 +151,7 @@ export function UtilityMapExperience() {
     (id: string | null) => {
       setSelectedUtilityId(id);
       setSelectedFips(null);
+      setPickerFips(null);
       fitUtility(id);
     },
     [fitUtility],
@@ -175,16 +180,21 @@ export function UtilityMapExperience() {
     const onMove = (event: MapMouseEvent) => {
       const feature = map.queryRenderedFeatures(event.point, { layers: [LAYER_COUNTY_FILL] })[0];
       const fips = feature?.properties?.fips as string | undefined;
-      const { model: m, countiesByFips: counties, data: d, selectedUtilityId: sel } =
-        latest.current;
+      const {
+        model: m,
+        countiesByFips: counties,
+        utilitiesById: utilities,
+        selectedUtilityId: sel,
+      } = latest.current;
       const county = fips ? counties.get(fips) : undefined;
-      if (!county || !m || !d) {
+      if (!county || !m) {
         clearHover();
         map.getCanvas().style.cursor = "";
         setTooltip(null);
         return;
       }
-      const utilityId = county.utilities[0];
+      const paint = countyPaintState(county, utilities, sel, m);
+      const utilityId = paint.inSelection && sel ? sel : county.primary_utility ?? county.utilities[0];
       clearHover();
       hoveredCounty = Number(fips);
       hoveredUtility = utilityId;
@@ -192,15 +202,16 @@ export function UtilityMapExperience() {
       setHover(map, SOURCE_TERRITORIES, utilityId, true);
       map.getCanvas().style.cursor = "pointer";
 
-      const utility = d.utilities.find((u) => u.id === utilityId);
-      const inSelection = sel === utilityId;
-      const level = inSelection ? m.county.get(county.fips)?.level : m.utility.get(utilityId)?.level;
+      const others = county.utilities.length - 1;
+      const utilityName = utilities.get(utilityId)?.name ?? "Unknown utility";
       setTooltip({
         x: event.point.x,
         y: event.point.y,
-        title: inSelection ? `${county.name} County` : utility?.name ?? "Unknown utility",
-        detail: `${level ? `Level ${level} · ${LEVEL_LABELS[level]}` : "No data"}${
-          inSelection ? "" : ` · ${county.name} County`
+        title: paint.inSelection
+          ? `${county.name} County`
+          : `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
+        detail: `${paint.level ? `Level ${paint.level} · ${LEVEL_LABELS[paint.level]}` : "No data"}${
+          paint.inSelection ? "" : ` · ${county.name} County`
         }`,
       });
     };
@@ -214,15 +225,21 @@ export function UtilityMapExperience() {
     const onClick = (event: MapMouseEvent) => {
       const feature = map.queryRenderedFeatures(event.point, { layers: [LAYER_COUNTY_FILL] })[0];
       const fips = feature?.properties?.fips as string | undefined;
-      const county = fips ? latest.current.countiesByFips.get(fips) : undefined;
+      const { countiesByFips: counties, utilitiesById: utilities, selectedUtilityId: sel } =
+        latest.current;
+      const county = fips ? counties.get(fips) : undefined;
       if (!county) return;
-      const utilityId = county.utilities[0];
-      if (latest.current.selectedUtilityId === utilityId) {
-        setSelectedFips(county.fips);
+      const target = clickTarget(county, sel, utilities);
+      if (target.kind === "county") {
+        setSelectedFips(target.fips);
+        setPickerFips(null);
+      } else if (target.kind === "picker") {
+        setPickerFips(target.fips);
       } else {
-        setSelectedUtilityId(utilityId);
+        setSelectedUtilityId(target.id);
         setSelectedFips(null);
-        const utility = latest.current.data?.utilities.find((u) => u.id === utilityId);
+        setPickerFips(null);
+        const utility = utilities.get(target.id);
         const features = loaded.counties.features.filter((f) =>
           utility?.counties.includes(String(f.properties?.fips)),
         );
@@ -244,21 +261,15 @@ export function UtilityMapExperience() {
   useEffect(() => {
     if (!map || !loaded || !model || !map.getSource(SOURCE_COUNTIES)) return;
     for (const county of loaded.data.counties) {
-      const utilityId = county.utilities[0];
-      const inSelection = selectedUtilityId === utilityId;
       paintCounty(map, county.fips, {
-        level: inSelection
-          ? model.county.get(county.fips)?.level ?? null
-          : model.utility.get(utilityId)?.level ?? null,
-        dim: selectedUtilityId != null && !inSelection,
-        inSelection,
-        picked: county.fips === selectedFips,
+        ...countyPaintState(county, utilitiesById, selectedUtilityId, model),
+        picked: county.fips === selectedFips || county.fips === pickerFips,
       });
     }
     for (const utility of loaded.data.utilities) {
       paintTerritory(map, utility.id, utility.id === selectedUtilityId);
     }
-  }, [map, loaded, model, selectedUtilityId, selectedFips]);
+  }, [map, loaded, model, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
 
   useEffect(() => {
     if (map) setWarningsVisible(map, showWarnings);
@@ -307,7 +318,8 @@ export function UtilityMapExperience() {
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
         <div className="pointer-events-auto w-full space-y-3 lg:max-h-full lg:w-80 lg:overflow-y-auto">
           <p className="bp-stamp inline-flex rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5">
-            Mockup · dummy data
+            {data ? dataModeLabel(data.data_mode) : "Loading data"}
+            {data?.release_id ? ` · ${data.as_of}` : ""}
           </p>
           {data ? (
             <ControlsPanel
@@ -338,6 +350,9 @@ export function UtilityMapExperience() {
               model={model}
               activeLayers={activeLayers}
               countiesByFips={countiesByFips}
+              utilitiesById={utilitiesById}
+              pickerFips={pickerFips}
+              onClosePicker={() => setPickerFips(null)}
               selectedUtility={selectedUtility}
               selectedCounty={selectedCounty}
               onSelectUtility={selectUtility}

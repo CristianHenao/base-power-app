@@ -2,14 +2,16 @@ import type {
   BaseOffer,
   CountyRecord,
   LayerId,
+  Quality,
   UtilityMapData,
   UtilityRecord,
-} from "@/lib/utility-map/types";
+} from "./types.ts";
 
 /**
  * Scores per P-04: each toggled layer is a 0-1 rank against Texas, a county's
  * score is the mean of its toggled ranks, and a utility's score is the
- * customer-weighted mean of its counties. Levels are quintiles of the peer set.
+ * mean of its counties weighted by its own estimated customers in each county
+ * (county_weights), never the county's full count. Levels are quintiles.
  */
 
 export type Level = 1 | 2 | 3 | 4 | 5;
@@ -92,15 +94,14 @@ export function buildScoreModel(
   for (const c of data.counties) countyScores.set(c.fips, countyScore(c, layers));
   const countyLevels = quintileLevels(countyScores);
 
-  const byFips = new Map(data.counties.map((c) => [c.fips, c]));
   const utilityScores = new Map<string, number | null>();
   for (const u of data.utilities) {
     utilityScores.set(
       u.id,
       weightedMean(
-        u.counties.map((fips) => ({
-          value: countyScores.get(fips) ?? null,
-          weight: byFips.get(fips)?.customers ?? 0,
+        u.county_weights.map((w) => ({
+          value: countyScores.get(w.fips) ?? null,
+          weight: w.customers_est,
         })),
       ),
     );
@@ -135,7 +136,7 @@ export function buildScoreModel(
   };
 }
 
-export type RankGroupId = "expansion" | "grow" | "monitor";
+export type RankGroupId = "expansion" | "grow" | "unverified" | "monitor";
 
 export const RANK_GROUPS: { id: RankGroupId; label: string; hint: string }[] = [
   {
@@ -148,6 +149,11 @@ export const RANK_GROUPS: { id: RankGroupId; label: string; hint: string }[] = [
     label: "Grow",
     hint: "High stress, and Base already offers backup here",
   },
+  {
+    id: "unverified",
+    label: "Offer not verified",
+    hint: "High stress; check Base's offer for this area before the meeting",
+  },
   { id: "monitor", label: "Monitor", hint: "Lower stress for the layers on" },
 ];
 
@@ -155,6 +161,7 @@ const SELLS_BACKUP: BaseOffer[] = ["energy_plus_backup", "backup_program"];
 
 export function rankGroup(utility: UtilityRecord, level: Level | null): RankGroupId {
   if (level == null || level <= 2) return "monitor";
+  if (utility.base_offer == null) return "unverified";
   return SELLS_BACKUP.includes(utility.base_offer) ? "grow" : "expansion";
 }
 
@@ -162,50 +169,72 @@ export const BASE_OFFER_LABELS: Record<BaseOffer, string> = {
   energy_plus_backup: "Energy + Backup",
   backup_program: "Backup program",
   energy_only: "Energy only",
-  none: "Not served",
 };
 
-/** Customer-weighted layer value and rank for a utility's breakdown bars. */
+export function offerLabel(utility: UtilityRecord): string {
+  return utility.base_offer ? BASE_OFFER_LABELS[utility.base_offer] : "Offer not verified";
+}
+
+/** A utility's layer value and rank from its own estimated share of each county. */
 export function utilityLayerSummary(
   utility: UtilityRecord,
   counties: Map<string, CountyRecord>,
   layer: LayerId,
 ): { value: number | null; rank: number | null } {
-  const mine = utility.counties
-    .map((fips) => counties.get(fips))
-    .filter((c): c is CountyRecord => c != null);
+  const mine = utility.county_weights
+    .map((w) => ({ w, c: counties.get(w.fips) }))
+    .filter((x): x is { w: (typeof x)["w"]; c: CountyRecord } => x.c != null);
+  const rank = weightedMean(mine.map(({ w, c }) => ({ value: c.ranks[layer], weight: w.customers_est })));
   if (layer === "homes") {
+    const known = mine.filter(({ c }) => c.values.homes != null);
     return {
-      value: mine.reduce((sum, c) => sum + (c.values.homes ?? 0), 0),
-      rank: weightedMean(mine.map((c) => ({ value: c.ranks.homes, weight: c.customers }))),
+      value: known.length ? known.reduce((sum, { w, c }) => sum + (c.values.homes ?? 0) * w.share, 0) : null,
+      rank,
     };
   }
   return {
-    value: weightedMean(mine.map((c) => ({ value: c.values[layer], weight: c.customers }))),
-    rank: weightedMean(mine.map((c) => ({ value: c.ranks[layer], weight: c.customers }))),
+    value: weightedMean(mine.map(({ w, c }) => ({ value: c.values[layer], weight: w.customers_est }))),
+    rank,
   };
+}
+
+/** Whether a utility has data for a layer: ok if any of its counties do. */
+export function utilityLayerQuality(
+  utility: UtilityRecord,
+  counties: Map<string, CountyRecord>,
+  layer: LayerId,
+): Quality {
+  const flags = utility.county_weights
+    .map((w) => counties.get(w.fips)?.quality[layer])
+    .filter((q): q is Quality => q != null);
+  if (flags.includes("ok")) return "ok";
+  return flags.length > 0 && flags.every((q) => q === "not_applicable") ? "not_applicable" : "missing";
 }
 
 export type FleetEstimate = {
   homes: number;
   storageMwh: number;
   peakMw: number;
-  outageHoursCovered: number;
+  outageHoursCovered: number | null;
 };
 
-/** "What if Base were here": linear in fleet share, as agreed in P-04. */
+/** "What if Base were here": linear in fleet share. Replaced by fleet.ts in UM-2.2. */
 export function fleetEstimate(
   utility: UtilityRecord,
   counties: Map<string, CountyRecord>,
   share: number,
   battery: { kwh_per_core: number; kw_per_core: number },
 ): FleetEstimate {
-  const homes = Math.round(utility.eligible_homes * share);
-  const outageHours = utilityLayerSummary(utility, counties, "outages").value ?? 0;
+  const eligible = utility.eligible_homes ?? utilityLayerSummary(utility, counties, "homes").value ?? 0;
+  const homes = Math.round(eligible * share);
+  const outageHours = utilityLayerSummary(utility, counties, "outages").value;
   return {
     homes,
     storageMwh: (homes * battery.kwh_per_core) / 1000,
     peakMw: (homes * battery.kw_per_core) / 1000,
-    outageHoursCovered: homes * outageHours * utility.core_coverage_hours,
+    outageHoursCovered:
+      outageHours != null && utility.core_coverage_hours != null
+        ? homes * outageHours * utility.core_coverage_hours
+        : null,
   };
 }
