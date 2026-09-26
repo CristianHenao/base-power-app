@@ -26,6 +26,7 @@ import duckdb
 import pandas as pd
 import yaml
 
+from api.app.adapters.nws import active_alerts, attach_alerts
 from api.app.narrator.facts import from_contract
 from api.app.narrator.narrate import ModelCall, narrate
 from pipeline import settings
@@ -256,6 +257,11 @@ def build_report(con: duckdb.DuckDBPyConnection, fips: str, profile_type: str | 
             {"id": "base_offer", "as_of": offers_as_of, "status": "ok"},
         ],
     }
+
+
+def with_live_alerts(report: dict, lat: float, lon: float) -> dict:
+    """Active alerts for this point. A weather-service failure leaves the report intact."""
+    return attach_alerts(report, active_alerts(lat, lon))
 
 
 def with_narrative(report: dict, call: ModelCall | None) -> dict:
