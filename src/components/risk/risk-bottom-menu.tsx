@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, CloudSun, Home, LineChart, Zap } from "lucide-react";
+import { FrostPanel } from "@/components/risk/frost-panel";
 import { cn } from "@/lib/utils";
 
 export const RISK_PRIMARY_TABS = [
@@ -40,7 +41,8 @@ export type RiskAnalysisItemId = (typeof RISK_ANALYSIS_ITEMS)[number]["id"];
 type RiskBottomMenuProps = {
   primaryTab: RiskPrimaryTabId;
   onPrimaryTabChange: (id: RiskPrimaryTabId) => void;
-  analysisId: RiskAnalysisItemId;
+  /** null = browsing options; map stays lit until user picks one */
+  activeAnalysisId: RiskAnalysisItemId | null;
   onAnalysisChange: (id: RiskAnalysisItemId) => void;
   className?: string;
 };
@@ -48,7 +50,7 @@ type RiskBottomMenuProps = {
 export function RiskBottomMenu({
   primaryTab,
   onPrimaryTabChange,
-  analysisId,
+  activeAnalysisId,
   onAnalysisChange,
   className,
 }: RiskBottomMenuProps) {
@@ -62,75 +64,73 @@ export function RiskBottomMenu({
       )}
     >
       {showAnalysisList ? (
-        <nav
-          aria-label="Analysis options"
-          className="overflow-hidden rounded-2xl border border-border/60 bg-background/90 shadow-lg backdrop-blur-md"
-        >
-          <ul className="divide-y divide-border/50">
-            {RISK_ANALYSIS_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = item.id === analysisId;
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    aria-current={active ? "true" : undefined}
-                    onClick={() => onAnalysisChange(item.id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-                      active
-                        ? "bg-primary/10 text-foreground"
-                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                    )}
-                  >
-                    <span
+        <FrostPanel>
+          <nav aria-label="Analysis options">
+            <ul className="divide-y divide-white/10">
+              {RISK_ANALYSIS_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = item.id === activeAnalysisId;
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      aria-current={active ? "true" : undefined}
+                      onClick={() => onAnalysisChange(item.id)}
                       className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
                         active
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground",
+                          ? "bg-white/15 text-white"
+                          : "text-white/70 hover:bg-white/10 hover:text-white",
                       )}
                     >
-                      <Icon className="size-4.5" aria-hidden />
-                    </span>
-                    <span className="text-sm font-medium">{item.label}</span>
+                      <span
+                        className={cn(
+                          "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                          active
+                            ? "bg-white text-black"
+                            : "bg-white/10 text-white/80",
+                        )}
+                      >
+                        <Icon className="size-4.5" aria-hidden />
+                      </span>
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </FrostPanel>
+      ) : null}
+
+      <FrostPanel>
+        <nav aria-label="Risk map views" className="p-1.5">
+          <ul className="grid grid-cols-2 gap-1">
+            {RISK_PRIMARY_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = tab.id === primaryTab;
+              return (
+                <li key={tab.id}>
+                  <button
+                    type="button"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => onPrimaryTabChange(tab.id)}
+                    className={cn(
+                      "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-white text-black"
+                        : "text-white/70 hover:bg-white/10 hover:text-white",
+                    )}
+                  >
+                    <Icon className="size-4.5" aria-hidden />
+                    {tab.label}
                   </button>
                 </li>
               );
             })}
           </ul>
         </nav>
-      ) : null}
-
-      <nav
-        aria-label="Risk map views"
-        className="rounded-2xl border border-border/60 bg-background/90 p-1.5 shadow-lg backdrop-blur-md"
-      >
-        <ul className="grid grid-cols-2 gap-1">
-          {RISK_PRIMARY_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = tab.id === primaryTab;
-            return (
-              <li key={tab.id}>
-                <button
-                  type="button"
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => onPrimaryTabChange(tab.id)}
-                  className={cn(
-                    "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  <Icon className="size-4.5" aria-hidden />
-                  {tab.label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      </FrostPanel>
     </div>
   );
 }
