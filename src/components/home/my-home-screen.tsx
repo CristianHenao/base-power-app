@@ -6,6 +6,7 @@ import {
   BatteryCharging,
   CircuitBoard,
   Cross,
+  Fuel,
   PlugZap,
   ScanLine,
   Snowflake,
@@ -18,6 +19,10 @@ import {
   type HomeDevice,
   type HomeDeviceKind,
 } from "@/lib/home/devices";
+import {
+  formatGeneratorExtensionShort,
+  generatorExtensionForDevice,
+} from "@/lib/home/generator-backup";
 import { cn } from "@/lib/utils";
 
 type MyHomeScreenProps = {
@@ -32,6 +37,7 @@ type MyHomeScreenProps = {
 function kindIcon(kind: HomeDeviceKind) {
   if (kind === "panel") return CircuitBoard;
   if (kind === "battery") return BatteryCharging;
+  if (kind === "generator") return Fuel;
   if (kind === "medical") return Cross;
   return PlugZap;
 }
@@ -50,6 +56,11 @@ export function MyHomeScreen({
   const criticalCount = devices.filter(
     (device) => device.isMedical || device.needsRefrigeration,
   ).length;
+  const generators = devices.filter((device) => device.kind === "generator");
+  const bestGeneratorExt = generators
+    .map((device) => generatorExtensionForDevice(device))
+    .filter((ext): ext is NonNullable<typeof ext> => ext != null)
+    .sort((a, b) => b.extensionHours - a.extensionHours)[0];
   const selectedDevice =
     devices.find((device) => device.id === selectedId) ?? null;
 
@@ -78,8 +89,8 @@ export function MyHomeScreen({
               My home
             </h1>
             <p className="text-sm text-muted-foreground">
-              Devices by room — including medical gear and refrigerated
-              medication that must stay powered.
+              Devices by room — including medical gear, refrigerated medication,
+              and generators that can recharge a Base Core.
             </p>
           </header>
 
@@ -92,8 +103,8 @@ export function MyHomeScreen({
                 No devices yet
               </p>
               <p className="mt-1.5 max-w-xs text-sm text-muted-foreground">
-                Scan appliances, your panel, and critical medical devices or
-                medication that needs refrigeration.
+                Scan appliances, your panel, a generator, and critical medical
+                devices or medication that needs refrigeration.
               </p>
             </div>
           ) : (
@@ -108,7 +119,26 @@ export function MyHomeScreen({
                     {criticalCount} critical for health
                   </span>
                 ) : null}
+                {bestGeneratorExt ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
+                    <Fuel className="size-3" aria-hidden />
+                    Core +{bestGeneratorExt.extensionHours} h est.
+                  </span>
+                ) : null}
               </div>
+
+              {bestGeneratorExt ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-3.5 py-3">
+                  <p className="text-[10px] font-medium tracking-wide text-amber-900/70 uppercase">
+                    Generator + Base Core
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-amber-950">
+                    Your generator can extend Core backup by about{" "}
+                    {bestGeneratorExt.extensionHours} hours (
+                    {bestGeneratorExt.extensionPercent}% longer). Estimate.
+                  </p>
+                </div>
+              ) : null}
 
               {grouped.map((group) => (
                 <section key={group.category} className="space-y-2">
@@ -120,6 +150,8 @@ export function MyHomeScreen({
                       const Icon = kindIcon(device.kind);
                       const critical =
                         device.isMedical || device.needsRefrigeration;
+                      const isGenerator = device.kind === "generator";
+                      const genExt = generatorExtensionForDevice(device);
                       return (
                         <li key={device.id}>
                           <button
@@ -129,7 +161,9 @@ export function MyHomeScreen({
                               "flex w-full items-center gap-3 rounded-2xl border bg-white px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors",
                               critical
                                 ? "border-rose-200 bg-rose-50/60"
-                                : "border-black/8 hover:bg-black/[0.02]",
+                                : isGenerator
+                                  ? "border-amber-200 bg-amber-50/50"
+                                  : "border-black/8 hover:bg-black/[0.02]",
                             )}
                           >
                             {device.thumbnailUrl ? (
@@ -141,7 +175,9 @@ export function MyHomeScreen({
                                   "size-12 shrink-0 rounded-xl object-cover ring-1",
                                   critical
                                     ? "ring-rose-200"
-                                    : "ring-black/10",
+                                    : isGenerator
+                                      ? "ring-amber-200"
+                                      : "ring-black/10",
                                 )}
                               />
                             ) : (
@@ -150,7 +186,9 @@ export function MyHomeScreen({
                                   "flex size-12 shrink-0 items-center justify-center rounded-xl",
                                   critical
                                     ? "bg-rose-500/15 text-rose-800"
-                                    : "bg-amber-400/15 text-amber-800",
+                                    : isGenerator
+                                      ? "bg-amber-500/15 text-amber-900"
+                                      : "bg-amber-400/15 text-amber-800",
                                 )}
                               >
                                 <Icon className="size-4.5" aria-hidden />
@@ -170,6 +208,11 @@ export function MyHomeScreen({
                                   ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
                                   : null}
                               </p>
+                              {genExt ? (
+                                <p className="mt-1 text-[11px] font-medium text-amber-900">
+                                  {formatGeneratorExtensionShort(genExt)}
+                                </p>
+                              ) : null}
                               {critical ? (
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   {device.isMedical ? (

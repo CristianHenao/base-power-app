@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Cross, ScanLine, Snowflake } from "lucide-react";
+import { Cross, Fuel, ScanLine, Snowflake } from "lucide-react";
 import { NameplateScanSheet } from "@/components/home/nameplate-scan-sheet";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -18,6 +18,10 @@ import {
   type DeviceNameplateResult,
   type HomeDevice,
 } from "@/lib/home/devices";
+import {
+  formatGeneratorExtensionDetail,
+  generatorExtensionForDevice,
+} from "@/lib/home/generator-backup";
 import { cn } from "@/lib/utils";
 
 type DeviceDetailSheetProps = {
@@ -40,6 +44,7 @@ export function DeviceDetailSheet({
   const rows = deviceDetailRows(device);
   const critical = device.isMedical || device.needsRefrigeration;
   const detailOpen = open && !nameplateOpen;
+  const generatorExt = generatorExtensionForDevice(device);
 
   function handleNameplateRead(result: DeviceNameplateResult) {
     const next = applyNameplateToDevice(device!, result);
@@ -74,8 +79,14 @@ export function DeviceDetailSheet({
                   {HOME_DEVICE_CATEGORY_META[device.category].label}
                   {device.brand ? ` · ${device.brand}` : null}
                 </SheetDescription>
-                {critical ? (
+                {critical || device.kind === "generator" ? (
                   <div className="mt-2 flex flex-wrap gap-1">
+                    {device.kind === "generator" ? (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
+                        <Fuel className="size-2.5" aria-hidden />
+                        Generator · Core port
+                      </span>
+                    ) : null}
                     {device.isMedical ? (
                       <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
                         <Cross className="size-2.5" aria-hidden />
@@ -95,6 +106,23 @@ export function DeviceDetailSheet({
           </SheetHeader>
 
           <div className="space-y-5 px-4 py-4">
+            {generatorExt ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
+                <p className="text-[10px] font-medium tracking-wide text-amber-900/70 uppercase">
+                  Extends Base Core backup
+                </p>
+                <p className="mt-1 text-2xl font-semibold tracking-tight text-amber-950">
+                  +{generatorExt.extensionHours} h
+                  <span className="ml-2 text-base font-medium text-amber-900/80">
+                    · +{generatorExt.extensionPercent}%
+                  </span>
+                </p>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-amber-950/75">
+                  {formatGeneratorExtensionDetail(generatorExt)}
+                </p>
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-2 gap-3">
               {rows.map((row) => (
                 <div
@@ -118,7 +146,9 @@ export function DeviceDetailSheet({
               </p>
             ) : (
               <p className="text-center text-[11px] text-muted-foreground">
-                Scan the rating label on the back or bottom for exact specs.
+                {device.kind === "generator"
+                  ? "Scan the rating label for exact rated output watts."
+                  : "Scan the rating label on the back or bottom for exact specs."}
               </p>
             )}
 

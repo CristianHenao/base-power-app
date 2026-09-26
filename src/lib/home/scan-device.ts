@@ -6,13 +6,13 @@ import {
 
 const DEFAULT_MODEL = "claude-sonnet-5";
 
-const SYSTEM_PROMPT = `You identify home electrical devices, appliances, breaker panels, home batteries, and critical medical / medication loads from a photo.
+const SYSTEM_PROMPT = `You identify home electrical devices, appliances, breaker panels, home batteries, portable/standby generators, and critical medical / medication loads from a photo.
 
 Return ONLY a single JSON object (no markdown, no prose) with this shape:
 {
   "name": string,
-  "kind": "appliance" | "panel" | "battery" | "medical" | "unknown",
-  "category": "kitchen" | "living_room" | "bedroom" | "bathroom" | "garage" | "laundry" | "office" | "outdoor" | "panel" | "medical" | "other",
+  "kind": "appliance" | "panel" | "battery" | "generator" | "medical" | "unknown",
+  "category": "kitchen" | "living_room" | "bedroom" | "bathroom" | "garage" | "laundry" | "office" | "outdoor" | "panel" | "generator" | "medical" | "other",
   "brand": string | null,
   "model": string | null,
   "watts": number | null,
@@ -33,6 +33,7 @@ Category guidance:
 - office: desktop, monitor, modem/router if in office
 - outdoor: exterior lights, pool pump, outdoor AC condenser
 - panel: breaker / load center only
+- generator: portable, inverter, or standby home generators (Honda, Champion, Generac, etc.)
 - medical: CPAP/BiPAP, oxygen concentrator, nebulizer, dialysis, powered medical equipment, medication fridge / insulin cooler
 - other: when unclear
 
@@ -46,6 +47,7 @@ Other rules:
 - Always return bbox tightly around the primary device when visible (normalized 0–1).
 - Electrical panel / load center → kind "panel", category "panel", watts null.
 - Home battery (Base Core, Powerwall, etc.) → kind "battery".
+- Portable / inverter / standby generator → kind "generator", category "generator". For watts, use rated OUTPUT watts when readable (e.g. 3500W, 4500 starting / 3500 running → use running/rated continuous). Null when unsure.
 - Never invent precise wattage; use null when unsure.
 - Do not invent patient names or medical conditions — describe the device only.
 - Confidence should drop when the photo is blurry or ambiguous.`;
@@ -101,7 +103,7 @@ export async function identifyHomeDeviceFromImage(
           },
           {
             type: "text",
-            text: "Identify the primary home device, appliance, panel, battery, or medical/medication load in this photo. Assign category and medical/refrigeration flags. Return JSON only.",
+            text: "Identify the primary home device, appliance, panel, battery, generator, or medical/medication load in this photo. Assign category and medical/refrigeration flags. For generators, prefer rated output watts. Return JSON only.",
           },
         ],
       },
