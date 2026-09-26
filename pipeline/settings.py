@@ -4,6 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Local secrets such as XAI_API_KEY. Gitignored.
+ENV_FILE = REPO_ROOT / ".env"
 
 RAW_EAGLEI_DIR = REPO_ROOT / "data" / "raw" / "eaglei"
 EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events.parquet"
