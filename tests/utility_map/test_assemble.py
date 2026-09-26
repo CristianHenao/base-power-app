@@ -235,8 +235,9 @@ def test_event_hazard_layers_are_wired_to_their_tables_and_sources() -> None:
         assert layers[layer_id]["table"] == table
         assert layers[layer_id]["unit"] and layers[layer_id]["method"]
         assert set(layers[layer_id]["source_ids"]) <= {s["id"] for s in assemble.SOURCES}
-    assert {"tornado": "hazards/tornado_tracks.geojson", "hurricane": "hazards/hurricane_tracks.geojson"} == \
-        assemble.HAZARD_FILES
+    assert assemble.HAZARD_FILES == {"tornado": "hazards/tornado_tracks.geojson",
+                                     "hurricane": "hazards/hurricane_tracks.geojson",
+                                     "severe_storm": "hazards/severe_reports.geojson"}
 
 
 def test_outage_links_are_attached_to_their_layers() -> None:

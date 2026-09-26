@@ -14,6 +14,11 @@
     "n": 254,
     "weak": false
   },
+  "severe_storm": {
+    "rho": -0.015,
+    "n": 254,
+    "weak": true
+  },
   "winter": {
     "rho": -0.229,
     "n": 254,

@@ -67,5 +67,6 @@ export-map:
 	$(PY) -m pipeline.utility_map.nfhl
 	$(PY) -m pipeline.utility_map.tornado
 	$(PY) -m pipeline.utility_map.hurricane
+	$(PY) -m pipeline.utility_map.severe_storms
 	$(PY) -m pipeline.utility_map.validate_hazards
 	$(PY) -m pipeline.utility_map.assemble

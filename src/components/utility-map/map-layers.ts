@@ -210,12 +210,18 @@ const SOURCE_HURRICANE = "um-hurricane";
 const LAYER_TORNADO = "um-tornado-line";
 const LAYER_HURRICANE = "um-hurricane-line";
 const LAYER_HURRICANE_LABEL = "um-hurricane-label";
+const SOURCE_SEVERE = "um-severe";
+const LAYER_SEVERE = "um-severe-points";
 
 /** Tornado tracks (width by EF) and hurricane tracks (teal by category). null hides a set. */
 export function setHazardTracks(
   map: Map,
-  tracks: { tornado: GeoJSON.FeatureCollection | null; hurricane: GeoJSON.FeatureCollection | null },
-  style: { tornado: string; hurricaneRamp: readonly string[] },
+  tracks: {
+    tornado: GeoJSON.FeatureCollection | null;
+    hurricane: GeoJSON.FeatureCollection | null;
+    severe_storm: GeoJSON.FeatureCollection | null;
+  },
+  style: { tornado: string; hurricaneRamp: readonly string[]; severe: string },
 ) {
   if (!map.getLayer(LAYER_TERRITORY_LINE)) return;
   const empty: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -271,6 +277,28 @@ export function setHazardTracks(
       paint: { "text-color": "#00564d", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
     });
   }
+  if (!map.getSource(SOURCE_SEVERE)) {
+    map.addSource(SOURCE_SEVERE, { type: "geojson", data: empty });
+    // Report points only once zoomed in; statewide the county fill carries the pattern.
+    map.addLayer(
+      {
+        id: LAYER_SEVERE,
+        type: "circle",
+        source: SOURCE_SEVERE,
+        slot: "middle",
+        minzoom: 7,
+        paint: {
+          "circle-color": style.severe,
+          "circle-radius": ["match", ["get", "size"], 3, 5, 2, 3.5, 2.2],
+          "circle-opacity": 0.6,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 0.5,
+        },
+      },
+      before,
+    );
+  }
+  (map.getSource(SOURCE_SEVERE) as GeoJSONSource).setData(tracks.severe_storm ?? empty);
   (map.getSource(SOURCE_TORNADO) as GeoJSONSource).setData(tracks.tornado ?? empty);
   (map.getSource(SOURCE_HURRICANE) as GeoJSONSource).setData(tracks.hurricane ?? empty);
 }

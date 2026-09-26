@@ -129,6 +129,6 @@ export type UtilityMapData = {
     counties: string;
     territories: string;
     flood?: Record<string, string>;
-    hazards?: Partial<Record<"tornado" | "hurricane", string>>;
+    hazards?: Partial<Record<"tornado" | "hurricane" | "severe_storm", string>>;
   };
 };

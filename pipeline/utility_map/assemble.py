@@ -63,7 +63,12 @@ LAYERS: list[dict] = [
      "method": "NOAA SPC tracks split between the counties they cross (straight line start to end); each km "
                "weighted by EF rating + 1 (unknown = EF0), divided by county land area and years.",
      "table": "county_tornado.parquet"},
-    {"id": "severe_storm", "group": "hazard", "label": "Hail and wind", "pending": "NOAA SPC hail and wind reports (UM-4.2)"},
+    {"id": "severe_storm", "group": "hazard", "label": "Hail and wind", "pending": "NOAA SPC hail and wind reports (UM-4.2)",
+     "unit": "severe hail (1 inch+) and wind reports per thousand km² per year (2000-2025)",
+     "period_start": "2000-01-01", "period_end": "2025-12-31", "source_ids": ["spc_hail_wind"],
+     "method": "NOAA SPC report database, Texas. Reports depend on people seeing and filing them, so cities "
+               "and highways show more than open country.",
+     "table": "county_severe_storm.parquet"},
     {"id": "hurricane", "group": "hazard", "label": "Hurricanes", "pending": "NHC HURDAT2 tracks (UM-4.3)",
      "unit": "tropical-storm-force passes within 100 km per decade, weighted by wind (1980-2025)",
      "period_start": "1980-01-01", "period_end": "2025-12-31", "source_ids": ["nhc_hurdat2"],
@@ -113,6 +118,7 @@ SOURCES = [
     {"id": "noaa_storm_events", "name": "NOAA NCEI Storm Events Database", "url": "https://www.ncei.noaa.gov/stormevents/"},
     {"id": "fema_nfhl", "name": "FEMA National Flood Hazard Layer (effective flood maps)", "url": "https://www.fema.gov/flood-maps/national-flood-hazard-layer"},
     {"id": "spc_tornadoes", "name": "NOAA SPC Severe Weather Database (tornado tracks)", "url": "https://www.spc.noaa.gov/wcm/"},
+    {"id": "spc_hail_wind", "name": "NOAA SPC Severe Weather Database (hail and wind reports)", "url": "https://www.spc.noaa.gov/wcm/"},
     {"id": "nhc_hurdat2", "name": "NOAA NHC HURDAT2 Atlantic best tracks", "url": "https://www.nhc.noaa.gov/data/#hurdat"},
     {"id": "ercot_load", "name": "ERCOT hourly native load by weather zone", "url": "https://www.ercot.com/gridinfo/load/load_hist"},
     {"id": "base_specs", "name": "Base Power Core specifications", "url": "https://www.basepowercompany.com/specs/core"},
@@ -171,7 +177,11 @@ def _lens(lens: dict, available: set[str]) -> dict:
 
 
 # Map files for the Hazards mode, copied into each release when they exist.
-HAZARD_FILES = {"tornado": "hazards/tornado_tracks.geojson", "hurricane": "hazards/hurricane_tracks.geojson"}
+HAZARD_FILES = {
+    "tornado": "hazards/tornado_tracks.geojson",
+    "hurricane": "hazards/hurricane_tracks.geojson",
+    "severe_storm": "hazards/severe_reports.geojson",
+}
 
 GRID_STATS = ("summer_peak_mw", "winter_peak_mw", "sales_mwh", "residential_mwh", "peak_source")
 

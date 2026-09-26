@@ -24,6 +24,7 @@ TABLES = {
     "flood": ("county_flood.parquet", "value"),
     "tornado": ("county_tornado.parquet", "tornado"),
     "hurricane": ("county_hurricane.parquet", "hurricane"),
+    "severe_storm": ("county_severe_storm.parquet", "severe_storm"),
     "winter": ("county_winter.parquet", "winter"),
     "heat": ("county_heat.parquet", "heat"),
     "peak_demand": ("county_peak_demand.parquet", "peak_demand"),

@@ -372,6 +372,27 @@
       "note": "Texas rows; zone events expanded to counties with NWS zone-county file bp16ap26; 1535 of 41036 zone events use retired zone codes and are left out."
     },
     {
+      "source_id": "spc_hail_wind",
+      "url": "https://www.spc.noaa.gov/wcm/",
+      "files": [
+        {
+          "name": "1955-2025_hail.csv.zip",
+          "sha256": "f511540a2c1454c863fc1604cf5b2d33bb3e6bfe531079f3a61d53b5d7fe70f8",
+          "bytes": 8266856
+        },
+        {
+          "name": "1955-2025_wind.csv.zip",
+          "sha256": "1db782d96d29dbb0ffd488a466f006799681cbe04b0003f245d1a2f3f6b9d87b",
+          "bytes": 11875052
+        }
+      ],
+      "rows": 47043,
+      "period_start": "2000-01-01",
+      "period_end": "2025-12-31",
+      "retrieved_at_utc": "2026-09-26T21:18:58Z",
+      "note": "Texas hail >= 1 inch and all severe wind reports."
+    },
+    {
       "source_id": "spc_tornadoes",
       "url": "https://www.spc.noaa.gov/wcm/data/1950-2025_actual_tornadoes.csv",
       "files": [

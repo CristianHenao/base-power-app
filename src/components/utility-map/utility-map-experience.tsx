@@ -99,7 +99,9 @@ export function UtilityMapExperience() {
   const [fleetShare, setFleetShare] = useState<FleetShare>(0.01);
   const [floodCache, setFloodCache] = useState<Record<string, GeoJSON.FeatureCollection>>({});
   const [hazardPicks, setHazardPicks] = useState<HazardId[]>([]);
-  const [trackCache, setTrackCache] = useState<Partial<Record<"tornado" | "hurricane", GeoJSON.FeatureCollection>>>({});
+  const [trackCache, setTrackCache] = useState<
+    Partial<Record<"tornado" | "hurricane" | "severe_storm", GeoJSON.FeatureCollection>>
+  >({});
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -368,7 +370,7 @@ export function UtilityMapExperience() {
   useEffect(() => {
     if (!loaded) return;
     const files = loaded.data.geometry.hazards ?? {};
-    const wanted = (["tornado", "hurricane"] as const).filter(
+    const wanted = (["tornado", "hurricane", "severe_storm"] as const).filter(
       (h) => mode === "hazards" && hazardPicks.includes(h) && files[h] && !trackCache[h],
     );
     if (wanted.length === 0) return;
@@ -391,12 +393,12 @@ export function UtilityMapExperience() {
   }, [loaded, mode, hazardPicks, trackCache]);
   useEffect(() => {
     if (!map || !loaded) return;
-    const show = (h: "tornado" | "hurricane") =>
+    const show = (h: "tornado" | "hurricane" | "severe_storm") =>
       mode === "hazards" && hazardPicks.includes(h) ? trackCache[h] ?? null : null;
     setHazardTracks(
       map,
-      { tornado: show("tornado"), hurricane: show("hurricane") },
-      { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp },
+      { tornado: show("tornado"), hurricane: show("hurricane"), severe_storm: show("severe_storm") },
+      { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp, severe: HAZARDS.severe_storm.ramp[4] },
     );
   }, [map, loaded, mode, hazardPicks, trackCache]);
 
