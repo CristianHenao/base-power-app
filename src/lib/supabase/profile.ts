@@ -1,9 +1,11 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { onboardingPatchFromDraft } from "@/lib/onboarding/profile-sync";
 import type {
   Database,
   Profile,
   ProfileUpdate,
 } from "@/lib/supabase/database.types";
+import type { OnboardingDraft } from "@/lib/types/domain";
 
 type Client = SupabaseClient<Database>;
 
@@ -78,5 +80,26 @@ export async function ensureProfile(
       (typeof user.user_metadata?.full_name === "string"
         ? user.user_metadata.full_name
         : null),
+  });
+}
+
+/** Persist onboarding answers without marking the flow complete. */
+export async function saveOnboardingDraft(
+  client: Client,
+  userId: string,
+  draft: OnboardingDraft,
+): Promise<Profile> {
+  return upsertProfile(client, userId, onboardingPatchFromDraft(draft));
+}
+
+/** Persist full draft and stamp onboarding as complete. */
+export async function completeOnboarding(
+  client: Client,
+  userId: string,
+  draft: OnboardingDraft,
+): Promise<Profile> {
+  return upsertProfile(client, userId, {
+    ...onboardingPatchFromDraft(draft),
+    onboarding_completed_at: new Date().toISOString(),
   });
 }

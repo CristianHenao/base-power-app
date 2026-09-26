@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { resolvePostAuthPath } from "@/lib/onboarding/profile-sync";
 import { ensureProfile } from "@/lib/supabase/profile";
 import { cn } from "@/lib/utils";
 
@@ -70,15 +71,16 @@ export function SignInForm() {
         return;
       }
 
+      let destination = nextPath.startsWith("/") ? nextPath : "/risk";
       if (data.user) {
         try {
-          await ensureProfile(supabase, data.user);
+          const profile = await ensureProfile(supabase, data.user);
+          destination = resolvePostAuthPath(profile, destination);
         } catch {
           // Profile trigger may have already created the row.
         }
       }
 
-      const destination = nextPath.startsWith("/") ? nextPath : "/risk";
       router.push(destination);
       router.refresh();
     } catch (err) {

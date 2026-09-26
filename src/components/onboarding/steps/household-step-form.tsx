@@ -9,6 +9,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { HOME_TYPE_OPTIONS } from "@/lib/onboarding/constants";
+import { createClient } from "@/lib/supabase/client";
+import {
+  getCurrentUser,
+  saveOnboardingDraft,
+} from "@/lib/supabase/profile";
 import type { HomeType, HouseholdDetails } from "@/lib/types/domain";
 
 type FormState = {
@@ -47,20 +52,33 @@ export function HouseholdStepForm() {
 
   function onContinue(event: React.FormEvent) {
     event.preventDefault();
-    updateDraft({
-      household: {
-        homeType: form.homeType,
-        squareFootage: form.squareFootage ? Number(form.squareFootage) : null,
-        occupants: form.occupants ? Number(form.occupants) : null,
-        ownsHome: form.ownsHome,
-        hasSolar: form.hasSolar,
-        hasExistingBattery: form.hasExistingBattery,
-        averageMonthlyBillUsd: form.averageMonthlyBillUsd
-          ? Number(form.averageMonthlyBillUsd)
-          : null,
-      },
-    });
-    router.push("/onboarding/goals");
+    void (async () => {
+      const next = updateDraft({
+        household: {
+          homeType: form.homeType,
+          squareFootage: form.squareFootage ? Number(form.squareFootage) : null,
+          occupants: form.occupants ? Number(form.occupants) : null,
+          ownsHome: form.ownsHome,
+          hasSolar: form.hasSolar,
+          hasExistingBattery: form.hasExistingBattery,
+          averageMonthlyBillUsd: form.averageMonthlyBillUsd
+            ? Number(form.averageMonthlyBillUsd)
+            : null,
+        },
+      });
+
+      try {
+        const supabase = createClient();
+        const user = await getCurrentUser(supabase);
+        if (user) {
+          await saveOnboardingDraft(supabase, user.id, next);
+        }
+      } catch {
+        // Keep going with local draft if sync fails.
+      }
+
+      router.push("/onboarding/goals");
+    })();
   }
 
   return (

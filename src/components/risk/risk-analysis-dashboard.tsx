@@ -10,11 +10,11 @@ import { BasePowerToggle } from "@/components/risk/base-power-toggle";
 import { FrostPanel } from "@/components/risk/frost-panel";
 import {
   RiskBottomMenu,
+  weatherRiskBadgesFromHazards,
   type RiskAnalysisItemId,
   type RiskPrimaryTabId,
 } from "@/components/risk/risk-bottom-menu";
-import { OutageBatteryCallout } from "@/components/risk/outage-battery-callout";
-import { OutageTimelineSlider } from "@/components/risk/outage-timeline-slider";
+import { OutageEventCards } from "@/components/risk/outage-event-cards";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAP_DEFAULTS } from "@/lib/map/config";
@@ -117,6 +117,11 @@ export function RiskAnalysisDashboard() {
     if (!center) return [];
     return generateSyntheticWeatherHazards(center);
   }, [center]);
+
+  const weatherRiskBadges = useMemo(
+    () => weatherRiskBadgesFromHazards(weatherHazards),
+    [weatherHazards],
+  );
 
   const outageTimeline = useMemo(() => {
     if (!center || !weatherHazards.length) return null;
@@ -294,21 +299,12 @@ export function RiskAnalysisDashboard() {
         </div>
 
         {showWeatherAnalysis && sliderEvents.length ? (
-          <div className="flex w-full flex-col gap-2 px-3 pb-0 sm:px-4">
-            {activeOutage ? (
-              <OutageBatteryCallout
-                event={activeOutage}
-                showBasePower={showBasePower}
-                className="w-full max-w-none"
-              />
-            ) : null}
-            <OutageTimelineSlider
-              className="!px-0 !pt-0"
-              events={sliderEvents}
-              activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
-              onChange={handleOutageIndexChange}
-            />
-          </div>
+          <OutageEventCards
+            events={sliderEvents}
+            activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
+            onChange={handleOutageIndexChange}
+            showBasePower={showBasePower}
+          />
         ) : !inAnalysis ? (
           <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,var(--sab))] sm:px-6">
             <RiskBottomMenu
@@ -316,6 +312,7 @@ export function RiskAnalysisDashboard() {
               onPrimaryTabChange={handlePrimaryTabChange}
               activeAnalysisId={activeAnalysisId}
               onAnalysisChange={setActiveAnalysisId}
+              weatherRiskBadges={weatherRiskBadges}
             />
           </div>
         ) : null}

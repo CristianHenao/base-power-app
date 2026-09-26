@@ -87,6 +87,13 @@ export function patchOnboardingDraft(
   return merged;
 }
 
+export function clearOnboardingDraft(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  cache = { raw: null, draft: EMPTY_ONBOARDING_DRAFT };
+  emitChange();
+}
+
 export function formatAddressLine(address: Partial<Address>): string {
   const street = [address.line1, address.line2].filter(Boolean).join(", ");
   const locality = [address.city, address.state].filter(Boolean).join(", ");
