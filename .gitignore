@@ -56,3 +56,5 @@ __pycache__/
 data/raw/
 # Full Texas EAGLE-I cut is 139 MB; rebuild with python -m pipeline.sources.eaglei_texas
 data/processed/eaglei_tx.parquet
+# Large observation extracts and ingest diagnostics are generated locally.
+data/processed/outage_observations*/
