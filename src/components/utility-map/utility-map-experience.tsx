@@ -6,6 +6,7 @@ import { MapViewClient } from "@/components/map/map-view-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ControlsPanel } from "@/components/utility-map/controls-panel";
 import { DetailPanel } from "@/components/utility-map/detail-panel";
+import { MethodsSheet } from "@/components/utility-map/methods-sheet";
 import {
   LAYER_COUNTY_FILL,
   SOURCE_COUNTIES,
@@ -656,6 +657,11 @@ export function UtilityMapExperience() {
             {data ? dataModeLabel(data.data_mode) : "Loading data"}
             {data?.release_id ? ` · ${data.as_of}` : ""}
           </p>
+          {data && model ? (
+            <div className="inline-flex rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)]">
+              <MethodsSheet data={data} model={model} activeLayers={activeLayers} countiesByFips={countiesByFips} />
+            </div>
+          ) : null}
           {data ? (
             <ControlsPanel
               mode={mode}
