@@ -172,18 +172,35 @@ is the highest-value year in every zone. The pays-twice map still needs Alejandr
 
 ## Narrator (`api/app/narrator/`, `evals/`)
 
-The narrator gets the report as a list of facts, each with an id and its allowed rounded values.
-The model writes a headline of up to 12 words and a summary of up to 120 words, and cites the fact
-ids it used. Validators reject the output if:
+The model is Grok (`grok-4.20-0309-non-reasoning`, xAI) at temperature 0 in JSON mode, behind a
+small adapter (`api/app/narrator/xai.py`) that reads `XAI_API_KEY` from the environment. It gets the
+report as a list of facts, each with an id and its allowed rounded values. It writes a headline of
+up to 12 words and a summary of up to 120 words, and cites the fact ids it used. Validators reject
+the output if:
 
-- any number does not match a cited fact after rounding,
+- a number does not match a cited fact after rounding,
+- a number is stated out of context: it lacks the fact's unit (hours, %, years), the sentence lacks
+  the fact's context (the month for backup hours, "long" or "12-hour" for the outage rate and sizing
+  share), or its clause names a different Core count than the fact,
 - it uses a banned phrase (fear words, "guarantee", "never lose power", "risk-free"),
 - its Flesch-Kincaid grade is above 7 (computed with pyphen syllable counts),
 - it is over the length caps.
 
+The context checks were added after reading recorded outputs. Before them, 23 of 24 replies passed,
+but some wrote one-Core hours as two Cores, or wrote the 12-hour-plus rate as a rate for any outage.
+
 A rejected output gets one retry with the reasons, and then falls back to a deterministic template.
-The eval set is 24 fixtures (8 counties × 3 homes). The template passes 24/24. Model pass rates
-are in `evals/results.md`.
+The eval set is 24 fixtures (8 counties × 3 homes):
+
+| Source | Passed |
+|---|---|
+| Grok, first reply | 23/24 (96%) |
+| Grok, after one retry | 24/24 (100%) |
+| Template | 24/24 (100%) |
+
+Median model time is 2.2 seconds per report, against an 8-second timeout. The validators check that
+numbers are right, not tone. For example, "homes with electric heat need 2 Cores" passes, but it is
+stronger than the facts support.
 
 ## Known limits
 

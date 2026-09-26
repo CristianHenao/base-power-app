@@ -35,10 +35,59 @@ _NUMBER = re.compile(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.])\d+(?:\.
 _WORD = re.compile(r"[A-Za-z]+(?:['’-][A-Za-z]+)*")
 _SENTENCE_END = re.compile(r"[.!?]+(?:\s|$)")
 _HYPHENATOR = pyphen.Pyphen(lang="en_US")
+_SENTENCE = re.compile(r"[^.!?]+(?:[.!?]+|$)")
+_CORE_PHRASE = re.compile(r"\b(one|1|a|single|two|2|both)\s+cores?\b", re.IGNORECASE)
+_CORE_COUNT = {"one": 1, "1": 1, "a": 1, "single": 1, "two": 2, "2": 2, "both": 2}
+_CLAUSE_BREAK = re.compile(r"[,;:]|\b(?:and|or|but|while)\b", re.IGNORECASE)
 
 
-def numbers_in(text: str) -> list[float]:
-    return [float(token.replace(",", "")) for token in _NUMBER.findall(text)]
+def nearest_cores(sentence: str, start: int, end: int) -> int | None:
+    """Core count of the "one Core"/"two Cores" phrase closest to a number, if any."""
+    best: tuple[int, int] | None = None
+    for match in _CORE_PHRASE.finditer(sentence):
+        if match.start() <= start < match.end():
+            continue
+        gap = start - match.end() if match.end() <= start else match.start() - end
+        if best is None or gap < best[0]:
+            best = (gap, _CORE_COUNT[match.group(1).lower()])
+    return None if best is None else best[1]
+
+
+def clause_cores(sentence: str, start: int, end: int) -> set[int]:
+    """Core counts named in the clause around a number."""
+    left = max((m.end() for m in _CLAUSE_BREAK.finditer(sentence, 0, start)), default=0)
+    right = next((m.start() for m in _CLAUSE_BREAK.finditer(sentence, end)), len(sentence))
+    return {_CORE_COUNT[m.group(1).lower()] for m in _CORE_PHRASE.finditer(sentence[left:right])}
+
+
+def fits_context(fact: Fact, sentence: str, start: int, end: int) -> bool:
+    """Unit right after the number, context words anywhere in the sentence, and Core counts
+    from the number's own clause (else the nearest phrase), so "2 Cores ... on one Core" fails."""
+    lowered = sentence.lower()
+    if fact.unit and not lowered[end:end + 12].lstrip(" -").startswith(fact.unit):
+        return False
+    if fact.context and not any(word in lowered for word in fact.context):
+        return False
+    if fact.cores is None:
+        return True
+    named = clause_cores(sentence, start, end)
+    if named:
+        return named == {fact.cores}
+    return nearest_cores(sentence, start, end) == fact.cores
+
+
+def number_problems(text: str, cited: list[Fact]) -> list[str]:
+    """Each number must match a cited fact and sit in a sentence that says what the fact says."""
+    problems: list[str] = []
+    for sentence in (m.group() for m in _SENTENCE.finditer(text)):
+        for match in _NUMBER.finditer(sentence):
+            value = float(match.group().replace(",", ""))
+            owners = [fact for fact in cited if any(abs(value - ok) < 1e-6 for ok in fact.numbers)]
+            if not owners:
+                problems.append(f"number {value:g} does not match a cited fact")
+            elif not any(fits_context(fact, sentence, match.start(), match.end()) for fact in owners):
+                problems.append(f"out of context: {value:g} should read like \"{owners[0].text}\"")
+    return problems
 
 
 def word_count(text: str) -> int:
@@ -81,10 +130,9 @@ def validate(narrative: dict, facts: list[Fact]) -> list[str]:
     unknown = [item for item in cited if item not in by_id]
     if unknown:
         problems.append(f"unknown fact ids: {', '.join(unknown)}")
-    allowed = {value for item in cited if item in by_id for value in by_id[item].numbers}
-    for value in numbers_in(f"{headline} {summary}"):
-        if not any(abs(value - ok) < 1e-6 for ok in allowed):
-            problems.append(f"number {value:g} does not match a cited fact")
+    cited_facts = [by_id[item] for item in cited if item in by_id]
+    problems += number_problems(headline, cited_facts)
+    problems += number_problems(summary, cited_facts)
 
     lowered = f"{headline} {summary}".lower()
     for phrase in BANNED_PHRASES:

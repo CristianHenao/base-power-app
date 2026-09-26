@@ -134,3 +134,42 @@ def test_no_model_uses_the_template():
 
 def test_parse_reply_accepts_a_code_fence():
     assert parse_reply("```json\n" + json.dumps(GOOD) + "\n```")["headline"] == GOOD["headline"]
+
+
+def test_one_core_hours_written_as_two_cores_fail():
+    bad = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
+                              "Two Cores last about 15 hours in August. Base confirms sizing at install."}
+    problems = validate(bad, build_facts(_report()))
+    assert problems == ['out of context: 15 should read like "about 15 hours on one Core in August"']
+
+
+def test_hours_named_after_the_number_count_as_context():
+    ok = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
+                             "In August, expect about 15 hours on one Core, or about 25 hours on two Cores. "
+                             "Base confirms sizing at install.",
+          "fact_ids": GOOD["fact_ids"] + ["backup.short_month_two_cores"]}
+    assert validate(ok, build_facts(_report())) == []
+
+
+def test_a_rate_without_long_outage_words_fails():
+    bad = {**GOOD, "summary": "Homes in Harris County lose power about once every 3 years. "
+                              "One Core lasts about 15 hours in August. Base confirms sizing at install.",
+           "fact_ids": ["county.name", "outlook.once_every_years", "backup.short_month"]}
+    assert any(p.startswith("out of context: 3") for p in validate(bad, build_facts(_report())))
+
+
+def test_a_clause_naming_two_core_counts_fails():
+    bad = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
+                              "A system with 2 Cores covers about 15 hours on one Core in August. "
+                              "Base confirms sizing at install.",
+           "fact_ids": GOOD["fact_ids"] + ["sizing.cores"]}
+    assert validate(bad, build_facts(_report())) == [
+        'out of context: 15 should read like "about 15 hours on one Core in August"'
+    ]
+
+
+def test_a_number_needs_its_fact_unit():
+    facts = build_facts(_report())
+    shaky = {**GOOD, "summary": "Homes in Harris County lose power for 12 hours or more about once every 3 years. "
+                                "One Core lasts about 15% in August. Base confirms sizing at install."}
+    assert validate(shaky, facts) == ['out of context: 15 should read like "about 15 hours on one Core in August"']

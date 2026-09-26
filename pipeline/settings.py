@@ -4,6 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Local secrets such as XAI_API_KEY. Gitignored.
+ENV_FILE = REPO_ROOT / ".env"
 
 RAW_EAGLEI_DIR = REPO_ROOT / "data" / "raw" / "eaglei"
 EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events.parquet"
@@ -22,6 +24,7 @@ RAW_PRICES_DIR = REPO_ROOT / "data" / "raw" / "ercot_prices"
 GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
 TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
 INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
+REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
 PRICE_YEARS = tuple(range(2019, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
@@ -44,6 +47,17 @@ DEMO_WEATHER_ZONE: dict[str, str] = {
     "48085": "NCENT",
     "48201": "COAST",
     "48453": "SCENT",
+}
+# ERCOT load zone and main utility for the demo counties. Travis is mostly Austin Energy.
+DEMO_LOAD_ZONE: dict[str, str] = {
+    "48085": "LZ_NORTH",
+    "48201": "LZ_HOUSTON",
+    "48453": "LZ_AEN",
+}
+DEMO_UTILITY: dict[str, str] = {
+    "48085": "Oncor",
+    "48201": "CenterPoint",
+    "48453": "Austin Energy",
 }
 # Sally in Collin heats with electricity. The other two personas use the non-heat profile.
 DEMO_PROFILE: dict[str, str] = {
@@ -71,3 +85,14 @@ STORM_WEEKS: dict[str, str] = {
     "Hurricane Beryl": "2024-07-08",
 }
 TAIL_EVENTS = 5
+HOME_LABELS: dict[str, str] = {"RESHIWR": "electric heat", "RESLOWR": "gas heat"}
+REPORT_EVENTS = 5
+# Named storms by Central start date, inclusive. Other events are labeled by month.
+STORM_LABELS: tuple[tuple[str, str, str], ...] = (
+    ("2021-02-10", "2021-02-20", "February 2021 winter storm (Uri)"),
+    ("2021-09-13", "2021-09-15", "Hurricane Nicholas"),
+    ("2023-01-30", "2023-02-03", "February 2023 ice storm"),
+    ("2024-05-16", "2024-05-17", "May 2024 Houston derecho"),
+    ("2024-05-28", "2024-05-29", "May 2024 North Texas storms"),
+    ("2024-07-08", "2024-07-10", "Hurricane Beryl"),
+)
