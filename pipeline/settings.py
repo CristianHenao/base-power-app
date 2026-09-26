@@ -27,6 +27,18 @@ INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
 REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
 # Exported charts land where the web app serves static files.
 INSIGHTS_CHART_DIR = REPO_ROOT / "public" / "insights"
+RAW_EIA861_DIR = REPO_ROOT / "data" / "raw" / "eia861"
+EIA861_CSV = REPO_ROOT / "data" / "processed" / "eia861_reliability.csv"
+EIA861_YEARS = tuple(range(2019, 2025))
+# EIA utility numbers for the Texas wires companies in the M-02 insight.
+EIA861_UTILITIES: dict[int, str] = {
+    44372: "Oncor",
+    8901: "CenterPoint",
+    3278: "AEP Texas Central",
+    20404: "AEP Texas North",
+    40051: "TNMP",
+    1015: "Austin Energy",
+}
 PRICE_YEARS = tuple(range(2018, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.

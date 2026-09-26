@@ -57,11 +57,11 @@ def _svg(title: str, subtitle: str, body: list[str], note: str) -> str:
 
 
 def nice_max(value: float) -> float:
-    """Smallest 1/2/5 x 10^k at or above `value`."""
+    """Smallest 1, 1.5, 2, 2.5 or 5 x 10^k at or above `value`."""
     if value <= 0:
         return 1.0
     power = 10 ** np.floor(np.log10(value))
-    for step in (1, 2, 5, 10):
+    for step in (1, 1.5, 2, 2.5, 5, 10):
         if step * power >= value:
             return float(step * power)
     return float(10 * power)
@@ -190,6 +190,43 @@ def tail_svg(shares: pd.Series, demo: dict[str, str]) -> str:
     )
 
 
+def reliability_svg(summary: pd.DataFrame, years: tuple[int, int]) -> str:
+    """Paired bars per utility: outage hours per customer with and without major event days."""
+    left, right, y0, bar_h, pair_gap, group_gap = 170, WIDTH - 150, 104, 12, 2, 12
+    top = nice_max(float(summary["saidi_with_med"].max()) / 60.0)
+    x_at = lambda h: left + (right - left) * h / top  # noqa: E731
+    group_h = 2 * bar_h + pair_gap + group_gap
+    bottom = y0 + len(summary) * group_h - group_gap
+    body = [
+        f'<circle class="s1" cx="{left}" cy="{y0 - 22}" r="5"/>',
+        f'<text class="ink2" x="{left + 10}" y="{y0 - 18}" font-size="12">All outage time customers lived through</text>',
+        f'<circle class="s2" cx="{left + 290}" cy="{y0 - 22}" r="5"/>',
+        f'<text class="ink2" x="{left + 300}" y="{y0 - 18}" font-size="12">Headline figure, major event days removed</text>',
+    ]
+    for tick in np.linspace(0, top, 4):
+        body.append(f'<line class="grid" x1="{x_at(tick):.1f}" y1="{y0 - 6}" x2="{x_at(tick):.1f}" y2="{bottom + 4}"/>')
+        body.append(f'<text class="muted" x="{x_at(tick):.1f}" y="{bottom + 20}" font-size="11" text-anchor="middle">{tick:.0f} h</text>')
+    for i, (utility, row) in enumerate(summary.iterrows()):
+        y = y0 + i * group_h
+        body.append(f'<text class="ink" x="{left - 12}" y="{y + bar_h + 5}" font-size="13" text-anchor="end">{escape(str(utility))}</text>')
+        for k, (column, cls) in enumerate((("saidi_with_med", "s1"), ("saidi_without_med", "s2"))):
+            hours = float(row[column]) / 60.0
+            width = max(x_at(hours) - left, 5.0)
+            by = y + k * (bar_h + pair_gap)
+            body.append(f'<path class="{cls}" d="M{left},{by} h{width - 4:.1f} a4,4 0 0 1 4,4 v{bar_h - 8} '
+                        f'a4,4 0 0 1 -4,4 h{-(width - 4):.1f} z"/>')
+            body.append(f'<text class="ink2" x="{left + width + 6:.1f}" y="{by + bar_h - 2}" font-size="11">{hours:.0f} h</text>')
+        body.append(f'<text class="ink" x="{WIDTH - 24}" y="{y + bar_h + 5}" font-size="13" text-anchor="end">'
+                    f'{row["share_removed"]:.0%} removed</text>')
+    low, high = summary["share_removed"].min(), summary["share_removed"].max()
+    return _svg(
+        f"Official reliability leaves out {low:.0%}-{high:.0%} of the dark",
+        f"Outage hours per customer, {years[0]}-{years[1]} combined (SAIDI), with and without major event days",
+        body,
+        "Source: EIA-861 reliability files; Oncor and TNMP report under a non-IEEE standard. Porchlight pipeline/sources/eia861_reliability.py.",
+    )
+
+
 def persona_hours(con: duckdb.DuckDBPyConnection) -> dict[str, list[float]]:
     table = con.execute(
         "select county_fips, month, hours from backup_monthly where cores = 1 and mode = 'normal' order by county_fips, month"
@@ -206,7 +243,13 @@ def main() -> int:
         (out / "backup_by_month.svg").write_text(month_svg(persona_hours(con)))
     tails = pd.read_parquet(settings.TAIL_SHARE_PARQUET)["top_share"]
     (out / "tail_share.svg").write_text(tail_svg(tails, settings.DEMO_COUNTIES))
-    print(f"wrote backtest.svg, backup_by_month.svg and tail_share.svg to {out}")
+    if settings.EIA861_CSV.exists():
+        from pipeline.sources.eia861_reliability import med_share
+
+        reliability = pd.read_csv(settings.EIA861_CSV)
+        years = (int(reliability["year"].min()), int(reliability["year"].max()))
+        (out / "reliability_med.svg").write_text(reliability_svg(med_share(reliability), years))
+    print(f"wrote the insight charts to {out}")
     return 0
 
 

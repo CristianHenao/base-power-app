@@ -189,3 +189,5 @@ Exported by `python -m pipeline.charts` into `public/insights/`. The numbers beh
 ![Same Core, different month](public/insights/backup_by_month.svg)
 
 ![Tail share](public/insights/tail_share.svg)
+
+![Reliability with and without major event days](public/insights/reliability_med.svg)

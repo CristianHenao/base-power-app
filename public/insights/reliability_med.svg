@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" role="img" aria-labelledby="t d">
+<title id="t">Official reliability leaves out 66%-92% of the dark</title><desc id="d">Outage hours per customer, 2019-2024 combined (SAIDI), with and without major event days Source: EIA-861 reliability files; Oncor and TNMP report under a non-IEEE standard. Porchlight pipeline/sources/eia861_reliability.py.</desc>
+<style>
+  .surface { fill: #fcfcfb; } .ink { fill: #0b0b0b; } .ink2 { fill: #52514e; } .muted { fill: #7a7974; }
+  .grid { stroke: #e5e4e0; stroke-width: 1; } .axis { stroke: #b8b7b1; stroke-width: 1; }
+  .ref { stroke: #7a7974; stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .s1 { fill: #2a78d6; stroke: #2a78d6; } .s2 { fill: #eb6834; stroke: #eb6834; } .s3 { fill: #1baf7a; stroke: #1baf7a; }
+  .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .dot { stroke: #fcfcfb; stroke-width: 2; }
+  text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; } .ink { fill: #ffffff; } .ink2 { fill: #c3c2b7; } .muted { fill: #9a998f; }
+    .grid { stroke: #2e2e2c; } .axis { stroke: #4a4a46; } .ref { stroke: #9a998f; }
+    .s1 { fill: #3987e5; stroke: #3987e5; } .s2 { fill: #d95926; stroke: #d95926; } .s3 { fill: #199e70; stroke: #199e70; }
+    .dot { stroke: #1a1a19; }
+  }
+</style>
+<rect class="surface" width="720" height="400" rx="8"/>
+<text class="ink" x="24" y="34" font-size="17" font-weight="600">Official reliability leaves out 66%-92% of the dark</text>
+<text class="ink2" x="24" y="56" font-size="13">Outage hours per customer, 2019-2024 combined (SAIDI), with and without major event days</text>
+<circle class="s1" cx="170" cy="82" r="5"/>
+<text class="ink2" x="180" y="86" font-size="12">All outage time customers lived through</text>
+<circle class="s2" cx="460" cy="82" r="5"/>
+<text class="ink2" x="470" y="86" font-size="12">Headline figure, major event days removed</text>
+<line class="grid" x1="170.0" y1="98" x2="170.0" y2="324"/>
+<text class="muted" x="170.0" y="340" font-size="11" text-anchor="middle">0 h</text>
+<line class="grid" x1="303.3" y1="98" x2="303.3" y2="324"/>
+<text class="muted" x="303.3" y="340" font-size="11" text-anchor="middle">50 h</text>
+<line class="grid" x1="436.7" y1="98" x2="436.7" y2="324"/>
+<text class="muted" x="436.7" y="340" font-size="11" text-anchor="middle">100 h</text>
+<line class="grid" x1="570.0" y1="98" x2="570.0" y2="324"/>
+<text class="muted" x="570.0" y="340" font-size="11" text-anchor="middle">150 h</text>
+<text class="ink" x="158" y="121" font-size="13" text-anchor="end">Austin Energy</text>
+<path class="s1" d="M170,104 h240.7 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-240.7 z"/>
+<text class="ink2" x="420.7" y="114" font-size="11">92 h</text>
+<path class="s2" d="M170,118 h14.4 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-14.4 z"/>
+<text class="ink2" x="194.4" y="128" font-size="11">7 h</text>
+<text class="ink" x="696" y="121" font-size="13" text-anchor="end">92% removed</text>
+<text class="ink" x="158" y="159" font-size="13" text-anchor="end">CenterPoint</text>
+<path class="s1" d="M170,142 h339.1 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-339.1 z"/>
+<text class="ink2" x="519.1" y="152" font-size="11">129 h</text>
+<path class="s2" d="M170,156 h35.7 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-35.7 z"/>
+<text class="ink2" x="215.7" y="166" font-size="11">15 h</text>
+<text class="ink" x="696" y="159" font-size="13" text-anchor="end">88% removed</text>
+<text class="ink" x="158" y="197" font-size="13" text-anchor="end">Oncor</text>
+<path class="s1" d="M170,180 h107.8 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-107.8 z"/>
+<text class="ink2" x="287.8" y="190" font-size="11">42 h</text>
+<path class="s2" d="M170,194 h21.8 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-21.8 z"/>
+<text class="ink2" x="201.8" y="204" font-size="11">10 h</text>
+<text class="ink" x="696" y="197" font-size="13" text-anchor="end">77% removed</text>
+<text class="ink" x="158" y="235" font-size="13" text-anchor="end">TNMP</text>
+<path class="s1" d="M170,218 h112.6 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-112.6 z"/>
+<text class="ink2" x="292.6" y="228" font-size="11">44 h</text>
+<path class="s2" d="M170,232 h24.2 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-24.2 z"/>
+<text class="ink2" x="204.2" y="242" font-size="11">11 h</text>
+<text class="ink" x="696" y="235" font-size="13" text-anchor="end">76% removed</text>
+<text class="ink" x="158" y="273" font-size="13" text-anchor="end">AEP Texas Central</text>
+<path class="s1" d="M170,256 h151.4 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-151.4 z"/>
+<text class="ink2" x="331.4" y="266" font-size="11">58 h</text>
+<path class="s2" d="M170,270 h40.8 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-40.8 z"/>
+<text class="ink2" x="220.8" y="280" font-size="11">17 h</text>
+<text class="ink" x="696" y="273" font-size="13" text-anchor="end">71% removed</text>
+<text class="ink" x="158" y="311" font-size="13" text-anchor="end">AEP Texas North</text>
+<path class="s1" d="M170,294 h84.5 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-84.5 z"/>
+<text class="ink2" x="264.5" y="304" font-size="11">33 h</text>
+<path class="s2" d="M170,308 h25.7 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-25.7 z"/>
+<text class="ink2" x="205.7" y="318" font-size="11">11 h</text>
+<text class="ink" x="696" y="311" font-size="13" text-anchor="end">66% removed</text>
+<text class="muted" x="24" y="386" font-size="11">Source: EIA-861 reliability files; Oncor and TNMP report under a non-IEEE standard. Porchlight pipeline/sources/eia861_reliability.py.</text>
+</svg>
