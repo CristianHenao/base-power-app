@@ -5,6 +5,9 @@ match and no county_fips) stops a report.
 """
 from __future__ import annotations
 
+import csv
+import json
+import re
 import threading
 import uuid
 from collections.abc import Callable
@@ -18,9 +21,33 @@ from api.app.metrics import Metrics
 from api.app.narrator.facts import from_contract
 from api.app.narrator.narrate import ModelCall, narrate
 from api.app.schemas import Report, ReportRequest
+from pipeline import settings
 from pipeline.reports import build_report
 
 PROFILE_BY_HEAT = {"electric": "RESHIWR", "gas": "RESLOWR"}
+TEXAS_ZIP = re.compile(r"\b(7[5-9]\d{3})(?:-\d{4})?\b")
+
+
+def load_zip_counties(path: Path) -> dict[str, str]:
+    """Texas ZIP to its majority county (pipeline/zip_county.py); empty if the file is missing."""
+    if not path.exists():
+        return {}
+    with path.open() as handle:
+        return {row["zip"]: row["county_fips"] for row in csv.DictReader(handle)}
+
+
+def load_centroids(path: Path) -> dict[str, tuple[float, float]]:
+    """County (latitude, longitude) from the sales map's county list; empty if missing."""
+    if not path.exists():
+        return {}
+    counties = json.loads(path.read_text()).get("counties", [])
+    return {c["fips"]: (float(c["centroid"][1]), float(c["centroid"][0])) for c in counties if c.get("centroid")}
+
+
+def zip_in(text: str) -> str | None:
+    """The last Texas ZIP written in an address, if any."""
+    found = TEXAS_ZIP.findall(text)
+    return found[-1] if found else None
 FAULTS = frozenset({"census", "nws", "llm", "ercot"})
 REPORT_TTL_S = 3600.0
 
@@ -38,8 +65,12 @@ class ReportService:
         geocode: Callable[[str], census.Place] = census.geocode,
         alerts: Callable[[float, float], list[dict]] = nws.active_alerts,
         grid: SnapshotWorker | None = None,
+        zip_counties: dict[str, str] | None = None,
+        centroids: dict[str, tuple[float, float]] | None = None,
     ) -> None:
         self.grid = grid
+        self._zip_counties = load_zip_counties(settings.ZIP_COUNTY_CSV) if zip_counties is None else zip_counties
+        self._centroids = load_centroids(settings.COUNTY_CENTROIDS_JSON) if centroids is None else centroids
         self._con = duckdb.connect(str(features_path), read_only=True)
         self._call = call
         self._metrics = metrics
@@ -74,8 +105,13 @@ class ReportService:
             self._record("census", "ok")
         except AdapterError:
             self._record("census", "degraded")
-            if request.county_fips:
-                return request.county_fips, None, {"id": "census", "status": "degraded"}
+            fips = request.county_fips or self._zip_counties.get(request.zip or zip_in(request.address) or "")
+            if fips:
+                # The street did not match (the demo homes use made-up streets); the ZIP still places the county.
+                zip_code = request.zip or zip_in(request.address)
+                center = self._centroids.get(fips)
+                place = census.Place(fips, None, center[0], center[1], zip_code, "TX") if center else None
+                return fips, place, {"id": "census", "status": "degraded", "fallback": "zip"}
             raise PlaceNotFound("we could not find that address; try adding the city and ZIP") from None
         if not place.county_fips.startswith("48"):
             raise ValueError("Porchlight covers Texas addresses only")

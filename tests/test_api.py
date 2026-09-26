@@ -231,3 +231,20 @@ def test_event_store_falls_back_to_memory_without_a_database():
 
     assert isinstance(event_store(None), MemoryStore)
     assert isinstance(event_store("postgres://nobody:nothing@127.0.0.1:1/none"), MemoryStore)
+
+
+def test_unmatched_street_falls_back_to_the_zip_county():
+    from api.app.service import zip_in
+
+    def no_match(address):
+        raise AdapterError("no match")
+
+    service = ReportService(settings.FEATURES_DUCKDB, None, Metrics(), geocode=no_match,
+                            alerts=lambda lat, lon: [], zip_counties={"75025": "48085"},
+                            centroids={"48085": (33.19, -96.57)})
+    client = TestClient(create_app(service))
+    report = client.post("/v1/report", json={"address": "1200 Juniper Hollow Ln, Plano, TX 75025"}).json()
+    assert report["location"]["county"] == "Collin" and report["location"]["tract_geoid"] is None
+    sources = {s["id"]: s["status"] for s in report["sources"]}
+    assert sources["census"] == "degraded" and sources["nws"] == "ok"
+    assert zip_in("Houston TX 77084-1234") == "77084" and zip_in("Oakland CA 94612") is None

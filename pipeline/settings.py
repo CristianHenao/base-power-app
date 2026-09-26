@@ -19,6 +19,9 @@ COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zon
 # Alejandro's EIA-861 crosswalks and Base's offer by utility.
 COUNTY_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "county_utility.csv"
 ZIP_UTILITY_CSV = REPO_ROOT / "data" / "processed" / "zip_utility.csv"
+ZIP_COUNTY_CSV = REPO_ROOT / "data" / "processed" / "zip_county.csv"
+# County centroids from the sales map (Alejandro); used to place weather alerts when only a ZIP is known.
+COUNTY_CENTROIDS_JSON = REPO_ROOT / "public" / "utility-map" / "data" / "utility-map.json"
 BASE_AVAILABILITY_YAML = REPO_ROOT / "data" / "reference" / "base_availability.yaml"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
