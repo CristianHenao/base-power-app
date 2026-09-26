@@ -58,3 +58,17 @@ export function pickerOptions(county: CountyRecord, utilities: Map<string, Utili
     })
     .sort((a, b) => (b.share ?? 0) - (a.share ?? 0));
 }
+
+const TOOLTIP_OFFSET = 12;
+
+/** Place the tooltip below-right of the cursor, flipping so it never leaves the map. */
+export function tooltipPosition(
+  x: number,
+  y: number,
+  box: { width: number; height: number },
+  view: { width: number; height: number },
+): { left: number; top: number } {
+  const left = x + TOOLTIP_OFFSET + box.width > view.width ? x - TOOLTIP_OFFSET - box.width : x + TOOLTIP_OFFSET;
+  const top = y + TOOLTIP_OFFSET + box.height > view.height ? y - TOOLTIP_OFFSET - box.height : y + TOOLTIP_OFFSET;
+  return { left, top };
+}

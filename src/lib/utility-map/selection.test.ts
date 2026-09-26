@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { clickTarget, countyPaintState, pickerOptions } from "./selection.ts";
+import { clickTarget, countyPaintState, pickerOptions, tooltipPosition } from "./selection.ts";
 import type { ScoreModel } from "./scoring.ts";
 import type { CountyRecord, UtilityRecord } from "./types.ts";
 
@@ -45,4 +45,9 @@ test("picker lists every serving utility with its estimated share, largest first
     { id: "alpha", name: "Alpha", share: 0.8 },
     { id: "beta", name: "Beta", share: 0.2 },
   ]);
+});
+
+test("tooltip sits below-right of the cursor and flips near the edges", () => {
+  assert.deepEqual(tooltipPosition(100, 100, { width: 200, height: 60 }, { width: 1000, height: 800 }), { left: 112, top: 112 });
+  assert.deepEqual(tooltipPosition(950, 780, { width: 200, height: 60 }, { width: 1000, height: 800 }), { left: 738, top: 708 });
 });

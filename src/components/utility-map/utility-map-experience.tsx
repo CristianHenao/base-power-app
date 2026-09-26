@@ -20,7 +20,7 @@ import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-
 import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
-import { clickTarget, countyPaintState } from "@/lib/utility-map/selection";
+import { clickTarget, countyPaintState, tooltipPosition } from "@/lib/utility-map/selection";
 import type { LayerId, Preset } from "@/lib/utility-map/types";
 
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
@@ -44,7 +44,8 @@ const FLAT_BASEMAP = {
 
 type Loaded = LoadedMap;
 
-type Tooltip = { x: number; y: number; title: string; detail: string };
+type Tooltip = { left: number; top: number; title: string; detail: string };
+const TOOLTIP_BOX = { width: 260, height: 64 };
 
 function mapPadding() {
   if (typeof window === "undefined" || window.innerWidth < 1024) {
@@ -208,9 +209,12 @@ export function UtilityMapExperience() {
 
       const others = county.utilities.length - 1;
       const utilityName = utilities.get(utilityId)?.name ?? "Unknown utility";
+      const canvas = map.getCanvas();
       setTooltip({
-        x: event.point.x,
-        y: event.point.y,
+        ...tooltipPosition(event.point.x, event.point.y, TOOLTIP_BOX, {
+          width: canvas.clientWidth,
+          height: canvas.clientHeight,
+        }),
         title: paint.inSelection
           ? `${county.name} County`
           : `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
@@ -316,7 +320,7 @@ export function UtilityMapExperience() {
       {tooltip ? (
         <div
           className="pointer-events-none absolute z-20 rounded-lg border bg-white px-3 py-2 text-[14px] leading-[21px] shadow-[var(--bp-shadow-media)]"
-          style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}
+          style={{ left: tooltip.left, top: tooltip.top, maxWidth: TOOLTIP_BOX.width }}
         >
           <p className="font-semibold">{tooltip.title}</p>
           <p className="text-[12px] leading-[18px] text-muted-foreground">{tooltip.detail}</p>
