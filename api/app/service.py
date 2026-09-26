@@ -65,6 +65,7 @@ class ReportService:
         metrics: Metrics,
         geocode: Callable[[str], census.Place] = census.geocode,
         alerts: Callable[[float, float], list[dict]] = nws.active_alerts,
+        last_good_alerts: Callable[[float, float], list[dict] | None] = nws.last_good_alerts,
         grid: SnapshotWorker | None = None,
         zip_counties: dict[str, str] | None = None,
         centroids: dict[str, tuple[float, float]] | None = None,
@@ -77,6 +78,7 @@ class ReportService:
         self._metrics = metrics
         self._geocode = geocode
         self._alerts = alerts
+        self._last_good_alerts = last_good_alerts
         self._reports: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=2048)
         # Validated narratives by the facts they were written from; identical facts reuse them.
         self._narratives: TTLCache[dict] = TTLCache(ttl_s=REPORT_TTL_S, max_items=1024)
@@ -131,6 +133,9 @@ class ReportService:
             return alerts, {"id": "nws", "status": "ok"}
         except AdapterError:
             self._record("nws", "degraded")
+            stale = None if "nws" in self._faults else self._last_good_alerts(place.latitude, place.longitude)
+            if stale is not None:
+                return stale, {"id": "nws", "status": "degraded", "fallback": "cache"}
             return [], {"id": "nws", "status": "degraded"}
 
     def _grid(self, load_zone: str | None) -> tuple[dict | None, dict]:

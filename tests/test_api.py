@@ -1,5 +1,6 @@
 import json
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -288,3 +289,31 @@ def test_identical_facts_reuse_the_validated_narrative():
         rid = client.post("/v1/report", json={"county_fips": "48201"}).json()["report_id"]
         assert client.get(f"/v1/report/{rid}/narrative.json").json()["status"] == "ok"
     assert len(replies) == 1
+
+
+def test_nws_retries_once_then_raises():
+    from api.app.adapters import nws
+
+    calls = []
+
+    class Flaky:
+        def get(self, *args, **kwargs):
+            calls.append(1)
+            raise httpx.ConnectTimeout("slow")
+
+    with pytest.raises(AdapterError, match="after a retry"):
+        nws.active_alerts(10.001, -10.001, client=Flaky())
+    assert len(calls) == 2
+
+
+def test_nws_outage_serves_the_last_good_alerts():
+    def down(lat, lon):
+        raise AdapterError("NWS down")
+
+    service = ReportService(settings.FEATURES_DUCKDB, None, Metrics(), geocode=lambda a: PLANO, alerts=down,
+                            last_good_alerts=lambda lat, lon: [{"event": "Flood Watch", "severity": "Moderate",
+                                                                "headline": "Flood Watch", "ends": None}])
+    report = TestClient(create_app(service)).post("/v1/report", json={"address": "123 Main St, Plano, TX 75024"}).json()
+    assert report["live"]["alerts"][0]["event"] == "Flood Watch"
+    nws_source = next(s for s in report["sources"] if s["id"] == "nws")
+    assert nws_source["status"] == "degraded" and nws_source["fallback"] == "cache"
