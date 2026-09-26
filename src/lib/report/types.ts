@@ -116,9 +116,23 @@ export interface Alert {
   ends: string | null;
 }
 
+/** ERCOT conditions from the snapshot worker; the price is for the report's load zone. */
+export interface GridNow {
+  status: string;
+  note: string | null;
+  eea_level: number;
+  reserves_mw: number;
+  demand_mw: number | null;
+  capacity_mw: number | null;
+  load_zone: string | null;
+  price_mwh: number | null;
+  as_of: string;
+  stale: boolean;
+}
+
 export interface Live {
   alerts: Alert[];
-  grid: Record<string, unknown> | null;
+  grid: GridNow | null;
 }
 
 export interface Narrative {

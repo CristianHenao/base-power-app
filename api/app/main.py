@@ -8,7 +8,8 @@ from __future__ import annotations
 import json
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -16,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
 
+from api.app.adapters.ercot import SnapshotWorker
 from api.app.metrics import Metrics
 from api.app.narrator.narrate import ModelCall
 from api.app.narrator.xai import KEY_ENV, xai_call
@@ -32,6 +34,7 @@ class Faults(BaseModel):
     census: bool = False
     nws: bool = False
     llm: bool = False
+    ercot: bool = False
 
 
 def default_call() -> ModelCall | None:
@@ -53,8 +56,17 @@ def narrative_stream(narrative: dict) -> Iterator[str]:
 
 def create_app(service: ReportService | None = None, metrics: Metrics | None = None) -> FastAPI:
     metrics = metrics or Metrics()
-    service = service or ReportService(settings.FEATURES_DUCKDB, default_call(), metrics)
-    app = FastAPI(title="Porchlight API", version="1.0.0",
+    service = service or ReportService(settings.FEATURES_DUCKDB, default_call(), metrics, grid=SnapshotWorker())
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if service.grid is not None:
+            service.grid.start()
+        yield
+        if service.grid is not None:
+            service.grid.stop()
+
+    app = FastAPI(title="Porchlight API", version="1.0.0", lifespan=lifespan,
                   description="Will my lights stay on? County outage history, storm replays and Core sizing for Texas.")
     origins = [o.strip() for o in os.environ.get(CORS_ENV, DEFAULT_ORIGINS).split(",") if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -86,6 +98,15 @@ def create_app(service: ReportService | None = None, metrics: Metrics | None = N
             raise HTTPException(status_code=422, detail=str(error)) from None
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from None
+
+    @app.get("/v1/grid/now")
+    def grid_now() -> dict:
+        if service.grid is None:
+            raise HTTPException(status_code=503, detail="grid snapshot is not running")
+        snapshot, status = service.grid.current()
+        if snapshot is None:
+            raise HTTPException(status_code=503, detail="no ERCOT snapshot yet")
+        return {**snapshot, "source_status": status}
 
     @app.get("/v1/report/{report_id}", response_model=Report)
     def read_report(report_id: str) -> dict:

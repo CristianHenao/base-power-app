@@ -140,3 +140,65 @@ def test_ttl_cache_expires_and_evicts():
     assert cache.get("a") is None and cache.get("c") == 3
     now[0] = 11
     assert cache.get("c") is None
+
+
+def _dashboards() -> tuple[dict, dict, dict]:
+    prc = {"current_condition": {"state": "normal", "condition_note": "Enough power.", "eea_level": 0,
+                                 "prc_value": "19,226", "datetime": 1790451384}}
+    prices = {"rtSppData": [{"lzHouston": 25.0, "timestamp": "a"},
+                            {"lzHouston": 30.17, "lzNorth": 26.45, "timestamp": "2026-09-26 14:30:00-0500"}]}
+    supply = {"data": [{"demand": 60000, "capacity": 87000, "forecast": 0},
+                       {"demand": 61773, "capacity": 87325, "forecast": 0},
+                       {"demand": 65000, "capacity": 90000, "forecast": 1}]}
+    return prc, prices, supply
+
+
+def test_ercot_snapshot_parses_the_latest_rows():
+    from api.app.adapters.ercot import parse_snapshot
+
+    snap = parse_snapshot(*_dashboards())
+    assert snap["reserves_mw"] == 19226.0
+    assert snap["demand_mw"] == 61773
+    assert snap["prices_mwh"] == {"LZ_HOUSTON": 30.17, "LZ_NORTH": 26.45}
+
+
+def test_snapshot_worker_keeps_the_last_good_snapshot_and_marks_it_stale():
+    from api.app.adapters.ercot import STALE_AFTER_S, SnapshotWorker, parse_snapshot
+
+    now = [0.0]
+    answers = [parse_snapshot(*_dashboards())]
+
+    def fetch():
+        if answers:
+            return answers.pop()
+        raise AdapterError("down")
+
+    worker = SnapshotWorker(fetch=fetch, clock=lambda: now[0])
+    assert worker.current() == (None, "unavailable")
+    assert worker.refresh() and not worker.refresh()
+    snap, status = worker.current()
+    assert status == "ok" and snap["stale"] is False
+    now[0] = STALE_AFTER_S + 1
+    snap, status = worker.current()
+    assert status == "degraded" and snap["stale"] is True
+
+
+def test_report_carries_the_grid_for_its_load_zone(monkeypatch):
+    from api.app.adapters.ercot import SnapshotWorker, parse_snapshot
+
+    monkeypatch.setenv("PORCHLIGHT_DEBUG", "1")
+    worker = SnapshotWorker(fetch=lambda: parse_snapshot(*_dashboards()))
+    worker.refresh()
+    service = ReportService(settings.FEATURES_DUCKDB, None, Metrics(), geocode=lambda a: PLANO,
+                            alerts=lambda lat, lon: [], grid=worker)
+    worker.start = lambda: None  # no background thread in tests
+    client = TestClient(create_app(service))
+    report = client.post("/v1/report", json={"county_fips": "48201"}).json()
+    assert report["live"]["grid"]["load_zone"] == "LZ_HOUSTON"
+    assert report["live"]["grid"]["price_mwh"] == 30.17
+    assert {s["id"]: s["status"] for s in report["sources"]}["ercot_live"] == "ok"
+    assert client.get("/v1/grid/now").json()["prices_mwh"]["LZ_NORTH"] == 26.45
+    client.post("/v1/debug/faults", json={"ercot": True})
+    report = client.post("/v1/report", json={"county_fips": "48201"}).json()
+    assert report["live"]["grid"] is None
+    assert {s["id"]: s["status"] for s in report["sources"]}["ercot_live"] == "degraded"

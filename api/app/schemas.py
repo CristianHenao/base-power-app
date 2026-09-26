@@ -125,9 +125,24 @@ class Alert(BaseModel):
     ends: str | None
 
 
+class GridNow(BaseModel):
+    """ERCOT conditions from the snapshot worker; the price is for the report's load zone."""
+
+    status: str
+    note: str | None
+    eea_level: int
+    reserves_mw: float
+    demand_mw: float | None
+    capacity_mw: float | None
+    load_zone: str | None
+    price_mwh: float | None
+    as_of: str
+    stale: bool
+
+
 class Live(BaseModel):
     alerts: list[Alert]
-    grid: dict | None
+    grid: GridNow | None
 
 
 class Narrative(BaseModel):

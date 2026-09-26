@@ -174,6 +174,7 @@ curl -X POST localhost:8000/v1/debug/faults -d '{"nws": true, "llm": true}' \
 | `GET /v1/report/{id}` | The stored report (one hour) |
 | `GET /v1/report/{id}/narrative` | Server-sent events: status, headline, tokens, done. Only validated text streams |
 | `GET /v1/report/{id}/narrative.json` | The same narrative as JSON |
+| `GET /v1/grid/now` | ERCOT conditions, reserves, demand and real-time prices by load zone, refreshed every 5 minutes |
 | `GET /health`, `/metrics` | Liveness and Prometheus metrics (latency by route, adapter outcomes) |
 
 Load test (`make loadtest`, one uvicorn worker on a laptop, 300 requests per row):
@@ -187,7 +188,8 @@ Load test (`make loadtest`, one uvicorn worker on a laptop, 300 requests per row
 A first-time address adds the live Census and NWS calls (about 0.7 s), and a first narrative
 adds the Grok call (about 3 s); both are cached after that.
 
-Census geocoding (4 s timeout, cached 24 h) and NWS alerts (3 s, cached 5 min) each report `ok`,
+A background thread keeps the last good ERCOT snapshot, so reports never wait on ERCOT and an old
+snapshot is marked stale. Census geocoding (4 s timeout, cached 24 h) and NWS alerts (3 s, cached 5 min) each report `ok`,
 `degraded` or `unavailable` in `sources[]`. The address goes only to the Census geocoder; it is
 never logged or stored, and its cache key is a hash.
 
