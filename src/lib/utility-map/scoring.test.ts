@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildScoreModel,
-  fleetEstimate,
   offerLabel,
   rankGroup,
   utilityLayerQuality,
@@ -70,13 +69,6 @@ test("an unverified offer gets its own group and label, never 'not served'", () 
   assert.equal(rankGroup(alpha, 5), "expansion");
   assert.equal(offerLabel(beta), "Offer not verified");
   assert.equal(offerLabel(alpha), "Energy only");
-});
-
-test("fleet estimate tolerates unknown homes and coverage", () => {
-  const counties = new Map([A, B].map((c) => [c.fips, c]));
-  const fleet = fleetEstimate(alpha, counties, 0.1, { kwh_per_core: 39.2, kw_per_core: 20 });
-  assert.equal(fleet.homes, Math.round(0.1 * 940));
-  assert.equal(fleet.outageHoursCovered, null);
 });
 
 test("layers passed in LAYERS order give a combined score", () => {

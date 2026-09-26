@@ -13,9 +13,12 @@ import {
   addUtilityMapLayers,
   paintCounty,
   paintTerritory,
+  setFillRamp,
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
+import type { FleetShare } from "@/components/utility-map/fleet-card";
+import { FLEET_COLORS, fleetLevel, fleetScenario } from "@/lib/utility-map/fleet";
 import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-map/controls";
 import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
@@ -81,6 +84,7 @@ export function UtilityMapExperience() {
   const [activePresetId, setActivePresetId] = useState<string | null>("winter");
   const [showWarnings, setShowWarnings] = useState(false);
   const [mode, setMode] = useState<ModeId>("risk");
+  const [fleetShare, setFleetShare] = useState<FleetShare>(0.01);
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -126,12 +130,27 @@ export function UtilityMapExperience() {
     [data],
   );
   const selectedUtility = selectedUtilityId ? utilitiesById.get(selectedUtilityId) ?? null : null;
+
+  // Base fleet mode colors each utility by the share of its summer peak the fleet could cover.
+  const fleetModel = useMemo(() => {
+    if (!data || !model || mode !== "fleet") return model;
+    const utility = new globalThis.Map(
+      data.utilities.map((u) => {
+        const level = fleetLevel(fleetScenario(u, countiesByFips, fleetShare, data.battery).peakShare);
+        return [u.id, { score: null, level, rank: null }];
+      }),
+    );
+    const county = new globalThis.Map(
+      data.counties.map((c) => [c.fips, utility.get(c.primary_utility ?? c.utilities[0]) ?? { score: null, level: null, rank: null }]),
+    );
+    return { ...model, utility, county };
+  }, [data, model, mode, countiesByFips, fleetShare]);
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
-  const latest = useRef({ model, countiesByFips, utilitiesById, data, selectedUtilityId });
+  const latest = useRef({ model: fleetModel, countiesByFips, utilitiesById, data, selectedUtilityId });
   useEffect(() => {
-    latest.current = { model, countiesByFips, utilitiesById, data, selectedUtilityId };
+    latest.current = { model: fleetModel, countiesByFips, utilitiesById, data, selectedUtilityId };
   });
 
   const fitUtility = useCallback(
@@ -267,17 +286,22 @@ export function UtilityMapExperience() {
 
   // Repaint whenever scores or the selection change.
   useEffect(() => {
-    if (!map || !loaded || !model || !map.getSource(SOURCE_COUNTIES)) return;
+    if (!map || !loaded || !fleetModel || !map.getSource(SOURCE_COUNTIES)) return;
+    setFillRamp(map, mode === "fleet" ? FLEET_COLORS : undefined);
     for (const county of loaded.data.counties) {
+      const paintModel =
+        mode === "fleet" && selectedUtilityId
+          ? { ...fleetModel, county: new globalThis.Map([[county.fips, fleetModel.utility.get(selectedUtilityId)!]]) }
+          : fleetModel;
       paintCounty(map, county.fips, {
-        ...countyPaintState(county, utilitiesById, selectedUtilityId, model),
+        ...countyPaintState(county, utilitiesById, selectedUtilityId, paintModel),
         picked: county.fips === selectedFips || county.fips === pickerFips,
       });
     }
     for (const utility of loaded.data.utilities) {
       paintTerritory(map, utility.id, utility.id === selectedUtilityId);
     }
-  }, [map, loaded, model, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
+  }, [map, loaded, fleetModel, mode, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
 
   useEffect(() => {
     if (map) setWarningsVisible(map, showWarnings);
@@ -337,6 +361,7 @@ export function UtilityMapExperience() {
             <ControlsPanel
               mode={mode}
               onMode={onMode}
+              fleetShare={fleetShare}
               sources={data.sources}
               layers={data.layers}
               presets={data.presets}
@@ -367,6 +392,8 @@ export function UtilityMapExperience() {
               countiesByFips={countiesByFips}
               utilitiesById={utilitiesById}
               pickerFips={pickerFips}
+              fleetShare={fleetShare}
+              onFleetShare={setFleetShare}
               onClosePicker={() => setPickerFips(null)}
               selectedUtility={selectedUtility}
               selectedCounty={selectedCounty}

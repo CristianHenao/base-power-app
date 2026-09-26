@@ -2,7 +2,9 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
+import { SequentialLegend } from "@/components/utility-map/legend";
 import { ModeSwitch } from "@/components/utility-map/mode-switch";
+import { FLEET_COLORS } from "@/lib/utility-map/fleet";
 import { MODES, lensCoverage, type ModeId } from "@/lib/utility-map/controls";
 import { LEVEL_COLORS, LEVEL_LABELS, type Level } from "@/lib/utility-map/scoring";
 import type {
@@ -20,8 +22,11 @@ const GROUPS: { id: LayerGroup; label: string }[] = [
   { id: "exposure", label: "Exposure" },
 ];
 
+const LIVE_MODES: ModeId[] = ["risk", "fleet"];
+
 type ControlsPanelProps = {
   mode: ModeId;
+  fleetShare: number;
   layers: MapLayerMeta[];
   presets: Preset[];
   sources: SourceRef[];
@@ -37,6 +42,7 @@ type ControlsPanelProps = {
 
 export function ControlsPanel({
   mode,
+  fleetShare,
   layers,
   presets,
   sources,
@@ -62,7 +68,7 @@ export function ControlsPanel({
 
       <div className="space-y-2">
         <ModeSwitch mode={mode} onChange={onMode} />
-        {mode === "risk" ? (
+        {LIVE_MODES.includes(mode) ? (
           <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
         ) : (
           <p className="bp-info px-3 py-2 text-[12px] leading-[18px]">
@@ -136,7 +142,16 @@ export function ControlsPanel({
         </span>
       </label>
 
-      <ScoreLegend />
+      {mode === "fleet" ? (
+        <SequentialLegend
+          title={`Share of summer peak a ${Math.round(fleetShare * 100)}% Base fleet could supply for 2 h`}
+          colors={FLEET_COLORS}
+          labels={["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"]}
+          note="Grey: peak demand not known. Change the fleet size in a utility's panel."
+        />
+      ) : (
+        <ScoreLegend />
+      )}
     </section>
   );
 }

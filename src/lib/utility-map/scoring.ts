@@ -213,31 +213,3 @@ export function utilityLayerQuality(
   if (flags.includes("ok")) return "ok";
   return flags.length > 0 && flags.every((q) => q === "not_applicable") ? "not_applicable" : "missing";
 }
-
-export type FleetEstimate = {
-  homes: number;
-  storageMwh: number;
-  peakMw: number;
-  outageHoursCovered: number | null;
-};
-
-/** "What if Base were here": linear in fleet share. Replaced by fleet.ts in UM-2.2. */
-export function fleetEstimate(
-  utility: UtilityRecord,
-  counties: Map<string, CountyRecord>,
-  share: number,
-  battery: { kwh_per_core: number; kw_per_core: number },
-): FleetEstimate {
-  const eligible = utility.eligible_homes ?? utilityLayerSummary(utility, counties, "homes").value ?? 0;
-  const homes = Math.round(eligible * share);
-  const outageHours = utilityLayerSummary(utility, counties, "outages").value;
-  return {
-    homes,
-    storageMwh: (homes * battery.kwh_per_core) / 1000,
-    peakMw: (homes * battery.kw_per_core) / 1000,
-    outageHoursCovered:
-      outageHours != null && utility.core_coverage_hours != null
-        ? homes * outageHours * utility.core_coverage_hours
-        : null,
-  };
-}

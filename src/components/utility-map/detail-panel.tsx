@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { LevelChip } from "@/components/utility-map/controls-panel";
 import { CountyPicker } from "@/components/utility-map/county-picker";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
+import { FleetCard, GridCard, type FleetShare } from "@/components/utility-map/fleet-card";
+import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, liveSummary } from "@/lib/utility-map/format";
 import {
   RANK_GROUPS,
-  fleetEstimate,
   offerLabel,
   rankGroup,
   utilityLayerQuality,
@@ -26,11 +27,9 @@ import type {
 } from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
 
-const FLEET_SHARES = [0.01, 0.05, 0.1] as const;
 const GROUP_PREVIEW = 8;
 
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
-const oneDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
 
 function formatAsOf(iso: string): string {
@@ -52,6 +51,8 @@ type DetailPanelProps = {
   selectedUtility: UtilityRecord | null;
   selectedCounty: CountyRecord | null;
   pickerFips: string | null;
+  fleetShare: FleetShare;
+  onFleetShare: (share: FleetShare) => void;
   onSelectUtility: (id: string | null) => void;
   onSelectCounty: (fips: string | null) => void;
   onClosePicker: () => void;
@@ -258,16 +259,17 @@ function UtilityView({
   activeLayers,
   countiesByFips,
   utility,
+  fleetShare,
+  onFleetShare,
   onSelectUtility,
   onSelectCounty,
 }: DetailPanelProps & { utility: UtilityRecord }) {
-  const [share, setShare] = useState<(typeof FLEET_SHARES)[number]>(0.01);
   const scored = model.utility.get(utility.id);
   const topCounties = utility.counties
     .map((fips) => countiesByFips.get(fips))
     .filter((c): c is CountyRecord => c != null)
     .sort((a, b) => (model.county.get(b.fips)?.score ?? -1) - (model.county.get(a.fips)?.score ?? -1));
-  const fleet = fleetEstimate(utility, countiesByFips, share, data.battery);
+  const fleet = fleetScenario(utility, countiesByFips, fleetShare, data.battery);
 
   return (
     <div className="space-y-6">
@@ -307,39 +309,16 @@ function UtilityView({
 
       <RightNow data={data} fips={utility.counties} />
 
-      <div className="bp-dark space-y-4 p-5">
-        <div className="space-y-1">
-          <p className="text-[20px] leading-[27px] font-semibold">What if Base were here</p>
-          <p className="text-[14px] leading-[21px] text-white/85">
-            Share of owner-occupied single-family homes with one Core. Estimates; scales linearly.
-          </p>
-        </div>
-        <div className="flex gap-2" role="group" aria-label="Fleet size">
-          {FLEET_SHARES.map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={share === value}
-              onClick={() => setShare(value)}
-              className="bp-pill flex-1"
-            >
-              {Math.round(value * 100)}%
-            </button>
-          ))}
-        </div>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <Stat label="Homes" value={number.format(fleet.homes)} />
-          <Stat label="Storage" value={`${oneDecimal.format(fleet.storageMwh)} MWh`} />
-          <Stat label="Peak support, up to" value={`${oneDecimal.format(fleet.peakMw)} MW`} />
-          {fleet.outageHoursCovered != null ? (
-            <Stat label="Outage hours covered / yr" value={number.format(fleet.outageHoursCovered)} />
-          ) : null}
-        </dl>
-        <p className="text-[12px] leading-[18px] text-white/75">
-          For scale: Base serves 30,000+ homes today. Peak support is an upper bound at{" "}
-          {data.battery.kw_per_core} kW per Core.
-        </p>
-      </div>
+      <FleetCard
+        data={data}
+        utility={utility}
+        fleet={fleet}
+        share={fleetShare}
+        onShare={onFleetShare}
+        spikeHours={utilityLayerSummary(utility, countiesByFips, "price_spikes").value}
+      />
+
+      <GridCard utility={utility} />
 
       <div className="space-y-3">
         <p className="text-[16px] leading-[24px] font-semibold">Counties, most stressed first</p>
@@ -406,17 +385,6 @@ function CountyView({
       <p className="text-[12px] leading-[18px] text-muted-foreground">
         Homes in this county, not any single home. Every value is an estimate.
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-[12px] leading-[18px] font-medium text-white/85">{label}</dt>
-      <dd className="text-[20px] leading-[27px] font-semibold text-[var(--bp-green-20)] tabular-nums">
-        {value}
-      </dd>
     </div>
   );
 }
