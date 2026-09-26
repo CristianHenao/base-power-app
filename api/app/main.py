@@ -108,6 +108,17 @@ def create_app(service: ReportService | None = None, metrics: Metrics | None = N
             raise HTTPException(status_code=503, detail="no ERCOT snapshot yet")
         return {**snapshot, "source_status": status}
 
+    @app.get("/v1/areas")
+    def areas(layer: str) -> dict:
+        try:
+            rows = service.areas(layer)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from None
+        except LookupError as error:
+            raise HTTPException(status_code=503, detail=str(error)) from None
+        return {"layer": layer, "counties": rows,
+                "note": "Grid value is a perfect-foresight upper bound per Core; homeowner value is an estimate."}
+
     @app.get("/v1/report/{report_id}", response_model=Report)
     def read_report(report_id: str) -> dict:
         report = service.get(report_id)

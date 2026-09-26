@@ -25,6 +25,7 @@ build:
 	$(PY) -m pipeline.sources.eia861
 	$(PY) -m pipeline.sources.zip_utility
 	$(PY) -m pipeline.map_layers
+	$(PY) -m pipeline.pays_twice
 	$(PY) -m pipeline.sources.eia861_reliability
 	$(PY) -m pipeline.reports
 	$(PY) -m pipeline.charts

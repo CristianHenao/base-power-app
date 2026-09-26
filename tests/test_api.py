@@ -202,3 +202,12 @@ def test_report_carries_the_grid_for_its_load_zone(monkeypatch):
     report = client.post("/v1/report", json={"county_fips": "48201"}).json()
     assert report["live"]["grid"] is None
     assert {s["id"]: s["status"] for s in report["sources"]}["ercot_live"] == "degraded"
+
+
+def test_areas_serves_pays_twice_rows(client):
+    body = client.get("/v1/areas", params={"layer": "pays_twice"}).json()
+    assert body["layer"] == "pays_twice" and len(body["counties"]) == 254
+    scored = [row["index"] for row in body["counties"] if row["index"] is not None]
+    assert body["counties"][0]["index"] == max(scored)
+    assert body["counties"][-1]["index"] is None  # counties outside ERCOT sort last
+    assert client.get("/v1/areas", params={"layer": "flood"}).status_code == 422
