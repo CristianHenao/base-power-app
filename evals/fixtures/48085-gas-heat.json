@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48085",
+    "name": "Collin",
+    "weather_zone": "NCENT"
+  },
+  "home": {
+    "label": "gas heat",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "Moderate",
+    "long_outages_per_year": 0.0937,
+    "once_every_years": 10.68,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-14T09:15:00-06:00",
+      "peak_out_pct": 34.47,
+      "duration_h": {
+        "p50": [
+          12.0,
+          1.0
+        ],
+        "p90": [
+          14.5,
+          54.07
+        ]
+      }
+    },
+    {
+      "start": "2024-05-28T06:00:00-05:00",
+      "peak_out_pct": 22.55,
+      "duration_h": {
+        "p50": [
+          10.5,
+          5.85
+        ],
+        "p90": [
+          38.75,
+          45.33
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        33.3,
+        37.8,
+        37.4,
+        31.7,
+        21.6,
+        16.4,
+        16.1,
+        15.0,
+        19.0,
+        20.9,
+        37.6,
+        36.9
+      ],
+      "cores_2": [
+        65.9,
+        72.2,
+        71.2,
+        61.9,
+        43.7,
+        29.1,
+        28.2,
+        23.5,
+        38.7,
+        42.5,
+        71.1,
+        70.4
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9543
+  }
+}

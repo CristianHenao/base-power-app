@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48485",
+    "name": "Wichita",
+    "weather_zone": "NORTH"
+  },
+  "home": {
+    "label": "electric heat",
+    "profile_type": "RESHIWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "Moderate",
+    "long_outages_per_year": 0.0915,
+    "once_every_years": 10.92,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-15T01:45:00-06:00",
+      "peak_out_pct": 16.04,
+      "duration_h": {
+        "p50": [
+          10.45,
+          4.01
+        ],
+        "p90": [
+          21.6,
+          43.83
+        ]
+      }
+    },
+    {
+      "start": "2023-08-10T21:45:00-05:00",
+      "peak_out_pct": 11.69,
+      "duration_h": {
+        "p50": [
+          12.98,
+          9.23
+        ],
+        "p90": [
+          23.5,
+          36.03
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        13.0,
+        23.2,
+        30.6,
+        31.8,
+        25.3,
+        18.2,
+        18.3,
+        16.9,
+        20.9,
+        25.3,
+        32.0,
+        20.0
+      ],
+      "cores_2": [
+        27.4,
+        46.5,
+        59.1,
+        62.2,
+        51.0,
+        36.9,
+        37.1,
+        32.3,
+        42.6,
+        50.9,
+        63.5,
+        39.5
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9078
+  }
+}

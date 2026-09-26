@@ -95,6 +95,16 @@ def coverage(durations, weights, backup_h: float) -> tuple[float, float]:
     return float(homes), float(hours)
 
 
+def customers_floor(modeled: float, series: pd.Series) -> float:
+    """Customers in a county: the modeled count, but never fewer than were ever out at once.
+
+    MCC.csv undercounts some small counties (Jeff Davis has 44), and EAGLE-I sometimes
+    books a utility's outage to one county, so peaks can exceed the modeled count.
+    """
+    peak = float(series.max()) if not series.empty else 0.0
+    return max(float(modeled), peak)
+
+
 def extract_events(series: pd.Series, customers_total: float,
                    cfg: EventConfig = EventConfig()) -> list[dict]:
     """Cut one county's customers-out series (DatetimeIndex, 15-min) into events.
@@ -130,6 +140,8 @@ def extract_events(series: pd.Series, customers_total: float,
             d, w = customer_durations(curve, order=order)
             row[f"p50_h_{order}"] = weighted_quantile(d, w, 0.5)
             row[f"p90_h_{order}"] = weighted_quantile(d, w, 0.9)
-            row[f"share_12h_{order}"] = float(w[d >= 12].sum() / customers_total) if customers_total else 0.0
+            # Queue replay of a noisy curve re-darkens homes; one event is at most its peak share.
+            share = float(w[d >= 12].sum() / customers_total) if customers_total else 0.0
+            row[f"share_12h_{order}"] = min(share, float(curve.max()) / customers_total) if customers_total else 0.0
         events.append(row)
     return events

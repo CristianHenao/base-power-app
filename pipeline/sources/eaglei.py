@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 
 from pipeline import settings
-from pipeline.events import EventConfig, extract_events
+from pipeline.events import EventConfig, customers_floor, extract_events
 
 NORMALIZED_COLUMNS = ("county_fips", "state", "customers_out", "timestamp")
 
@@ -168,9 +168,10 @@ def events_frame(
         )
     rows: list[dict] = []
     for fips, series in series_by_fips.items():
-        total = float(customers_by_fips[fips])
-        if total <= 0:
+        modeled = float(customers_by_fips[fips])
+        if modeled <= 0:
             raise ValueError(f"modeled customers for {fips} must be positive")
+        total = customers_floor(modeled, series)
         for event in extract_events(series, total, cfg):
             rows.append({"county_fips": fips, **event})
     return pd.DataFrame(rows, columns=list(EVENT_COLUMNS))

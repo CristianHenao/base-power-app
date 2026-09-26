@@ -4,18 +4,28 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Local secrets such as XAI_API_KEY. Gitignored.
+ENV_FILE = REPO_ROOT / ".env"
 
 RAW_EAGLEI_DIR = REPO_ROOT / "data" / "raw" / "eaglei"
 EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events.parquet"
 TEXAS_EVENTS_PARQUET = REPO_ROOT / "data" / "processed" / "events_texas.parquet"
 OUTLOOK_PARQUET = REPO_ROOT / "data" / "processed" / "outlook.parquet"
 BACKTEST_JSON = REPO_ROOT / "data" / "processed" / "backtest.json"
-# Alejandro's crosswalk, columns county_fips and weather_zone. Until it exists the
+FEATURES_DUCKDB = REPO_ROOT / "data" / "features.duckdb"
+# Alejandro's crosswalk (pipeline/sources/crosswalk.py). Without it the
 # empirical-Bayes prior is fit statewide.
-COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "raw" / "reference" / "county_weather_zone.csv"
+COUNTY_WEATHER_ZONE_CSV = REPO_ROOT / "data" / "processed" / "county_weather_zone.csv"
 STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
 RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
+ERCOT_CACHE_DIR = RAW_ERCOT_DIR / "cache"
+RAW_PRICES_DIR = REPO_ROOT / "data" / "raw" / "ercot_prices"
+GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
+TAIL_SHARE_PARQUET = REPO_ROOT / "data" / "processed" / "tail_share.parquet"
+INSIGHTS_JSON = REPO_ROOT / "data" / "processed" / "insights.json"
+REPORTS_DIR = REPO_ROOT / "data" / "processed" / "reports"
+PRICE_YEARS = tuple(range(2018, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
 RATES_START = "2018-01-01"
@@ -32,11 +42,22 @@ DEMO_COUNTIES: dict[str, str] = {
 }
 DEMO_FIPS: tuple[str, ...] = tuple(DEMO_COUNTIES)
 
-# ERCOT weather zones for the demo counties. Confirm against Alejandro's crosswalk.
+# ERCOT weather zones for the demo counties. tests/test_backtest.py checks them against the crosswalk.
 DEMO_WEATHER_ZONE: dict[str, str] = {
     "48085": "NCENT",
     "48201": "COAST",
     "48453": "SCENT",
+}
+# ERCOT load zone and main utility for the demo counties. Travis is mostly Austin Energy.
+DEMO_LOAD_ZONE: dict[str, str] = {
+    "48085": "LZ_NORTH",
+    "48201": "LZ_HOUSTON",
+    "48453": "LZ_AEN",
+}
+DEMO_UTILITY: dict[str, str] = {
+    "48085": "Oncor",
+    "48201": "CenterPoint",
+    "48453": "Austin Energy",
 }
 # Sally in Collin heats with electricity. The other two personas use the non-heat profile.
 DEMO_PROFILE: dict[str, str] = {
@@ -54,3 +75,24 @@ EAGLEI_FIPS_COL = "fips_code"
 EAGLEI_STATE_COL = "state"
 EAGLEI_CUSTOMERS_OUT_COL = "customers_out"
 EAGLEI_TIMESTAMP_COL = "run_start_time"
+
+# ERCOT weather zones and residential profile types in the backcasted workbooks.
+WEATHER_ZONES: tuple[str, ...] = ("COAST", "EAST", "FWEST", "NCENT", "NORTH", "SCENT", "SOUTH", "WEST")
+PROFILE_TYPES: tuple[str, ...] = ("RESLOWR", "RESHIWR")
+# Storm weeks replayed for every zone, as Central start dates.
+STORM_WEEKS: dict[str, str] = {
+    "Winter Storm Uri": "2021-02-14",
+    "Hurricane Beryl": "2024-07-08",
+}
+TAIL_EVENTS = 5
+HOME_LABELS: dict[str, str] = {"RESHIWR": "electric heat", "RESLOWR": "gas heat"}
+REPORT_EVENTS = 5
+# Named storms by Central start date, inclusive. Other events are labeled by month.
+STORM_LABELS: tuple[tuple[str, str, str], ...] = (
+    ("2021-02-10", "2021-02-20", "February 2021 winter storm (Uri)"),
+    ("2021-09-13", "2021-09-15", "Hurricane Nicholas"),
+    ("2023-01-30", "2023-02-03", "February 2023 ice storm"),
+    ("2024-05-16", "2024-05-17", "May 2024 Houston derecho"),
+    ("2024-05-28", "2024-05-29", "May 2024 North Texas storms"),
+    ("2024-07-08", "2024-07-10", "Hurricane Beryl"),
+)

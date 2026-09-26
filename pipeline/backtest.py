@@ -14,7 +14,7 @@ import pandas as pd
 
 from pipeline import settings
 from pipeline.events import EventConfig
-from pipeline.outlook import backtest_outlook, county_outlook
+from pipeline.outlook import backtest_outlook, county_outlook, zone_dispersion
 from pipeline.sources.eaglei import (
     columns_from_settings,
     concat_yearly,
@@ -68,6 +68,13 @@ def load_zones(path: Path, fips: pd.Index) -> tuple[pd.Series, str]:
     return zones.reindex(fips), "weather_zone"
 
 
+def floored_counties(frame: pd.DataFrame, customers: dict[str, float]) -> pd.Series:
+    """True where a county's peak customers out exceeds its modeled count, so the peak is used."""
+    peak = frame.groupby("county_fips")["customers_out"].max()
+    modeled = pd.Series(customers, dtype=float).reindex(peak.index)
+    return (peak > modeled).rename("customers_floored")
+
+
 def statewide_events(frame: pd.DataFrame, customers: dict[str, float], cfg: EventConfig = EventConfig()) -> pd.DataFrame:
     """Events for every Texas county that has both readings and a modeled customer count."""
     series = {
@@ -90,7 +97,11 @@ def run_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series) -> tu
     usable = train_years.index[(train_years > 0) & (test_years > 0)]
     train = long_counts(events, train_start, train_end).reindex(usable, fill_value=0.0)
     test = long_counts(events, test_start, test_end).reindex(usable, fill_value=0.0)
-    scores = backtest_outlook(train, train_years[usable], test, test_years[usable], zones[usable])
+    col = f"share_12h_{settings.LONG_OUTAGE_ORDER}"
+    stamps = pd.to_datetime(events["start"], utc=True)
+    train_rows = events.loc[(stamps >= _utc(train_start)) & (stamps < _utc(train_end))]
+    phi = zone_dispersion(train_rows, zones, col)
+    scores = backtest_outlook(train, train_years[usable], test, test_years[usable], zones[usable], phi)
     surprises = int(((train == 0) & (test > 0)).sum())
     return scores, surprises
 
@@ -148,6 +159,7 @@ def main() -> int:
 
     zones, scope = load_zones(settings.COUNTY_WEATHER_ZONE_CSV, first.index)
     outlook = build_outlook(events, first, zones, data_end)
+    outlook["customers_floored"] = floored_counties(frame, customers).reindex(outlook.index, fill_value=False)
     settings.OUTLOOK_PARQUET.parent.mkdir(parents=True, exist_ok=True)
     outlook.to_parquet(settings.OUTLOOK_PARQUET)
 
@@ -161,6 +173,7 @@ def main() -> int:
     print("backtest: fit 2018-2022, score 2023-2024")
     print(scores.to_string(float_format=lambda v: f"{v:.3f}"))
     print(f"{surprises} counties had no 12h+ outages in training and some in testing")
+    print(f"{int(outlook['customers_floored'].sum())} counties use their peak customers out as the customer count")
     demo = outlook.loc[outlook.index.isin(list(settings.DEMO_FIPS))]
     print(demo[["long_outages_per_year", "lo90", "hi90", "level", "label", "once_every_years", "years_of_data"]]
           .to_string(float_format=lambda v: f"{v:.3f}"))

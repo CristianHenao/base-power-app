@@ -1,0 +1,24 @@
+{
+  "headline": "Backup Report for Collin County Homes",
+  "summary": "Collin County has a moderate outlook. It sees a long outage of 12 hours or more about once every 11 years based on 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth waited about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth waited about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 91% of past 12-hour-plus outage hours for homes with electric heat. Base confirms sizing at install.",
+  "fact_ids": [
+    "county.name",
+    "outlook.label",
+    "outlook.once_every_years",
+    "outlook.years_of_data",
+    "outlook.since",
+    "event.1.start",
+    "event.1.peak_out_pct",
+    "event.1.p90_hours",
+    "event.2.start",
+    "event.2.peak_out_pct",
+    "event.2.p90_hours",
+    "backup.short_month",
+    "backup.long_month",
+    "backup.short_month_two_cores",
+    "sizing.cores",
+    "sizing.share",
+    "threshold.hours",
+    "home.label"
+  ]
+}

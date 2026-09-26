@@ -1,0 +1,280 @@
+{
+  "report_id": "rpt_48201_reslowr",
+  "location": {
+    "county_fips": "48201",
+    "county": "Harris",
+    "tract_geoid": null,
+    "weather_zone": "COAST",
+    "load_zone": "LZ_HOUSTON",
+    "utility": {
+      "name": "CenterPoint",
+      "detected_from": "persona",
+      "confirmed": false
+    }
+  },
+  "home": {
+    "profile_type": "RESLOWR",
+    "label": "gas heat"
+  },
+  "base_offer": null,
+  "outlook": {
+    "level": 4,
+    "label": "High",
+    "long_outages_per_year": 0.23,
+    "interval_90": [
+      0.151,
+      0.322
+    ],
+    "once_every_years": 4.4,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "id": "48201-2024-07-08",
+      "label": "Hurricane Beryl",
+      "start": "2024-07-08T09:15:00-05:00",
+      "peak_out_pct": 90.9,
+      "duration_h": {
+        "p50": [
+          1.8,
+          1.8
+        ],
+        "p90": [
+          42.2,
+          29.1
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.761,
+          "hours": 0.467
+        },
+        "cores_2": {
+          "homes": 0.912,
+          "hours": 0.612
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 20.1,
+        "cores_2": 38.5
+      }
+    },
+    {
+      "id": "48201-2024-05-18",
+      "label": "May 2024 outage",
+      "start": "2024-05-18T01:45:00-05:00",
+      "peak_out_pct": 15.9,
+      "duration_h": {
+        "p50": [
+          7.8,
+          7.8
+        ],
+        "p90": [
+          63.3,
+          63.3
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.655,
+          "hours": 0.606
+        },
+        "cores_2": {
+          "homes": 0.869,
+          "hours": 0.795
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 20.1,
+        "cores_2": 39.6
+      }
+    },
+    {
+      "id": "48201-2021-02-14-3",
+      "label": "February 2021 winter storm (Uri)",
+      "start": "2021-02-14T23:15:00-06:00",
+      "peak_out_pct": 24.9,
+      "duration_h": {
+        "p50": [
+          0.8,
+          0.5
+        ],
+        "p90": [
+          10.9,
+          8.4
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.999,
+          "hours": 0.998
+        },
+        "cores_2": {
+          "homes": 1.0,
+          "hours": 1.0
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 32.2,
+        "cores_2": 118.3
+      }
+    },
+    {
+      "id": "48201-2024-05-16",
+      "label": "May 2024 Houston derecho",
+      "start": "2024-05-16T18:00:00-05:00",
+      "peak_out_pct": 27.5,
+      "duration_h": {
+        "p50": [
+          5.5,
+          4.6
+        ],
+        "p90": [
+          14.1,
+          14.3
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 1.0,
+          "hours": 1.0
+        },
+        "cores_2": {
+          "homes": 1.0,
+          "hours": 1.0
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 21.6,
+        "cores_2": 48.0
+      }
+    },
+    {
+      "id": "48201-2021-09-13-2",
+      "label": "Hurricane Nicholas",
+      "start": "2021-09-13T21:30:00-05:00",
+      "peak_out_pct": 6.5,
+      "duration_h": {
+        "p50": [
+          9.9,
+          6.4
+        ],
+        "p90": [
+          33.5,
+          40.3
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.844,
+          "hours": 0.64
+        },
+        "cores_2": {
+          "homes": 0.927,
+          "hours": 0.837
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 23.3,
+        "cores_2": 49.3
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        41.7,
+        40.7,
+        37.6,
+        26.2,
+        19.6,
+        16.6,
+        16.8,
+        15.4,
+        18.0,
+        20.7,
+        32.2,
+        40.9
+      ],
+      "cores_2": [
+        82.0,
+        79.7,
+        69.3,
+        52.8,
+        39.9,
+        30.6,
+        32.9,
+        24.9,
+        36.1,
+        42.4,
+        61.8,
+        79.1
+      ]
+    },
+    "assumptions": {
+      "kwh_per_core": 39.2,
+      "kw_per_core": 20.0,
+      "start_soc": 1.0,
+      "mode": "normal",
+      "profile_year": 2024
+    }
+  },
+  "sizing": {
+    "cores": 2,
+    "reason": "Two Cores would have covered 63% of the 12-hour-plus outage hours in Harris County since 2018, the most of the options we model. Base confirms sizing at install.",
+    "share": 0.637
+  },
+  "live": {
+    "alerts": [],
+    "grid": null
+  },
+  "narrative": {
+    "status": "retried",
+    "headline": "Power Backup Report for Harris County",
+    "summary": "Homes in Harris County face a long outage about once every 4 years based on 8 years of records since 2018. In one storm 91% of homes in the county lost power. In another 16% of homes in the county lost power. One Core lasts about 15 hours in August. One Core lasts about 42 hours in January. Two Cores last about 25 hours in August. Two Cores cover 63% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "fact_ids": [
+      "county.name",
+      "outlook.once_every_years",
+      "outlook.years_of_data",
+      "outlook.since",
+      "event.1.peak_out_pct",
+      "event.2.peak_out_pct",
+      "backup.short_month",
+      "backup.long_month",
+      "backup.short_month_two_cores",
+      "sizing.share",
+      "threshold.hours"
+    ],
+    "url": null
+  },
+  "sources": [
+    {
+      "id": "eaglei",
+      "as_of": "2025-12-31",
+      "status": "ok"
+    },
+    {
+      "id": "ercot_profiles",
+      "as_of": "2024",
+      "status": "ok"
+    },
+    {
+      "id": "nws",
+      "status": "not_connected"
+    },
+    {
+      "id": "base_offer",
+      "status": "not_connected"
+    },
+    {
+      "id": "llm",
+      "status": "ok"
+    }
+  ]
+}

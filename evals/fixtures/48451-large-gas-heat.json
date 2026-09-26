@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48451",
+    "name": "Tom Green",
+    "weather_zone": "WEST"
+  },
+  "home": {
+    "label": "gas heat and a larger footprint",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.5
+  },
+  "outlook": {
+    "label": "Moderate",
+    "long_outages_per_year": 0.0992,
+    "once_every_years": 10.08,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-14T05:00:00-06:00",
+      "peak_out_pct": 49.13,
+      "duration_h": {
+        "p50": [
+          19.9,
+          7.0
+        ],
+        "p90": [
+          37.05,
+          70.27
+        ]
+      }
+    },
+    {
+      "start": "2019-05-18T05:15:00-05:00",
+      "peak_out_pct": 48.16,
+      "duration_h": {
+        "p50": [
+          5.0,
+          3.96
+        ],
+        "p90": [
+          11.39,
+          12.74
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        32.9,
+        36.2,
+        36.4,
+        25.9,
+        18.9,
+        15.6,
+        16.1,
+        14.9,
+        19.8,
+        20.8,
+        38.1,
+        36.0
+      ],
+      "cores_2": [
+        64.7,
+        69.5,
+        69.1,
+        52.2,
+        38.0,
+        25.8,
+        27.4,
+        23.4,
+        40.4,
+        42.4,
+        71.8,
+        69.0
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9632
+  }
+}

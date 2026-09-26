@@ -5,7 +5,13 @@ import numpy as np
 import pytest
 from openpyxl import Workbook
 
-from pipeline.sources.ercot_profiles import intervals_from_row, read_profile_day, span_kwh, typical_day
+from pipeline.sources.ercot_profiles import (
+    intervals_from_row,
+    profile_days_many,
+    read_profile_day,
+    span_kwh,
+    typical_day,
+)
 
 
 def test_intervals_drop_trailing_empty_cells_and_ignore_addtime():
@@ -45,6 +51,24 @@ def test_span_kwh_concatenates_consecutive_days(tmp_path: Path):
     _workbook(path)
     trace = span_kwh(path, date(2021, 6, 1), 1, "RESLOWR", "COAST")
     assert trace.tolist() == [0.4, 0.5, 0.6]
+
+
+def test_duplicate_month_sheets_keep_the_fuller_one(tmp_path: Path):
+    book = Workbook()
+    partial = book.active
+    partial.title = "September"
+    full = book.create_sheet("Sep")
+    header = ["PType_WZ", "Date", "int_kWh1", "ADDTIME"]
+    partial.append(header)
+    partial.append(["RESLOWR_COAST", date(2025, 9, 1), 9.0, None])
+    full.append(header)
+    full.append(["RESLOWR_COAST", date(2025, 9, 1), 1.0, None])
+    full.append(["RESLOWR_COAST", date(2025, 9, 2), 2.0, None])
+    path = tmp_path / "profiles.xlsx"
+    book.save(path)
+    book.close()
+    days = profile_days_many(path, {"RESLOWR_COAST"})["RESLOWR_COAST"]
+    assert [(day.day, trace.tolist()) for day, trace in days] == [(1, [1.0]), (2, [2.0])]
 
 
 def test_read_profile_day_from_a_workbook(tmp_path: Path):

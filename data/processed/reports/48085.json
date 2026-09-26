@@ -1,0 +1,287 @@
+{
+  "report_id": "rpt_48085_reshiwr",
+  "location": {
+    "county_fips": "48085",
+    "county": "Collin",
+    "tract_geoid": null,
+    "weather_zone": "NCENT",
+    "load_zone": "LZ_NORTH",
+    "utility": {
+      "name": "Oncor",
+      "detected_from": "persona",
+      "confirmed": false
+    }
+  },
+  "home": {
+    "profile_type": "RESHIWR",
+    "label": "electric heat"
+  },
+  "base_offer": null,
+  "outlook": {
+    "level": 2,
+    "label": "Moderate",
+    "long_outages_per_year": 0.094,
+    "interval_90": [
+      0.04,
+      0.166
+    ],
+    "once_every_years": 10.7,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "id": "48085-2021-02-14",
+      "label": "February 2021 winter storm (Uri)",
+      "start": "2021-02-14T09:15:00-06:00",
+      "peak_out_pct": 34.5,
+      "duration_h": {
+        "p50": [
+          12.0,
+          1.0
+        ],
+        "p90": [
+          14.5,
+          54.1
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.818,
+          "hours": 0.27
+        },
+        "cores_2": {
+          "homes": 0.826,
+          "hours": 0.379
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 8.6,
+        "cores_2": 15.3
+      }
+    },
+    {
+      "id": "48085-2024-05-28",
+      "label": "May 2024 North Texas storms",
+      "start": "2024-05-28T06:00:00-05:00",
+      "peak_out_pct": 22.6,
+      "duration_h": {
+        "p50": [
+          10.5,
+          5.9
+        ],
+        "p90": [
+          38.8,
+          45.3
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.792,
+          "hours": 0.621
+        },
+        "cores_2": {
+          "homes": 0.923,
+          "hours": 0.862
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 23.4,
+        "cores_2": 46.9
+      }
+    },
+    {
+      "id": "48085-2025-03-04",
+      "label": "March 2025 outage",
+      "start": "2025-03-04T05:15:00-06:00",
+      "peak_out_pct": 21.5,
+      "duration_h": {
+        "p50": [
+          7.0,
+          3.2
+        ],
+        "p90": [
+          12.0,
+          18.9
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.969,
+          "hours": 0.983
+        },
+        "cores_2": {
+          "homes": 1.0,
+          "hours": 1.0
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 33.1,
+        "cores_2": 58.3
+      }
+    },
+    {
+      "id": "48085-2022-02-02",
+      "label": "February 2022 outage",
+      "start": "2022-02-02T21:00:00-06:00",
+      "peak_out_pct": 3.8,
+      "duration_h": {
+        "p50": [
+          4.8,
+          2.0
+        ],
+        "p90": [
+          21.1,
+          35.6
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 0.82,
+          "hours": 0.602
+        },
+        "cores_2": {
+          "homes": 0.877,
+          "hours": 0.776
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 19.2,
+        "cores_2": 30.6
+      }
+    },
+    {
+      "id": "48085-2023-03-02",
+      "label": "March 2023 outage",
+      "start": "2023-03-02T18:30:00-06:00",
+      "peak_out_pct": 13.2,
+      "duration_h": {
+        "p50": [
+          4.2,
+          4.1
+        ],
+        "p90": [
+          10.2,
+          10.0
+        ]
+      },
+      "covered": {
+        "cores_1": {
+          "homes": 1.0,
+          "hours": 1.0
+        },
+        "cores_2": {
+          "homes": 1.0,
+          "hours": 1.0
+        }
+      },
+      "covered_order": "lifo",
+      "backup_h": {
+        "cores_1": 33.5,
+        "cores_2": 62.9
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        16.1,
+        28.2,
+        34.2,
+        34.0,
+        25.7,
+        19.0,
+        18.5,
+        17.4,
+        21.8,
+        25.5,
+        34.9,
+        23.4
+      ],
+      "cores_2": [
+        31.9,
+        55.3,
+        66.8,
+        65.5,
+        51.7,
+        38.7,
+        37.7,
+        34.1,
+        44.0,
+        51.2,
+        68.2,
+        46.8
+      ]
+    },
+    "assumptions": {
+      "kwh_per_core": 39.2,
+      "kw_per_core": 20.0,
+      "start_soc": 1.0,
+      "mode": "normal",
+      "profile_year": 2024
+    }
+  },
+  "sizing": {
+    "cores": 2,
+    "reason": "Two Cores would have covered 52% of the 12-hour-plus outage hours in Collin County since 2018, the most of the options we model. Base confirms sizing at install.",
+    "share": 0.52
+  },
+  "live": {
+    "alerts": [],
+    "grid": null
+  },
+  "narrative": {
+    "status": "ok",
+    "headline": "Backup Power for Collin County Homes",
+    "summary": "Collin County has a moderate outlook. It sees a long outage of 12 hours or more about once every 11 years based on 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. Two Cores cover 52% of past 12-hour-plus outage hours for homes with electric heat. Base confirms sizing at install.",
+    "fact_ids": [
+      "county.name",
+      "outlook.label",
+      "outlook.once_every_years",
+      "outlook.years_of_data",
+      "outlook.since",
+      "event.1.start",
+      "event.1.peak_out_pct",
+      "event.1.p90_hours",
+      "event.2.start",
+      "event.2.peak_out_pct",
+      "event.2.p90_hours",
+      "backup.short_month",
+      "backup.long_month",
+      "backup.short_month_two_cores",
+      "sizing.cores",
+      "sizing.share",
+      "threshold.hours",
+      "home.label"
+    ],
+    "url": null
+  },
+  "sources": [
+    {
+      "id": "eaglei",
+      "as_of": "2025-12-31",
+      "status": "ok"
+    },
+    {
+      "id": "ercot_profiles",
+      "as_of": "2024",
+      "status": "ok"
+    },
+    {
+      "id": "nws",
+      "status": "not_connected"
+    },
+    {
+      "id": "base_offer",
+      "status": "not_connected"
+    },
+    {
+      "id": "llm",
+      "status": "ok"
+    }
+  ]
+}

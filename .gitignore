@@ -58,3 +58,5 @@ data/raw/
 # Runtime device outline thumbnails from My Home scans
 public/home/scans/*
 !public/home/scans/.gitkeep
+# Full Texas EAGLE-I cut is 139 MB; rebuild with python -m pipeline.sources.eaglei_texas
+data/processed/eaglei_tx.parquet

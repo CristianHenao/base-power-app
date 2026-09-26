@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48485",
+    "name": "Wichita",
+    "weather_zone": "NORTH"
+  },
+  "home": {
+    "label": "gas heat",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "Moderate",
+    "long_outages_per_year": 0.0915,
+    "once_every_years": 10.92,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-15T01:45:00-06:00",
+      "peak_out_pct": 16.04,
+      "duration_h": {
+        "p50": [
+          10.45,
+          4.01
+        ],
+        "p90": [
+          21.6,
+          43.83
+        ]
+      }
+    },
+    {
+      "start": "2023-08-10T21:45:00-05:00",
+      "peak_out_pct": 11.69,
+      "duration_h": {
+        "p50": [
+          12.98,
+          9.23
+        ],
+        "p90": [
+          23.5,
+          36.03
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        43.3,
+        47.8,
+        46.9,
+        43.2,
+        34.1,
+        20.3,
+        20.4,
+        18.4,
+        23.7,
+        34.1,
+        49.7,
+        45.4
+      ],
+      "cores_2": [
+        86.1,
+        95.6,
+        94.1,
+        86.2,
+        64.6,
+        41.2,
+        41.4,
+        37.1,
+        47.5,
+        64.2,
+        99.6,
+        91.3
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9809
+  }
+}

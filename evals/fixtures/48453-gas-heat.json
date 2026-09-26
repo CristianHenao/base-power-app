@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48453",
+    "name": "Travis",
+    "weather_zone": "SCENT"
+  },
+  "home": {
+    "label": "gas heat",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "Moderate",
+    "long_outages_per_year": 0.0908,
+    "once_every_years": 11.01,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2021-02-14T12:30:00-06:00",
+      "peak_out_pct": 42.66,
+      "duration_h": {
+        "p50": [
+          21.75,
+          1.25
+        ],
+        "p90": [
+          29.0,
+          74.38
+        ]
+      }
+    },
+    {
+      "start": "2023-02-01T02:15:00-06:00",
+      "peak_out_pct": 28.82,
+      "duration_h": {
+        "p50": [
+          32.0,
+          3.5
+        ],
+        "p90": [
+          58.5,
+          106.35
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        43.1,
+        43.8,
+        42.7,
+        36.6,
+        21.6,
+        18.1,
+        18.7,
+        17.5,
+        19.2,
+        23.2,
+        42.2,
+        43.1
+      ],
+      "cores_2": [
+        85.3,
+        87.4,
+        84.9,
+        67.8,
+        43.7,
+        36.3,
+        37.9,
+        34.4,
+        39.3,
+        46.6,
+        84.1,
+        85.7
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9373
+  }
+}

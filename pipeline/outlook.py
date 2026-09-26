@@ -6,15 +6,36 @@ import pandas as pd
 from scipy import stats
 
 LEVELS = ["Low", "Moderate", "Elevated", "High", "Very high"]
+# Fixed bands on "a 12h+ outage about once every N years": >15, 10-15, 6-10, 3-6, <=3.
+# Rates cluster within weather zones, so statewide quintiles flipped on tiny differences.
+BAND_YEARS = (15.0, 10.0, 6.0, 3.0)
 
 
-def shrink_rates(events, years, floor_cv: float = 0.25):
+def outlook_level(once_every_years: float) -> int:
+    """1 (Low) to 5 (Very high); each band edge belongs to the higher level."""
+    return 1 + sum(once_every_years <= edge for edge in BAND_YEARS)
+
+
+def dispersion(shares) -> float:
+    """Quasi-Poisson scale of a count built from per-event shares: sum(s^2) / sum(s).
+
+    A count of whole events has scale 1. Summing fractional shares is less noisy.
+    """
+    s = np.asarray(shares, float)
+    s = s[s > 0]
+    return 1.0 if s.size == 0 else float(np.sum(s ** 2) / np.sum(s))
+
+
+def shrink_rates(events, years, floor_cv: float = 0.25, phi: float = 1.0):
     """Gamma-Poisson empirical Bayes. Returns (posterior mean, 5th pct, 95th pct).
 
     events: effective long-outage count per county (fractional is fine)
     years:  years of usable coverage per county
+    phi:    quasi-Poisson scale from `dispersion`; counts and years are divided by it
     Fit separately within each ERCOT weather zone.
     """
+    if phi <= 0:
+        raise ValueError("phi must be positive")
     events, years = np.asarray(events, float), np.asarray(years, float)
     if np.any(years <= 0):
         raise ValueError("years must be positive")
@@ -24,13 +45,19 @@ def shrink_rates(events, years, floor_cv: float = 0.25):
         zeros = np.zeros_like(rate)
         return zeros, zeros, zeros
     raw_var = np.average((rate - mean) ** 2, weights=years)
-    noise = mean * np.average(1.0 / years, weights=years)       # expected Poisson share
+    noise = phi * mean * np.average(1.0 / years, weights=years)  # expected sampling share
     var_between = max(raw_var - noise, (floor_cv * mean) ** 2)   # floor keeps the prior honest
     beta = mean / var_between
     alpha = mean * beta
-    a_post, b_post = alpha + events, beta + years
+    a_post, b_post = alpha + events / phi, beta + years / phi
     lo, hi = stats.gamma.ppf([[0.05], [0.95]], a_post, scale=1.0 / b_post)
     return a_post / b_post, lo, hi
+
+
+def zone_dispersion(events: pd.DataFrame, zone: pd.Series, col: str) -> pd.Series:
+    """`dispersion` of the per-event shares within each weather zone."""
+    zones = events["county_fips"].map(zone)
+    return events[col].groupby(zones).apply(dispersion)
 
 
 def county_outlook(events: pd.DataFrame, years: pd.Series, zone: pd.Series,
@@ -43,19 +70,19 @@ def county_outlook(events: pd.DataFrame, years: pd.Series, zone: pd.Series,
     """
     col = f"share_12h_{order}"
     counts = events.groupby("county_fips")[col].sum().reindex(years.index, fill_value=0.0)
+    phis = zone_dispersion(events, zone, col)
     parts = []
     for z, idx in zone.groupby(zone).groups.items():
-        post, lo, hi = shrink_rates(counts.loc[idx], years.loc[idx])
+        post, lo, hi = shrink_rates(counts.loc[idx], years.loc[idx], phi=phis.get(z, 1.0))
         parts.append(pd.DataFrame({
             "weather_zone": z, "long_outages_per_year": post,
             "lo90": lo, "hi90": hi, "years_of_data": years.loc[idx],
         }, index=idx))
     df = pd.concat(parts)
-    cuts = df["long_outages_per_year"].quantile([0.2, 0.4, 0.6, 0.8]).to_numpy()
-    df["level"] = np.searchsorted(cuts, df["long_outages_per_year"].to_numpy(), side="right") + 1
-    df["label"] = [LEVELS[i - 1] for i in df["level"]]
     rate = df["long_outages_per_year"].to_numpy()
     df["once_every_years"] = np.where(rate > 0, 1.0 / np.where(rate > 0, rate, 1.0), np.inf)
+    df["level"] = [outlook_level(years) for years in df["once_every_years"]]
+    df["label"] = [LEVELS[i - 1] for i in df["level"]]
     return df
 
 
@@ -97,6 +124,7 @@ def backtest_outlook(
     test_events: pd.Series,
     test_years: pd.Series,
     zone: pd.Series,
+    phi: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Score 2023–2024 counts from a prior fit on 2018–2022.
 
@@ -123,15 +151,19 @@ def backtest_outlook(
         raise ValueError("years must be positive")
 
     eb_rate = pd.Series(index=idx, dtype=float)
-    for members in aligned["zone"].groupby(aligned["zone"]).groups.values():
+    zone_rate = pd.Series(index=idx, dtype=float)
+    raw_rate = aligned["train_events"] / aligned["train_years"]
+    for name, members in aligned["zone"].groupby(aligned["zone"]).groups.items():
         posterior, _, _ = shrink_rates(
-            aligned["train_events"].loc[members], aligned["train_years"].loc[members]
+            aligned["train_events"].loc[members], aligned["train_years"].loc[members],
+            phi=1.0 if phi is None else float(phi.get(name, 1.0)),
         )
         eb_rate.loc[members] = posterior
-    raw_rate = aligned["train_events"] / aligned["train_years"]
+        zone_rate.loc[members] = np.average(raw_rate.loc[members], weights=aligned["train_years"].loc[members])
     statewide = float(np.average(raw_rate.to_numpy(), weights=aligned["train_years"].to_numpy()))
     forecasts = {
         "empirical_bayes": eb_rate,
+        "zone_mean": zone_rate,
         "statewide_mean": pd.Series(statewide, index=idx),
         "raw_rate": raw_rate,
     }

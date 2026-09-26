@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48423",
+    "name": "Smith",
+    "weather_zone": "EAST"
+  },
+  "home": {
+    "label": "gas heat",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "High",
+    "long_outages_per_year": 0.2605,
+    "once_every_years": 3.84,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2024-06-02T20:00:00-05:00",
+      "peak_out_pct": 55.71,
+      "duration_h": {
+        "p50": [
+          18.75,
+          9.0
+        ],
+        "p90": [
+          27.5,
+          47.24
+        ]
+      }
+    },
+    {
+      "start": "2023-01-30T22:15:00-06:00",
+      "peak_out_pct": 32.61,
+      "duration_h": {
+        "p50": [
+          21.24,
+          3.0
+        ],
+        "p90": [
+          31.0,
+          57.7
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        40.9,
+        42.9,
+        42.1,
+        37.8,
+        25.5,
+        18.7,
+        19.0,
+        17.3,
+        21.3,
+        30.0,
+        42.8,
+        42.0
+      ],
+      "cores_2": [
+        80.9,
+        84.9,
+        83.3,
+        72.5,
+        51.2,
+        37.7,
+        38.5,
+        34.5,
+        43.1,
+        59.2,
+        85.1,
+        83.0
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.9178
+  }
+}
