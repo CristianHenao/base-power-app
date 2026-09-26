@@ -1,0 +1,979 @@
+county_fips,utility_id,utility,utility_name,grid,share,customers_est,primary
+48001,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7990,23171,True
+48001,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1243,3606,False
+48001,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0766,2223,False
+48003,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6134,7741,True
+48003,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.3113,3929,False
+48003,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0753,950,False
+48005,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6197,29237,True
+48005,9668,jasper_newton_elec_coop,"Jasper-Newton Elec Coop, Inc",MISO,0.1587,7489,False
+48005,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.1251,5902,False
+48005,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.0964,4550,False
+48007,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.9370,11235,True
+48007,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0630,756,False
+48009,9422,j_a_c_electric_coop,J-A-C Electric Coop Inc,ERCOT,1.0000,3386,True
+48009,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48009,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.0000,0,False
+48009,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,0.0000,0,False
+48009,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48009,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48009,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48011,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.5615,254,True
+48011,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.3517,159,False
+48011,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.0868,39,False
+48013,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.8746,16610,True
+48013,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0914,1735,False
+48013,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0190,361,False
+48013,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0151,287,False
+48015,1519,city_of_bellville,City of Bellville - (TX),ERCOT,1.0000,9780,True
+48015,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48015,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48015,8901,centerpoint,CenterPoint Energy,ERCOT,0.0000,0,False
+48015,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0000,0,False
+48017,1169,bailey_county_elec_coop,Bailey County Elec Coop Assn,SPP,0.6122,2973,True
+48017,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.2348,1140,False
+48017,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1530,743,False
+48019,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.9545,1427,True
+48019,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0455,68,False
+48021,1324,city_of_bastrop,City of Bastrop - (TX),ERCOT,0.5000,8914,True
+48021,17453,city_of_smithville,City of Smithville - (TX),ERCOT,0.5000,8914,False
+48021,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48021,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48021,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48023,16961,city_of_seymour,City of Seymour - (TX),ERCOT,1.0000,1527,True
+48023,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48023,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.0000,0,False
+48023,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48023,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48023,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48025,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.7842,7989,True
+48025,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.1630,1661,False
+48025,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0527,537,False
+48027,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4538,77701,True
+48027,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.3556,60885,False
+48027,1287,city_of_bartlett,City of Bartlett - (TX),ERCOT,0.0823,14095,False
+48027,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0608,10403,False
+48027,1273,bartlett_electric_coop,"Bartlett Electric Coop, Inc",ERCOT,0.0475,8140,False
+48029,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.7224,740127,True
+48029,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.1639,167977,False
+48029,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0636,65135,False
+48029,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0344,35272,False
+48029,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0157,16076,False
+48031,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,1.0000,5297,True
+48031,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48033,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.5640,230,True
+48033,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.2675,109,False
+48033,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1357,55,False
+48033,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0328,13,False
+48035,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7225,5339,True
+48035,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0994,735,False
+48035,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0967,715,False
+48035,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0813,601,False
+48037,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.7305,85455,True
+48037,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.2613,30566,False
+48037,17671,southwest_arkansas_e_c_c,Southwest Arkansas E C C,MISO,0.0082,958,False
+48039,8901,centerpoint,CenterPoint Energy,ERCOT,0.7050,101639,True
+48039,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.2098,30243,False
+48039,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0852,12282,False
+48041,2442,city_of_bryan,City of Bryan - (TX),ERCOT,0.5933,43890,True
+48041,3940,city_of_college_station,City of College Station - (TX),ERCOT,0.4064,30065,False
+48041,58113,texas_a_m_utilities_energy_services,"Texas A&M, Utilities & Energy Services",ERCOT,0.0004,27,False
+48041,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.0000,0,False
+48041,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.0000,0,False
+48041,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48043,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,222,True
+48043,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48045,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,589,True
+48045,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48045,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.0000,0,False
+48045,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48047,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5307,1641,True
+48047,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.1947,602,False
+48047,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.1870,578,False
+48047,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0876,271,False
+48049,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.6246,16791,True
+48049,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.1951,5244,False
+48049,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.1803,4846,False
+48049,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48051,2800,city_of_caldwell,City of Caldwell,ERCOT,1.0000,2155,True
+48051,2442,city_of_bryan,City of Bryan - (TX),ERCOT,0.0000,0,False
+48051,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48051,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48051,1273,bartlett_electric_coop,"Bartlett Electric Coop, Inc",ERCOT,0.0000,0,False
+48053,2559,city_of_burnet,City of Burnet - (TX),ERCOT,1.0000,13537,True
+48053,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48053,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48055,11119,city_of_lockhart,City of Lockhart - (TX),ERCOT,0.5000,10634,True
+48055,11316,city_of_luling,City of Luling - (TX),ERCOT,0.5000,10634,False
+48055,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48055,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48055,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48055,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0000,0,False
+48057,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5206,5832,True
+48057,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.3987,4467,False
+48057,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0807,904,False
+48059,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.4759,1798,True
+48059,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2381,900,False
+48059,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.1486,562,False
+48059,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.1373,519,False
+48061,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6010,157649,True
+48061,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.2118,55552,False
+48061,2409,brownsville_public_utilities_board,Brownsville Public Utilities Board,ERCOT,0.1872,49098,False
+48063,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.5958,3547,True
+48063,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.2575,1533,False
+48063,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.1467,874,False
+48065,17718,southwestern_public_service,Southwestern Public Service Co,SPP,1.0000,4187,True
+48067,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.5158,7863,True
+48067,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.2939,4481,False
+48067,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.1845,2812,False
+48067,17671,southwest_arkansas_e_c_c,Southwest Arkansas E C C,MISO,0.0058,88,False
+48069,4939,deaf_smith_electric_coop,"Deaf Smith Electric Coop, Inc",SPP,1.0000,5080,True
+48069,1169,bailey_county_elec_coop,Bailey County Elec Coop Assn,SPP,0.0000,0,False
+48069,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.0000,0,False
+48069,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.0000,0,False
+48069,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48071,8901,centerpoint,CenterPoint Energy,ERCOT,0.8131,21450,True
+48071,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1869,4931,False
+48073,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7733,22974,True
+48073,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1203,3575,False
+48073,3470,cherokee_county_elec_coop,Cherokee County Elec Coop Assn - (TX),ERCOT,0.1063,3159,False
+48075,8183,harmon_electric,Harmon Electric Assn Inc,ERCOT,1.0000,2451,True
+48075,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48075,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48075,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48075,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.0000,0,False
+48075,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0000,0,False
+48077,9422,j_a_c_electric_coop,J-A-C Electric Coop Inc,ERCOT,1.0000,4905,True
+48077,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48077,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48077,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0000,0,False
+48079,1169,bailey_county_elec_coop,Bailey County Elec Coop Assn,SPP,0.5375,880,True
+48079,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.2061,337,False
+48079,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1344,220,False
+48079,10817,lea_county_electric_coop_nm,"Lea County Electric Coop, Inc - (NM)",SPP,0.1220,200,False
+48081,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.4897,728,True
+48081,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2450,364,False
+48081,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.1529,227,False
+48081,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1124,167,False
+48081,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48083,3923,city_of_coleman,City of Coleman - (TX),ERCOT,1.0000,4018,True
+48083,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48083,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.0000,0,False
+48083,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.0000,0,False
+48083,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48085,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4993,208337,True
+48085,7559,grayson_collin_elec_coop,"Grayson-Collin Elec Coop, Inc",ERCOT,0.1790,74680,False
+48085,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.1371,57201,False
+48085,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0687,28670,False
+48085,6203,city_of_farmersville,City of Farmersville - (TX),ERCOT,0.0548,22866,False
+48085,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0409,17059,False
+48085,6173,fannin_county_electric_coop,Fannin County Electric Coop,ERCOT,0.0202,8431,False
+48087,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.8822,1102,True
+48087,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.0880,110,False
+48087,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0298,37,False
+48089,20331,city_of_weimar,City of Weimar - (TX),ERCOT,1.0000,8146,True
+48089,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48089,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48089,8901,centerpoint,CenterPoint Energy,ERCOT,0.0000,0,False
+48089,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48089,20472,wharton_county_elec_coop,"Wharton County Elec Coop, Inc",ERCOT,0.0000,0,False
+48089,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0000,0,False
+48091,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.5164,47162,True
+48091,13418,city_of_new_braunfels,City of New Braunfels - (TX),ERCOT,0.3210,29318,False
+48091,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.1172,10704,False
+48091,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0454,4150,False
+48093,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,1.0000,7336,True
+48093,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.0000,0,False
+48093,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48093,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48093,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0000,0,False
+48095,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.6486,1002,True
+48095,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.2026,313,False
+48095,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1489,230,False
+48095,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48095,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48097,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.5050,8511,True
+48097,7559,grayson_collin_elec_coop,"Grayson-Collin Elec Coop, Inc",ERCOT,0.1810,3051,False
+48097,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.1387,2337,False
+48097,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0695,1171,False
+48097,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0575,968,False
+48097,4262,cooke_county_elec_coop,Cooke County Elec Coop Assn,ERCOT,0.0483,814,False
+48099,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.6311,16715,True
+48099,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.2665,7059,False
+48099,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0367,971,False
+48099,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0357,945,False
+48099,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0300,794,False
+48101,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,712,True
+48101,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48101,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48101,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48103,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,6157,True
+48103,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48105,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,383,True
+48105,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48105,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48105,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48107,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.5357,1398,True
+48107,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.2477,646,False
+48107,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2166,565,False
+48109,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,1.0000,1000,True
+48109,5701,el_paso_electric,El Paso Electric Co,WECC,0.0000,0,False
+48109,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48111,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.8386,1083,True
+48111,19160,tri_county_electric_coop_ok,"Tri-County Electric Coop, Inc (OK)",SPP,0.1290,167,False
+48111,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0260,34,False
+48111,17715,southwestern_electric_coop_nm,Southwestern Electric Coop Inc - (NM),WECC,0.0064,8,False
+48113,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6858,650392,True
+48113,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0944,89502,False
+48113,6958,city_of_garland,City of Garland - (TX),ERCOT,0.0722,68505,False
+48113,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0658,62393,False
+48113,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0562,53254,False
+48113,8620,hilco_electric_cooperative,"HILCO Electric Cooperative, Inc.",ERCOT,0.0256,24308,False
+48115,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6134,5014,True
+48115,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.3113,2544,False
+48115,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0753,615,False
+48117,6198,farmers_electric_coop_nm,"Farmers Electric Coop, Inc - (NM)",ERCOT,0.7779,9418,True
+48117,4939,deaf_smith_electric_coop,"Deaf Smith Electric Coop, Inc",SPP,0.2221,2689,False
+48117,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48119,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6722,2170,True
+48119,10649,lamar_county_elec_coop,Lamar County Elec Coop Assn,ERCOT,0.2728,881,False
+48119,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0550,178,False
+48121,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4264,141875,True
+48121,5063,city_of_denton,City of Denton - (TX),ERCOT,0.1797,59775,False
+48121,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.1171,38953,False
+48121,16647,city_of_sanger,City of Sanger - (TX),ERCOT,0.0687,22866,False
+48121,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0601,20004,False
+48121,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0587,19524,False
+48121,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0485,16140,False
+48121,4262,cooke_county_elec_coop,Cooke County Elec Coop Assn,ERCOT,0.0408,13571,False
+48123,4610,city_of_cuero,City of Cuero - (TX),ERCOT,0.5000,5798,True
+48123,21108,city_of_yoakum,City of Yoakum - (TX),ERCOT,0.5000,5798,False
+48123,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48123,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0000,0,False
+48123,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.0000,0,False
+48123,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0000,0,False
+48125,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,917,True
+48125,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48125,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48127,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.8583,2891,True
+48127,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1417,477,False
+48127,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48129,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.6503,1108,True
+48129,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2629,448,False
+48129,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.0649,111,False
+48129,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0220,37,False
+48131,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6528,3024,True
+48131,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2394,1109,False
+48131,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1078,499,False
+48133,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.5590,5186,True
+48133,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2797,2595,False
+48133,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.1613,1497,False
+48133,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48133,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48133,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0000,0,False
+48135,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.5664,88636,True
+48135,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2874,44980,False
+48135,7419,city_of_goldsmith,City of Goldsmith - (TX),ERCOT,0.1461,22865,False
+48137,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,424,True
+48137,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48137,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48137,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48137,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0000,0,False
+48137,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48139,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7645,61892,True
+48139,13332,navarro_county_elec_coop,"Navarro County Elec Coop, Inc",ERCOT,0.1209,9784,False
+48139,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0860,6963,False
+48139,8620,hilco_electric_cooperative,"HILCO Electric Cooperative, Inc.",ERCOT,0.0286,2313,False
+48141,5701,el_paso_electric,El Paso Electric Co,WECC,0.9611,335890,True
+48141,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0389,13594,False
+48143,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7999,19422,True
+48143,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1101,2673,False
+48143,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0900,2185,False
+48145,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6942,2885,True
+48145,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1391,578,False
+48145,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0929,386,False
+48145,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0738,307,False
+48147,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4940,6740,True
+48147,10649,lamar_county_elec_coop,Lamar County Elec Coop Assn,ERCOT,0.2005,2735,False
+48147,7559,grayson_collin_elec_coop,"Grayson-Collin Elec Coop, Inc",ERCOT,0.1771,2416,False
+48147,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0680,927,False
+48147,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0404,552,False
+48147,6173,fannin_county_electric_coop,Fannin County Electric Coop,ERCOT,0.0200,273,False
+48149,10532,city_of_la_grange,City of La Grange - (TX),ERCOT,0.5000,1866,True
+48149,16765,city_of_schulenburg,City of Schulenburg - (TX),ERCOT,0.5000,1866,False
+48149,6396,city_of_flatonia,City of Flatonia - (TX),ERCOT,0.0000,0,False
+48149,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48149,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48149,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0000,0,False
+48149,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0000,0,False
+48151,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.6665,1497,True
+48151,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.3335,749,False
+48151,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48151,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48153,6472,city_of_floydada,City of Floydada - (TX),ERCOT,1.0000,2808,True
+48153,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48153,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48153,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48155,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.7176,254,True
+48155,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.2824,100,False
+48155,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48155,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48155,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48157,8901,centerpoint,CenterPoint Energy,ERCOT,1.0000,694780,True
+48159,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.3667,2010,True
+48159,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.2616,1434,False
+48159,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.2182,1196,False
+48159,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.1131,620,False
+48159,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.0404,222,False
+48161,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6605,5888,True
+48161,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1323,1180,False
+48161,13332,navarro_county_elec_coop,"Navarro County Elec Coop, Inc",ERCOT,0.1044,931,False
+48161,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1028,916,False
+48163,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.7283,5204,True
+48163,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.1514,1082,False
+48163,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1203,859,False
+48165,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4783,6634,True
+48165,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2427,3367,False
+48165,10817,lea_county_electric_coop_nm,"Lea County Electric Coop, Inc - (NM)",SPP,0.2203,3056,False
+48165,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0587,814,False
+48167,8901,centerpoint,CenterPoint Energy,ERCOT,0.6547,94551,True
+48167,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1948,28134,False
+48167,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1505,21736,False
+48169,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.6353,1711,True
+48169,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.1749,471,False
+48169,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1529,412,False
+48169,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0370,100,False
+48171,6758,city_of_fredericksburg,City of Fredericksburg - (TX),ERCOT,1.0000,17022,True
+48171,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48171,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48171,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48173,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,1.0000,931,True
+48173,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48175,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.3468,787,True
+48175,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.2921,663,False
+48175,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.2656,603,False
+48175,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0721,164,False
+48175,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0233,53,False
+48177,6396,city_of_flatonia,City of Flatonia - (TX),ERCOT,0.3333,2333,True
+48177,7370,city_of_gonzales,City of Gonzales - (TX),ERCOT,0.3333,2333,False
+48177,19952,city_of_waelder,City of Waelder - (TX),ERCOT,0.3333,2333,False
+48177,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48177,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48177,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48177,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0000,0,False
+48179,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.7517,5339,True
+48179,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.1855,1318,False
+48179,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0628,446,False
+48181,20588,city_of_whitesboro,City of Whitesboro - (TX),ERCOT,0.4355,22866,True
+48181,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.2961,15546,False
+48181,7559,grayson_collin_elec_coop,"Grayson-Collin Elec Coop, Inc",ERCOT,0.1061,5573,False
+48181,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.0813,4268,False
+48181,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0407,2139,False
+48181,4262,cooke_county_elec_coop,Cooke County Elec Coop Assn,ERCOT,0.0283,1487,False
+48181,6173,fannin_county_electric_coop,Fannin County Electric Coop,ERCOT,0.0120,629,False
+48183,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.4411,28363,True
+48183,16461,rusk_county_electric_coop,"Rusk County Electric Coop, Inc",SPP,0.3076,19781,False
+48183,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.2513,16162,False
+48185,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.5186,1624,True
+48185,55937,entergy_texas,Entergy Texas Inc.,MISO,0.4454,1395,False
+48185,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0360,113,False
+48187,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.4132,40115,True
+48187,13418,city_of_new_braunfels,City of New Braunfels - (TX),ERCOT,0.2569,24937,False
+48187,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0938,9104,False
+48187,16900,city_of_seguin,City of Seguin - (TX),ERCOT,0.0922,8946,False
+48187,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0645,6259,False
+48187,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0432,4191,False
+48187,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0364,3530,False
+48189,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.3193,4917,True
+48189,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.2060,3173,False
+48189,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.1980,3050,False
+48189,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.1476,2274,False
+48189,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1291,1988,False
+48191,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,1741,True
+48191,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48191,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48191,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0000,0,False
+48193,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.8605,1584,True
+48193,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0500,92,False
+48193,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0487,90,False
+48193,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0409,75,False
+48195,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.5682,794,True
+48195,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3268,457,False
+48195,19160,tri_county_electric_coop_ok,"Tri-County Electric Coop, Inc (OK)",SPP,0.0874,122,False
+48195,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0176,25,False
+48197,8183,harmon_electric,Harmon Electric Assn Inc,ERCOT,1.0000,1110,True
+48197,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48197,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.0000,0,False
+48197,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48199,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.6550,7987,True
+48199,55937,entergy_texas,Entergy Texas Inc.,MISO,0.3450,4207,False
+48201,8901,centerpoint,CenterPoint Energy,ERCOT,0.8010,1463946,True
+48201,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1841,336535,False
+48201,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0149,27205,False
+48203,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.5116,25779,True
+48203,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.2916,14690,False
+48203,14424,panola_harrison_elec_coop,"Panola-Harrison Elec Coop, Inc",SPP,0.1968,9916,False
+48205,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.9629,1037,True
+48205,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0298,32,False
+48205,17715,southwestern_electric_coop_nm,Southwestern Electric Coop Inc - (NM),WECC,0.0073,8,False
+48207,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,1529,True
+48207,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48207,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48209,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.3982,28340,True
+48209,28978,city_of_san_marcos,City of San Marcos - (TX),ERCOT,0.3281,23353,False
+48209,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.2737,19483,False
+48211,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.5489,653,True
+48211,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3157,375,False
+48211,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.1354,161,False
+48213,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.9125,50923,True
+48213,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0875,4885,False
+48215,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6721,506580,True
+48215,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.2424,182715,False
+48215,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.0854,64385,False
+48217,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6521,8716,True
+48217,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1307,1746,False
+48217,13332,navarro_county_elec_coop,"Navarro County Elec Coop, Inc",ERCOT,0.1031,1378,False
+48217,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0897,1199,False
+48217,8620,hilco_electric_cooperative,"HILCO Electric Cooperative, Inc.",ERCOT,0.0244,326,False
+48219,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.3914,4248,True
+48219,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.2918,3167,False
+48219,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2551,2769,False
+48219,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0617,670,False
+48221,7480,city_of_granbury,City of Granbury - (TX),ERCOT,0.8356,22865,True
+48221,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.1182,3234,False
+48221,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0167,456,False
+48221,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0163,445,False
+48221,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0133,364,False
+48223,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8180,17273,True
+48223,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.0803,1695,False
+48223,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0670,1414,False
+48223,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0347,733,False
+48225,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7924,9257,True
+48225,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1233,1441,False
+48225,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0842,984,False
+48227,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8907,39019,True
+48227,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.1093,4789,False
+48229,5701,el_paso_electric,El Paso Electric Co,WECC,0.9611,1097,True
+48229,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0389,44,False
+48231,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4814,21696,True
+48231,7634,city_of_greenville,City of Greenville - (TX),ERCOT,0.3473,15650,False
+48231,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0662,2986,False
+48231,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0462,2081,False
+48231,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0394,1776,False
+48231,6173,fannin_county_electric_coop,Fannin County Electric Coop,ERCOT,0.0195,878,False
+48233,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.6226,4345,True
+48233,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3581,2499,False
+48233,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0193,135,False
+48235,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.8133,788,True
+48235,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1867,181,False
+48235,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48235,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48237,9422,j_a_c_electric_coop,J-A-C Electric Coop Inc,ERCOT,1.0000,3594,True
+48237,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,0.0000,0,False
+48237,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48237,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48237,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48237,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0000,0,False
+48239,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.3180,1937,True
+48239,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.2679,1632,False
+48239,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.2436,1484,False
+48239,20472,wharton_county_elec_coop,"Wharton County Elec Coop, Inc",ERCOT,0.1212,738,False
+48239,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0493,300,False
+48241,9664,city_of_jasper,City of Jasper - (TX),ERCOT,0.5000,7654,True
+48241,10359,kirbyville_light_power,Kirbyville Light & Power Co,ERCOT,0.5000,7654,False
+48241,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.0000,0,False
+48241,9668,jasper_newton_elec_coop,"Jasper-Newton Elec Coop, Inc",MISO,0.0000,0,False
+48241,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.0000,0,False
+48241,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48243,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,44,True
+48243,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48245,55937,entergy_texas,Entergy Texas Inc.,MISO,1.0000,51659,True
+48247,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.8583,2539,True
+48247,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1417,419,False
+48249,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6973,12281,True
+48249,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2558,4505,False
+48249,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0469,826,False
+48251,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7767,59553,True
+48251,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1069,8195,False
+48251,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0874,6700,False
+48251,8620,hilco_electric_cooperative,"HILCO Electric Cooperative, Inc.",ERCOT,0.0290,2226,False
+48253,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.6665,3466,True
+48253,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.3335,1735,False
+48253,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48255,6427,city_of_floresville,City of Floresville,ERCOT,0.7522,4350,True
+48255,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.1208,699,False
+48255,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.1018,589,False
+48255,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0251,145,False
+48257,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8490,63478,True
+48257,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0814,6090,False
+48257,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0695,5198,False
+48259,1913,city_of_boerne,City of Boerne,ERCOT,0.8781,18473,True
+48259,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.1219,2565,False
+48259,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.0000,0,False
+48259,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48259,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0000,0,False
+48261,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5817,136,True
+48261,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2134,50,False
+48261,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.2050,48,False
+48263,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,346,True
+48263,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48263,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48263,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48265,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.5562,22162,True
+48265,28604,kerrville_public_utility_board,Kerrville Public Utility Board,ERCOT,0.4438,17680,False
+48265,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48265,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0000,0,False
+48267,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,1.0000,2099,True
+48267,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48267,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48269,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,119,True
+48269,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48269,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48271,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.6509,777,True
+48271,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.2996,357,False
+48271,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0495,59,False
+48271,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48273,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.7316,15165,True
+48273,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2684,5563,False
+48275,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,551,True
+48275,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48277,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6313,17603,True
+48277,10649,lamar_county_elec_coop,Lamar County Elec Coop Assn,ERCOT,0.2562,7144,False
+48277,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0869,2422,False
+48277,6173,fannin_county_electric_coop,Fannin County Electric Coop,ERCOT,0.0255,712,False
+48279,1169,bailey_county_elec_coop,Bailey County Elec Coop Assn,SPP,0.5210,4340,True
+48279,10625,lamb_county_electric_coop,"Lamb County Electric Coop, Inc",SPP,0.1998,1665,False
+48279,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.1490,1241,False
+48279,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.1302,1085,False
+48281,10656,city_of_lampasas,City of Lampasas - (TX),ERCOT,1.0000,11425,True
+48281,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.0000,0,False
+48281,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48281,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48283,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.7283,2002,True
+48283,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.1514,416,False
+48283,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1203,331,False
+48285,7958,city_of_hallettsville,City of Hallettsville - (TX),ERCOT,0.3333,722,True
+48285,13025,city_of_moulton,City of Moulton - (TX),ERCOT,0.3333,722,False
+48285,17101,city_of_shiner,City of Shiner - (TX),ERCOT,0.3333,722,False
+48285,16765,city_of_schulenburg,City of Schulenburg - (TX),ERCOT,0.0000,0,False
+48285,21108,city_of_yoakum,City of Yoakum - (TX),ERCOT,0.0000,0,False
+48285,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48285,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0000,0,False
+48285,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0000,0,False
+48285,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0000,0,False
+48287,7184,city_of_giddings,City of Giddings - (TX),ERCOT,0.5000,1112,True
+48287,10969,city_of_lexington,City of Lexington - (TX),ERCOT,0.5000,1112,False
+48287,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.0000,0,False
+48287,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48287,1273,bartlett_electric_coop,"Bartlett Electric Coop, Inc",ERCOT,0.0000,0,False
+48289,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6839,5121,True
+48289,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1370,1026,False
+48289,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1064,797,False
+48289,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0727,544,False
+48291,10982,city_of_liberty,City of Liberty - (TX),ERCOT,0.5177,22878,True
+48291,8901,centerpoint,CenterPoint Energy,ERCOT,0.2894,12789,False
+48291,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.1263,5582,False
+48291,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0665,2940,False
+48293,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6827,2895,True
+48293,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1368,580,False
+48293,13332,navarro_county_elec_coop,"Navarro County Elec Coop, Inc",ERCOT,0.1079,458,False
+48293,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0726,308,False
+48295,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.6348,917,True
+48295,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3652,528,False
+48297,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6090,2169,True
+48297,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2234,796,False
+48297,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.1266,451,False
+48297,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0410,146,False
+48299,11103,city_of_llano,City of Llano - (TX),ERCOT,1.0000,9838,True
+48299,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48299,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.0000,0,False
+48299,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48301,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,1.0000,170,True
+48303,11292,city_of_lubbock,City of Lubbock - (TX),ERCOT,0.4457,99333,True
+48303,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.2658,59232,False
+48303,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2323,51784,False
+48303,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0562,12523,False
+48305,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4524,1088,True
+48305,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.2626,631,False
+48305,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.2296,552,False
+48305,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0555,134,False
+48307,2135,city_of_brady,City of Brady - (TX),ERCOT,1.0000,7593,True
+48307,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48307,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48307,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48309,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6626,67558,True
+48309,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.1327,13535,False
+48309,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0912,9297,False
+48309,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0887,9045,False
+48309,8620,hilco_electric_cooperative,"HILCO Electric Cooperative, Inc.",ERCOT,0.0248,2525,False
+48311,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5534,120,True
+48311,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2030,44,False
+48311,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.1151,25,False
+48311,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0914,20,False
+48311,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0372,8,False
+48313,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.3418,753,True
+48313,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.2655,585,False
+48313,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.2112,465,False
+48313,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1814,400,False
+48315,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.6370,3188,True
+48315,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.3630,1817,False
+48317,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8907,3439,True
+48317,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.1093,422,False
+48319,11793,city_of_mason,City of Mason - (TX),ERCOT,1.0000,2818,True
+48319,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48319,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48319,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48319,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48321,8901,centerpoint,CenterPoint Energy,ERCOT,0.4007,6860,True
+48321,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.3125,5350,False
+48321,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1192,2041,False
+48321,20472,wharton_county_elec_coop,"Wharton County Elec Coop, Inc",ERCOT,0.1191,2038,False
+48321,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0484,829,False
+48323,3278,aep_texas_central,AEP Texas Central Company,ERCOT,1.0000,29327,True
+48323,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48325,3168,city_of_castroville,City of Castroville - (TX),ERCOT,0.5000,7903,True
+48325,8801,city_of_hondo,City of Hondo - (TX),ERCOT,0.5000,7903,False
+48325,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.0000,0,False
+48325,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48325,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0000,0,False
+48325,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0000,0,False
+48325,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0000,0,False
+48327,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,1.0000,1142,True
+48327,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.0000,0,False
+48327,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48327,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48327,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48329,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6634,109157,True
+48329,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.3366,55393,False
+48331,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.5309,4609,True
+48331,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.2860,2483,False
+48331,55982,heart_of_texas_electric_coop,Heart of Texas Electric Coop,ERCOT,0.0711,617,False
+48331,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0564,490,False
+48331,1273,bartlett_electric_coop,"Bartlett Electric Coop, Inc",ERCOT,0.0556,483,False
+48333,7368,city_of_goldthwaite,City of Goldthwaite - (TX),ERCOT,1.0000,3489,True
+48333,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.0000,0,False
+48333,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.0000,0,False
+48333,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48335,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.6855,3329,True
+48335,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.3145,1527,False
+48335,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48335,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48337,2050,city_of_bowie,City of Bowie - (TX),ERCOT,1.0000,8303,True
+48337,9422,j_a_c_electric_coop,J-A-C Electric Coop Inc,ERCOT,0.0000,0,False
+48337,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48337,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48337,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0000,0,False
+48337,4262,cooke_county_elec_coop,Cooke County Elec Coop Assn,ERCOT,0.0000,0,False
+48339,8901,centerpoint,CenterPoint Energy,ERCOT,0.5121,117812,True
+48339,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.2236,51426,False
+48339,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.1371,31530,False
+48339,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1177,27083,False
+48339,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0095,2189,False
+48341,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.9700,6262,True
+48341,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0300,194,False
+48343,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.5188,3345,True
+48343,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.2956,1906,False
+48343,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.1856,1196,False
+48345,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,556,True
+48345,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48345,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48345,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48347,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4955,20309,True
+48347,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.4217,17286,False
+48347,3470,cherokee_county_elec_coop,Cherokee County Elec Coop Assn - (TX),ERCOT,0.0681,2792,False
+48347,16461,rusk_county_electric_coop,"Rusk County Electric Coop, Inc",SPP,0.0147,601,False
+48349,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8635,35634,True
+48349,13332,navarro_county_elec_coop,"Navarro County Elec Coop, Inc",ERCOT,0.1365,5633,False
+48351,13603,city_of_newton,City of Newton - (TX),ERCOT,1.0000,4202,True
+48351,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.0000,0,False
+48351,9668,jasper_newton_elec_coop,"Jasper-Newton Elec Coop, Inc",MISO,0.0000,0,False
+48351,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48353,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.5781,5003,True
+48353,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2893,2503,False
+48353,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1327,1148,False
+48353,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48353,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48355,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5991,97208,True
+48355,13830,nueces_electric_cooperative,Nueces Electric Cooperative,ERCOT,0.2197,35655,False
+48355,16175,city_of_robstown,City of Robstown - (TX),ERCOT,0.1409,22865,False
+48355,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0403,6538,False
+48357,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.6348,3157,True
+48357,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3652,1816,False
+48359,6198,farmers_electric_coop_nm,"Farmers Electric Coop, Inc - (NM)",ERCOT,0.7779,737,True
+48359,4939,deaf_smith_electric_coop,"Deaf Smith Electric Coop, Inc",SPP,0.2221,211,False
+48359,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48359,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0000,0,False
+48361,9668,jasper_newton_elec_coop,"Jasper-Newton Elec Coop, Inc",MISO,0.7067,13982,True
+48361,55937,entergy_texas,Entergy Texas Inc.,MISO,0.2933,5804,False
+48363,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,1.0000,11965,True
+48363,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48363,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48363,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48363,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0000,0,False
+48365,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.9060,12565,True
+48365,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0452,626,False
+48365,16461,rusk_county_electric_coop,"Rusk County Electric Coop, Inc",SPP,0.0315,437,False
+48365,14424,panola_harrison_elec_coop,"Panola-Harrison Elec Coop, Inc",SPP,0.0174,241,False
+48367,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6582,57581,True
+48367,20230,weatherford_mun_utility_system,Weatherford Mun Utility System,ERCOT,0.1741,15226,False
+48367,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0928,8119,False
+48367,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0749,6551,False
+48369,6198,farmers_electric_coop_nm,"Farmers Electric Coop, Inc - (NM)",ERCOT,0.7779,5952,True
+48369,4939,deaf_smith_electric_coop,"Deaf Smith Electric Coop, Inc",SPP,0.2221,1699,False
+48369,1169,bailey_county_elec_coop,Bailey County Elec Coop Assn,SPP,0.0000,0,False
+48369,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48371,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,1846,True
+48371,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48371,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48371,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48371,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48373,11097,city_of_livingston,City of Livingston - (TX),ERCOT,1.0000,11122,True
+48373,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.0000,0,False
+48373,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48375,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.9700,37730,True
+48375,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0300,1168,False
+48377,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,131,True
+48377,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48379,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.3822,2034,True
+48379,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.2726,1451,False
+48379,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.2274,1210,False
+48379,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.1178,627,False
+48381,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.5615,19438,True
+48381,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.3517,12176,False
+48381,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.0868,3005,False
+48383,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.8133,1747,True
+48383,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1867,401,False
+48383,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48383,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48385,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,1.0000,1239,True
+48385,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48385,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0000,0,False
+48385,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.0000,0,False
+48385,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.0000,0,False
+48387,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6246,4473,True
+48387,10649,lamar_county_elec_coop,Lamar County Elec Coop Assn,ERCOT,0.2535,1815,False
+48387,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0860,615,False
+48387,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0265,190,False
+48387,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.0095,68,False
+48389,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,1724,True
+48389,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48389,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48389,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48391,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5455,1855,True
+48391,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.4178,1421,False
+48391,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0367,125,False
+48393,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.5489,154,True
+48393,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3157,89,False
+48393,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.1354,38,False
+48395,8359,city_of_hearne,City of Hearne - (TX),ERCOT,1.0000,2755,True
+48395,2442,city_of_bryan,City of Bryan - (TX),ERCOT,0.0000,0,False
+48395,16146,navasota_valley_elec_coop,"Navasota Valley Elec Coop, Inc",ERCOT,0.0000,0,False
+48395,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48395,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48397,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.9243,71199,True
+48397,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0757,5830,False
+48399,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.4897,940,True
+48399,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2450,470,False
+48399,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.1529,294,False
+48399,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1124,216,False
+48401,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.4797,12745,True
+48401,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.4083,10848,False
+48401,3470,cherokee_county_elec_coop,Cherokee County Elec Coop Assn - (TX),ERCOT,0.0659,1752,False
+48401,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0203,541,False
+48401,16461,rusk_county_electric_coop,"Rusk County Electric Coop, Inc",SPP,0.0142,377,False
+48401,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.0116,308,False
+48403,8432,city_of_hemphill,City of Hemphill - (TX),ERCOT,1.0000,5026,True
+48403,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.0000,0,False
+48403,9668,jasper_newton_elec_coop,"Jasper-Newton Elec Coop, Inc",MISO,0.0000,0,False
+48405,16605,city_of_san_augustine,City of San Augustine - (TX),ERCOT,1.0000,5144,True
+48405,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.0000,0,False
+48407,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.6550,3508,True
+48407,55937,entergy_texas,Entergy Texas Inc.,MISO,0.3450,1847,False
+48409,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.9370,33419,True
+48409,16627,san_patricio_electric_coop,San Patricio Electric Coop Inc,ERCOT,0.0630,2248,False
+48411,28981,city_of_san_saba,City of San Saba - (TX),ERCOT,1.0000,3729,True
+48411,3282,central_texas_elec_coop,"Central Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48411,7979,hamilton_county_elec_coop,Hamilton County Elec Coop Assn,ERCOT,0.0000,0,False
+48411,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48411,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48413,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,507,True
+48413,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48413,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48415,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.6783,10260,True
+48415,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.3217,4865,False
+48417,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.5244,945,True
+48417,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2624,473,False
+48417,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.1513,273,False
+48417,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,0.0619,112,False
+48417,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48417,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48419,18933,city_of_timpson,City of Timpson - (TX),ERCOT,1.0000,14484,True
+48419,4975,deep_east_texas_elec_coop,Deep East Texas Elec Coop Inc,MISO,0.0000,0,False
+48419,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0000,0,False
+48419,16461,rusk_county_electric_coop,"Rusk County Electric Coop, Inc",SPP,0.0000,0,False
+48421,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.8440,543,True
+48421,19160,tri_county_electric_coop_ok,"Tri-County Electric Coop, Inc (OK)",SPP,0.1299,83,False
+48421,16063,rita_blanca_electric_coop,"Rita Blanca Electric Coop, Inc",SPP,0.0261,17,False
+48423,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7679,99101,True
+48423,3470,cherokee_county_elec_coop,Cherokee County Elec Coop Assn - (TX),ERCOT,0.1056,13626,False
+48423,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.0754,9727,False
+48423,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0326,4204,False
+48423,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.0186,2396,False
+48425,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.7999,4280,True
+48425,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1101,589,False
+48425,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0900,482,False
+48427,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6590,20437,True
+48427,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.2322,7202,False
+48427,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1088,3375,False
+48429,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.7109,3396,True
+48429,4295,comanche_county_elec_coop,Comanche County Elec Coop Assn,ERCOT,0.2052,980,False
+48429,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,0.0839,401,False
+48429,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48429,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48429,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0000,0,False
+48431,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.8133,974,True
+48431,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1867,223,False
+48431,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48433,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,453,True
+48433,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48433,17561,south_plains_electric_coop,South Plains Electric Coop Inc,ERCOT,0.0000,0,False
+48433,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48435,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,787,True
+48435,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.0000,0,False
+48435,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48437,19264,city_of_tulia,City of Tulia,ERCOT,1.0000,2662,True
+48437,11014,lighthouse_electric_coop,"Lighthouse Electric Coop, Inc",ERCOT,0.0000,0,False
+48437,18199,swisher_electric_coop,"Swisher Electric Coop, Inc",ERCOT,0.0000,0,False
+48437,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48439,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6544,681099,True
+48439,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.1797,187002,False
+48439,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0923,96032,False
+48439,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0736,76628,False
+48441,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.5517,10318,True
+48441,27369,taylor_electric_coop,Taylor Electric Coop Inc - (TX),ERCOT,0.2760,5163,False
+48441,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.1723,3222,False
+48443,40051,tnmp,Texas-New Mexico Power Co,ERCOT,1.0000,70,True
+48443,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48445,2404,city_of_brownfield,City of Brownfield - (TX),ERCOT,1.0000,4311,True
+48445,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48445,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48445,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.0000,0,False
+48447,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.8944,521,True
+48447,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,0.1056,61,False
+48447,1591,big_country_electric_coop,"Big Country Electric Coop, Inc",ERCOT,0.0000,0,False
+48447,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48449,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.4691,7971,True
+48449,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.3346,5685,False
+48449,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.1446,2457,False
+48449,2049,bowie_cass_electric_coop,"Bowie-Cass Electric Coop, Inc",SPP,0.0517,879,False
+48451,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.6486,37864,True
+48451,3938,coleman_county_elec_coop,"Coleman County Elec Coop, Inc",ERCOT,0.2026,11826,False
+48451,4146,concho_valley_elec_coop,Concho Valley Elec Coop Inc,ERCOT,0.1489,8691,False
+48451,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48451,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48453,1015,austin_energy,Austin Energy,ERCOT,0.5616,360508,True
+48453,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.1888,121182,False
+48453,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.1479,94957,False
+48453,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.1017,65280,False
+48455,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6831,4468,True
+48455,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.1379,902,False
+48455,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.1063,695,False
+48455,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0726,475,False
+48457,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.6550,2933,True
+48457,55937,entergy_texas,Entergy Texas Inc.,MISO,0.3450,1545,False
+48459,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.5958,10857,True
+48459,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.2575,4693,False
+48459,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.1467,2674,False
+48461,20404,aep_texas_north,AEP Texas North Company,ERCOT,1.0000,2542,True
+48461,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48461,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.0000,0,False
+48463,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.6168,5192,True
+48463,1175,bandera_electric_coop,"Bandera Electric Coop, Inc",ERCOT,0.2814,2369,False
+48463,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1018,857,False
+48463,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48465,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.5262,9869,True
+48465,17693,southwest_texas_elec_coop,"Southwest Texas Elec Coop, Inc",ERCOT,0.4738,8888,False
+48465,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48467,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.6868,16400,True
+48467,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0945,2257,False
+48467,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.0674,1610,False
+48467,18976,trinity_valley_elec_coop,Trinity Valley Elec Coop Inc,ERCOT,0.0659,1573,False
+48467,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0562,1343,False
+48467,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0291,696,False
+48469,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.3834,18804,True
+48469,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.3230,15841,False
+48469,19806,victoria_electric_coop,"Victoria Electric Coop, Inc",ERCOT,0.2936,14403,False
+48471,16613,sam_houston_electric_coop,Sam Houston Electric Coop Inc,MISO,0.3436,5693,True
+48471,8898,houston_county_elec_coop,Houston County Elec Coop Inc,ERCOT,0.2648,4389,False
+48471,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.2106,3490,False
+48471,55937,entergy_texas,Entergy Texas Inc.,MISO,0.1809,2998,False
+48473,8435,city_of_hempstead,City of Hempstead - (TX),ERCOT,1.0000,18532,True
+48473,8901,centerpoint,CenterPoint Energy,ERCOT,0.0000,0,False
+48473,12452,mid_south_electric_coop,Mid-South Electric Coop Assn,ERCOT,0.0000,0,False
+48473,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48473,16638,san_bernard_electric_coop,"San Bernard Electric Coop, Inc",ERCOT,0.0000,0,False
+48475,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8790,7520,True
+48475,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1210,1035,False
+48477,6183,fayette_electric_coop,"Fayette Electric Coop, Inc",ERCOT,0.6856,8792,True
+48477,2194,city_of_brenham,City of Brenham - (TX),ERCOT,0.3144,4032,False
+48477,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0000,0,False
+48477,55937,entergy_texas,Entergy Texas Inc.,MISO,0.0000,0,False
+48479,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.8583,94591,True
+48479,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1417,15619,False
+48479,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False
+48481,8901,centerpoint,CenterPoint Energy,ERCOT,0.4550,10817,True
+48481,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.3548,8436,False
+48481,20472,wharton_county_elec_coop,"Wharton County Elec Coop, Inc",ERCOT,0.1352,3214,False
+48481,9590,jackson_electric_coop,"Jackson Electric Coop, Inc - (TX)",ERCOT,0.0550,1307,False
+48483,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.5248,1217,True
+48483,13757,north_plains_electric_coop,North Plains Electric Coop Inc,SPP,0.3018,700,False
+48483,7561,greenbelt_electric_coop,"Greenbelt Electric Coop, Inc",ERCOT,0.1295,300,False
+48483,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0439,102,False
+48485,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.5461,49566,True
+48485,5744,city_of_electra,City of Electra - (TX),ERCOT,0.2389,21688,False
+48485,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.2149,19509,False
+48485,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48487,20404,aep_texas_north,AEP Texas North Company,ERCOT,0.7176,5281,True
+48487,17681,southwest_rural_elec,Southwest Rural Elec Assn Inc,ERCOT,0.2824,2078,False
+48487,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48487,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.0000,0,False
+48487,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0000,0,False
+48489,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.7394,8609,True
+48489,11501,magic_valley_electric_coop,Magic Valley Electric Coop Inc,ERCOT,0.2606,3033,False
+48491,1015,austin_energy,Austin Energy,ERCOT,0.4800,143814,True
+48491,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.1614,48342,False
+48491,14626,pedernales_electric_coop,"Pedernales Electric Coop, Inc",ERCOT,0.1264,37880,False
+48491,7129,city_of_georgetown,City of Georgetown - (TX),ERCOT,0.0990,29672,False
+48491,1892,bluebonnet_electric_coop,"Bluebonnet Electric Coop, Inc",ERCOT,0.0869,26041,False
+48491,1287,city_of_bartlett,City of Bartlett - (TX),ERCOT,0.0293,8770,False
+48491,1273,bartlett_electric_coop,"Bartlett Electric Coop, Inc",ERCOT,0.0169,5064,False
+48493,16604,city_of_san_antonio,City of San Antonio - (TX),ERCOT,0.5363,18031,True
+48493,6427,city_of_floresville,City of Floresville,ERCOT,0.3488,11726,False
+48493,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.0560,1884,False
+48493,7752,gvec,Guadalupe Valley Elec Coop Inc,ERCOT,0.0472,1587,False
+48493,10009,karnes_electric_coop,Karnes Electric Coop Inc,ERCOT,0.0116,392,False
+48495,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8790,4814,True
+48495,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.1210,662,False
+48497,2210,city_of_bridgeport,City of Bridgeport - (TX),ERCOT,0.8284,22865,True
+48497,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.1056,2915,False
+48497,5078,coserv,"Denton County Elec Coop, Inc",ERCOT,0.0290,800,False
+48497,19159,tri_county_electric_coop_tx,"Tri-County Electric Coop, Inc (TX)",ERCOT,0.0149,411,False
+48497,20948,wise_electric_coop,Wise Electric Coop Inc,ERCOT,0.0120,332,False
+48497,4262,cooke_county_elec_coop,Cooke County Elec Coop Assn,ERCOT,0.0101,279,False
+48499,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.8022,12859,True
+48499,20927,wood_county_electric_coop,"Wood County Electric Coop, Inc",SPP,0.0787,1262,False
+48499,6182,farmers_ec,"Farmers Electric Coop, Inc - (TX)",ERCOT,0.0657,1053,False
+48499,17698,southwestern_electric_power,Southwestern Electric Power Co,SPP,0.0340,546,False
+48499,19579,upshur_rural_elec_coop,Upshur Rural Elec Coop Corp,SPP,0.0194,311,False
+48501,17718,southwestern_public_service,Southwestern Public Service Co,SPP,0.4652,1662,True
+48501,10817,lea_county_electric_coop_nm,"Lea County Electric Coop, Inc - (NM)",SPP,0.4223,1509,False
+48501,11364,lyntegar_electric_coop,"Lyntegar Electric Coop, Inc",SPP,0.1125,402,False
+48503,6611,fort_belknap_electric_coop,Fort Belknap Electric Coop Inc,ERCOT,1.0000,9166,True
+48503,44372,oncor,Oncor Electric Delivery Company LLC,ERCOT,0.0000,0,False
+48503,40051,tnmp,Texas-New Mexico Power Co,ERCOT,0.0000,0,False
+48503,19490,united_electric_coop_service,United Electric Coop Service Inc - (TX),ERCOT,0.0000,0,False
+48505,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.8583,6888,True
+48505,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1417,1137,False
+48507,3278,aep_texas_central,AEP Texas Central Company,ERCOT,0.8583,57961,True
+48507,12268,medina_electric_coop,"Medina Electric Coop, Inc",ERCOT,0.1417,9571,False
+48507,16057,rio_grande_electric_coop,"Rio Grande Electric Coop, Inc",ERCOT,0.0000,0,False

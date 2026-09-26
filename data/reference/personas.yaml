@@ -1,0 +1,44 @@
+# Demo personas. Fictional people and made-up street names; only the ZIP and county are real.
+# No real address is stored anywhere (CLAUDE.md). The app always asks the user to confirm the utility.
+
+as_of: 2026-09-26
+
+personas:
+  - key: sally
+    name: Sally
+    street: 1200 Juniper Hollow Ln (fictional)
+    city: Plano
+    zip: "75025"
+    county_fips: "48085"
+    county: Collin
+    utility: oncor              # the ZIP also lists two co-ops, so the confirm step shows three choices
+    base_offer: energy_plus_backup
+    heat: electric              # ERCOT profile RESHIWR
+    storms: [Winter Storm Uri, Memorial Day storms (Dallas derecho)]
+    story: Electric heat in a February freeze; the Uri replay and winter backup hours carry her report.
+
+  - key: thomas
+    name: Thomas
+    street: 4400 Cypress Bend Dr (fictional)
+    city: Houston
+    zip: "77084"
+    county_fips: "48201"
+    county: Harris
+    utility: centerpoint
+    base_offer: energy_plus_backup
+    heat: gas                   # ERCOT profile RESLOWR
+    storms: [Hurricane Beryl, Houston derecho, Winter Storm Uri]
+    story: Hurricane-heavy county; Beryl replay, August air conditioning, storm mode.
+
+  - key: austin
+    name: Third persona (name TBD by the team)
+    street: 800 Live Oak Bluff (fictional)
+    city: Austin
+    zip: "78745"
+    county_fips: "48453"
+    county: Travis
+    utility: austin_energy
+    base_offer: backup_program  # a different Base product: backup through the utility program
+    heat: gas                   # ERCOT profile RESLOWR
+    storms: [Winter Storm Mara (ice storm), Winter Storm Uri]
+    story: Municipal utility, so Base offers backup only; the 2023 ice storm is the longest outage here.

@@ -1,7 +1,7 @@
 # Alejandro's tickets
 
 Data, story and glue (playbook T-01). Ordered by what unblocks the team first.
-Done means `make data` rebuilds features from scratch and `DATA_SOURCES.md` lists
+Done means `make data` rebuilds features from scratch and `docs/DATA_SOURCES.md` lists
 every source with license and as-of date.
 
 | # | Ticket | Unblocks | Status |

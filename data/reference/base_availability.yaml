@@ -1,0 +1,117 @@
+# What Base offers in each utility area. Hand-built from Base's pricing page.
+# No prices here on purpose: Base says availability, pricing and offers vary by
+# address, so the app links to `url` for anything beyond the offer type.
+#
+# offer:
+#   energy_plus_backup  Base can be the retail electric provider and install a Core
+#   energy_only         Base sells electricity plans only (competitive area, no Core offer)
+#   backup_program      Core through a utility or co-op program; the utility still sells the power
+#   none                no Base offer listed (any utility not in this file)
+#
+# eia_utility_id: EIA-861 2024 Utility Number (Service_Territory_2024.xlsx).
+# Offer names match BaseOffer in src/lib/utility-map/types.ts.
+
+source: https://www.basepowercompany.com/pricing
+as_of: 2026-09-26
+note: Availability varies by address inside a utility area. Always let the user confirm.
+
+utilities:
+  - key: centerpoint
+    eia_utility_id: 8901
+    name: CenterPoint Energy
+    region: Greater Houston
+    state: TX
+    market: ERCOT competitive
+    offer: energy_plus_backup
+    also: [energy_only]
+    url: https://www.basepowercompany.com/centerpoint#pricing
+
+  - key: oncor
+    eia_utility_id: 44372
+    name: Oncor
+    region: Central & North Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_plus_backup
+    also: [energy_only]
+    url: https://www.basepowercompany.com/oncor#pricing
+
+  - key: aep_texas_central
+    eia_utility_id: 3278
+    name: AEP Texas Central
+    region: Corpus Christi & South Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: aep_texas_north
+    eia_utility_id: 20404
+    name: AEP Texas North
+    region: West & Northern Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: tnmp
+    eia_utility_id: 40051
+    name: Texas-New Mexico Power
+    region: Gulf Coast & West Texas
+    state: TX
+    market: ERCOT competitive
+    offer: energy_only
+    url: https://www.basepowercompany.com/energy
+
+  - key: gvec
+    eia_utility_id: 7752
+    name: Guadalupe Valley Electric Cooperative
+    region: Guadalupe Valley
+    state: TX
+    market: co-op
+    offer: backup_program
+    url: https://www.basepowercompany.com/gvec#pricing
+
+  - key: coserv
+    eia_utility_id: 5078
+    name: CoServ
+    region: Denton & Collin counties
+    state: TX
+    market: co-op
+    offer: backup_program
+    url: https://www.basepowercompany.com/coserv#pricing
+
+  - key: farmers_ec
+    eia_utility_id: 6182
+    name: Farmers Electric Cooperative
+    region: North Texas
+    state: TX
+    market: co-op
+    offer: backup_program
+    url: https://www.basepowercompany.com/farmers#pricing
+
+  - key: austin_energy
+    eia_utility_id: 1015
+    name: Austin Energy
+    region: Austin
+    state: TX
+    market: municipal
+    offer: backup_program
+    url: https://www.basepowercompany.com/austinenergy#pricing
+
+  - key: el_paso_electric
+    eia_utility_id: 5701
+    name: El Paso Electric
+    region: El Paso & far West Texas
+    state: TX
+    market: non-ERCOT (WECC)
+    offer: backup_program
+    url: https://www.basepowercompany.com/epelectric#pricing
+
+  - key: comed
+    name: ComEd
+    region: Chicago & Northern Illinois
+    state: IL
+    market: Illinois retail choice
+    offer: unconfirmed
+    url: https://www.basepowercompany.com/illinois#pricing
