@@ -7,6 +7,8 @@ import { LevelChip } from "@/components/utility-map/controls-panel";
 import { CountyPicker } from "@/components/utility-map/county-picker";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { FleetCard, GridCard, type FleetShare } from "@/components/utility-map/fleet-card";
+import { HazardChip } from "@/components/utility-map/hazard-chip";
+import { isHazard, type HazardId } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
 import { formatLayerValue, liveSummary } from "@/lib/utility-map/format";
 import {
@@ -357,6 +359,8 @@ function CountyView({
 }: DetailPanelProps & { county: CountyRecord; utility: UtilityRecord }) {
   const scored = model.county.get(county.fips);
   const serving = pickerOptions(county, utilitiesById);
+  const hazardsOn = activeLayers.filter(isHazard) as HazardId[];
+  const topFifth = hazardsOn.filter((h) => (county.ranks[h] ?? 0) >= 0.8);
   return (
     <div className="space-y-6">
       <BackButton label={utility.name} onClick={() => onSelectCounty(null)} />
@@ -372,6 +376,20 @@ function CountyView({
           {county.load_zone ? ` · ${county.load_zone} (approximate)` : ""}
         </p>
       </div>
+      {hazardsOn.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-[14px] leading-[21px] font-semibold">
+            Top fifth of Texas in {topFifth.length} of {hazardsOn.length} hazards shown
+          </p>
+          {topFifth.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {topFifth.map((h) => (
+                <HazardChip key={h} hazard={h} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {county.sfha_land_pct != null ? (
         <p className="bp-info px-4 py-3 text-[14px] leading-[21px]">
           {Math.round(county.sfha_land_pct)}% of this county&apos;s land is in FEMA&apos;s 1% annual-chance

@@ -33,6 +33,8 @@ export type MapLayerMeta = {
   available: boolean;
   unavailable_reason?: string;
   coverage: Record<Quality, number>;
+  /** Spearman ρ with long-outage hours across counties; weak when ρ < 0.1. */
+  outage_link?: { rho: number | null; n: number; weak: boolean | null } | null;
 };
 
 export type Preset = {
@@ -123,5 +125,10 @@ export type UtilityMapData = {
   counties: CountyRecord[];
   utilities: UtilityRecord[];
   /** Release files; flood maps FIPS → FEMA flood-zone GeoJSON for the demo counties. */
-  geometry: { counties: string; territories: string; flood?: Record<string, string> };
+  geometry: {
+    counties: string;
+    territories: string;
+    flood?: Record<string, string>;
+    hazards?: Partial<Record<"tornado" | "hurricane", string>>;
+  };
 };

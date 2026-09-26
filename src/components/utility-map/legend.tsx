@@ -59,3 +59,46 @@ export function FloodZoneLegend() {
     </div>
   );
 }
+
+/** 3×3 square: rows = first hazard (up = higher), columns = second hazard (right = higher). */
+export function BivariateLegend({
+  colors,
+  first,
+  second,
+}: {
+  colors: readonly string[];
+  first: string;
+  second: string;
+}) {
+  const rows = [2, 1, 0];
+  return (
+    <div className="space-y-2">
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">
+        {first} × {second}, Texas thirds
+      </p>
+      <div className="flex items-end gap-2">
+        <span className="text-[11px] leading-tight text-muted-foreground [writing-mode:vertical-rl] rotate-180">
+          {first} higher →
+        </span>
+        <div>
+          <div className="grid grid-cols-3 gap-0.5">
+            {rows.flatMap((row) =>
+              [0, 1, 2].map((col) => (
+                <span
+                  key={`${row}-${col}`}
+                  className="block size-5 ring-1 ring-black/5"
+                  style={{ backgroundColor: colors[row * 3 + col] }}
+                  aria-hidden
+                />
+              )),
+            )}
+          </div>
+          <p className="mt-1 text-[11px] leading-tight text-muted-foreground">{second} higher →</p>
+        </div>
+      </div>
+      <p className="text-[11px] leading-tight text-muted-foreground">
+        Dark corner: both in the top third of Texas counties.
+      </p>
+    </div>
+  );
+}

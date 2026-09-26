@@ -237,3 +237,11 @@ def test_event_hazard_layers_are_wired_to_their_tables_and_sources() -> None:
         assert set(layers[layer_id]["source_ids"]) <= {s["id"] for s in assemble.SOURCES}
     assert {"tornado": "hazards/tornado_tracks.geojson", "hurricane": "hazards/hurricane_tracks.geojson"} == \
         assemble.HAZARD_FILES
+
+
+def test_outage_links_are_attached_to_their_layers() -> None:
+    links = {"flood": {"rho": 0.12, "n": 254, "weak": False}}
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS, outage_links=links)
+    layers = {layer["id"]: layer for layer in release["layers"]}
+    assert layers["flood"]["outage_link"] == {"rho": 0.12, "n": 254, "weak": False}
+    assert layers["homes"]["outage_link"] is None

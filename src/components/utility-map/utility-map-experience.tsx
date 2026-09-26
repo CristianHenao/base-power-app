@@ -15,15 +15,26 @@ import {
   paintTerritory,
   setFillRamp,
   setFloodZones,
+  setHazardTracks,
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
 import type { FleetShare } from "@/components/utility-map/fleet-card";
+import { BivariateLegend, SequentialLegend } from "@/components/utility-map/legend";
 import { FLEET_COLORS, fleetLevel, fleetScenario } from "@/lib/utility-map/fleet";
+import {
+  BIVARIATE_COLORS,
+  HAZARDS,
+  bivariateClass,
+  hazardLevel,
+  isHazard,
+  overlapCount,
+  type HazardId,
+} from "@/lib/utility-map/hazard-style";
 import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-map/controls";
 import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
-import { LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
+import { LEVEL_COLORS, LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
 import { clickTarget, countyPaintState, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
 import type { LayerId, Preset } from "@/lib/utility-map/types";
 
@@ -87,6 +98,8 @@ export function UtilityMapExperience() {
   const [mode, setMode] = useState<ModeId>("risk");
   const [fleetShare, setFleetShare] = useState<FleetShare>(0.01);
   const [floodCache, setFloodCache] = useState<Record<string, GeoJSON.FeatureCollection>>({});
+  const [hazardPicks, setHazardPicks] = useState<HazardId[]>([]);
+  const [trackCache, setTrackCache] = useState<Partial<Record<"tornado" | "hurricane", GeoJSON.FeatureCollection>>>({});
   const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
   const [selectedFips, setSelectedFips] = useState<string | null>(null);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
@@ -147,6 +160,35 @@ export function UtilityMapExperience() {
     );
     return { ...model, utility, county };
   }, [data, model, mode, countiesByFips, fleetShare]);
+
+  // Hazards mode: each county colored by the picked hazards (1: that hazard's fifths,
+  // 2: a 3×3 bivariate class, 3+: how many are in Texas's top fifth).
+  const availableHazards = useMemo(
+    () => (data?.layers ?? []).filter((l) => l.available && isHazard(l.id)).map((l) => l.id as HazardId),
+    [data],
+  );
+  const hazardPaint = useMemo(() => {
+    if (!data || mode !== "hazards" || hazardPicks.length === 0) return null;
+    const levels = new globalThis.Map<string, number | null>();
+    for (const c of data.counties) {
+      const ranks = hazardPicks.map((h) => c.ranks[h]);
+      levels.set(
+        c.fips,
+        hazardPicks.length === 1
+          ? hazardLevel(ranks[0])
+          : hazardPicks.length === 2
+            ? bivariateClass(ranks[0], ranks[1])
+            : Math.min(overlapCount(c, hazardPicks), 4) + 1,
+      );
+    }
+    const colors =
+      hazardPicks.length === 1
+        ? HAZARDS[hazardPicks[0]].ramp
+        : hazardPicks.length === 2
+          ? BIVARIATE_COLORS
+          : [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
+    return { levels, colors };
+  }, [data, mode, hazardPicks]);
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
@@ -289,6 +331,23 @@ export function UtilityMapExperience() {
   // Repaint whenever scores or the selection change.
   useEffect(() => {
     if (!map || !loaded || !fleetModel || !map.getSource(SOURCE_COUNTIES)) return;
+    if (hazardPaint) {
+      setFillRamp(map, hazardPaint.colors);
+      const selected = selectedUtilityId ? utilitiesById.get(selectedUtilityId) : undefined;
+      for (const county of loaded.data.counties) {
+        const inSelection = selected?.counties.includes(county.fips) ?? false;
+        paintCounty(map, county.fips, {
+          level: (hazardPaint.levels.get(county.fips) ?? null) as never,
+          dim: selected != null && !inSelection,
+          inSelection,
+          picked: county.fips === selectedFips || county.fips === pickerFips,
+        });
+      }
+      for (const utility of loaded.data.utilities) {
+        paintTerritory(map, utility.id, utility.id === selectedUtilityId);
+      }
+      return;
+    }
     setFillRamp(map, mode === "fleet" ? FLEET_COLORS : undefined);
     for (const county of loaded.data.counties) {
       const paintModel =
@@ -303,12 +362,54 @@ export function UtilityMapExperience() {
     for (const utility of loaded.data.utilities) {
       paintTerritory(map, utility.id, utility.id === selectedUtilityId);
     }
-  }, [map, loaded, fleetModel, mode, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
+  }, [map, loaded, fleetModel, hazardPaint, mode, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
+
+  // Tornado and hurricane tracks: fetched the first time they're picked.
+  useEffect(() => {
+    if (!loaded) return;
+    const files = loaded.data.geometry.hazards ?? {};
+    const wanted = (["tornado", "hurricane"] as const).filter(
+      (h) => mode === "hazards" && hazardPicks.includes(h) && files[h] && !trackCache[h],
+    );
+    if (wanted.length === 0) return;
+    let cancelled = false;
+    Promise.all(wanted.map((h) => fetch(`${loaded.base}/${files[h]}`).then((r) => (r.ok ? r.json() : null)))).then(
+      (results) => {
+        if (cancelled) return;
+        setTrackCache((prev) => {
+          const next = { ...prev };
+          wanted.forEach((h, i) => {
+            if (results[i]) next[h] = results[i];
+          });
+          return next;
+        });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, mode, hazardPicks, trackCache]);
+  useEffect(() => {
+    if (!map || !loaded) return;
+    const show = (h: "tornado" | "hurricane") =>
+      mode === "hazards" && hazardPicks.includes(h) ? trackCache[h] ?? null : null;
+    setHazardTracks(
+      map,
+      { tornado: show("tornado"), hurricane: show("hurricane") },
+      { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp },
+    );
+  }, [map, loaded, mode, hazardPicks, trackCache]);
 
   // FEMA flood zones for demo counties in view; fetched once each, drawn only with the flood layer on.
   const floodInView = useMemo(
-    () => floodCountiesInView(data?.geometry.flood, selectedUtility, selectedFips, activeLayers),
-    [data, selectedUtility, selectedFips, activeLayers],
+    () =>
+      floodCountiesInView(
+        data?.geometry.flood,
+        selectedUtility,
+        selectedFips,
+        mode === "hazards" ? hazardPicks : activeLayers,
+      ),
+    [data, selectedUtility, selectedFips, activeLayers, mode, hazardPicks],
   );
   useEffect(() => {
     if (!loaded) return;
@@ -349,6 +450,31 @@ export function UtilityMapExperience() {
     setActivePresetId(preset.id);
   };
 
+  const onToggleHazard = (hazard: HazardId) =>
+    setHazardPicks((prev) => (prev.includes(hazard) ? prev.filter((h) => h !== hazard) : [...prev, hazard]));
+
+  const hazardLegend =
+    mode !== "hazards" || hazardPicks.length === 0 ? null : hazardPicks.length === 1 ? (
+      <SequentialLegend
+        title={`${HAZARDS[hazardPicks[0]].label}: Texas rank, in fifths`}
+        colors={HAZARDS[hazardPicks[0]].ramp}
+        labels={["Lowest", "", "Middle", "", "Top fifth"]}
+        note={data?.layers.find((l) => l.id === hazardPicks[0])?.unit ?? undefined}
+      />
+    ) : hazardPicks.length === 2 ? (
+      <BivariateLegend
+        colors={BIVARIATE_COLORS}
+        first={HAZARDS[hazardPicks[0]].label}
+        second={HAZARDS[hazardPicks[1]].label}
+      />
+    ) : (
+      <SequentialLegend
+        title={`Hazards where the county is in Texas's top fifth (of ${hazardPicks.length})`}
+        colors={[LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]]}
+        labels={["0", "1", "2", "3", "4+"]}
+      />
+    );
+
   const onToggleLayer = (id: LayerId, on: boolean) => {
     if (!data) return;
     const next = toggleLayer(activeLayers, id, on, data.layers);
@@ -358,6 +484,10 @@ export function UtilityMapExperience() {
 
   const onMode = (next: ModeId) => {
     setMode(next);
+    if (next === "hazards" && hazardPicks.length === 0) {
+      const fromLens = activeLayers.filter((l) => availableHazards.includes(l as HazardId)) as HazardId[];
+      setHazardPicks(fromLens.length ? fromLens.slice(0, 1) : availableHazards.slice(0, 1));
+    }
     const url = new URL(window.location.href);
     if (next === "risk") url.searchParams.delete("mode");
     else url.searchParams.set("mode", next);
@@ -400,6 +530,10 @@ export function UtilityMapExperience() {
               onMode={onMode}
               fleetShare={fleetShare}
               floodCounties={floodInView.filter((fips) => floodCache[fips])}
+              availableHazards={availableHazards}
+              hazardPicks={hazardPicks}
+              onToggleHazard={onToggleHazard}
+              hazardLegend={hazardLegend}
               sources={data.sources}
               layers={data.layers}
               presets={data.presets}

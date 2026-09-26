@@ -1,7 +1,10 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import type { ReactNode } from "react";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
+import { HazardPicker } from "@/components/utility-map/hazard-chip";
+import type { HazardId } from "@/lib/utility-map/hazard-style";
 import { FloodZoneLegend, SequentialLegend } from "@/components/utility-map/legend";
 import { ModeSwitch } from "@/components/utility-map/mode-switch";
 import { FLEET_COLORS } from "@/lib/utility-map/fleet";
@@ -22,12 +25,16 @@ const GROUPS: { id: LayerGroup; label: string }[] = [
   { id: "exposure", label: "Exposure" },
 ];
 
-const LIVE_MODES: ModeId[] = ["risk", "fleet"];
+const LIVE_MODES: ModeId[] = ["risk", "hazards", "fleet"];
 
 type ControlsPanelProps = {
   mode: ModeId;
   fleetShare: number;
   floodCounties: string[];
+  availableHazards: HazardId[];
+  hazardPicks: HazardId[];
+  onToggleHazard: (hazard: HazardId) => void;
+  hazardLegend: ReactNode;
   layers: MapLayerMeta[];
   presets: Preset[];
   sources: SourceRef[];
@@ -45,6 +52,10 @@ export function ControlsPanel({
   mode,
   fleetShare,
   floodCounties,
+  availableHazards,
+  hazardPicks,
+  onToggleHazard,
+  hazardLegend,
   layers,
   presets,
   sources,
@@ -78,6 +89,10 @@ export function ControlsPanel({
           </p>
         )}
       </div>
+
+      {mode === "hazards" ? (
+        <HazardPicker available={availableHazards} picked={hazardPicks} onToggle={onToggleHazard} />
+      ) : null}
 
       <div className="space-y-2">
         <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Lens</p>
@@ -144,7 +159,9 @@ export function ControlsPanel({
         </span>
       </label>
 
-      {mode === "fleet" ? (
+      {hazardLegend ? (
+        hazardLegend
+      ) : mode === "fleet" ? (
         <SequentialLegend
           title={`Share of summer peak a ${Math.round(fleetShare * 100)}% Base fleet could supply for 2 h`}
           colors={FLEET_COLORS}

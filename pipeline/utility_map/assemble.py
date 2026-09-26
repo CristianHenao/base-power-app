@@ -181,6 +181,7 @@ def upgrade(
     tables: dict[str, pd.Series | pd.DataFrame] | None = None,
     utility_grid: pd.DataFrame | None = None,
     county_fields: dict[str, pd.Series] | None = None,
+    outage_links: dict[str, dict] | None = None,
 ) -> dict:
     """Turn the phase-0 contract into the PRD v3 shape. Pure: no files touched.
 
@@ -258,7 +259,11 @@ def upgrade(
         "data_mode": "partial",
         "as_of": v1["as_of"],
         "note": v1["note"],
-        "layers": [_layer_entry(meta, counties, meta["id"] in available) for meta in LAYERS],
+        "layers": [
+            {**_layer_entry(meta, counties, meta["id"] in available),
+             "outage_link": (outage_links or {}).get(meta["id"])}
+            for meta in LAYERS
+        ],
         "presets": [_lens(lens, available) for lens in LENSES],
         "battery": {
             **v1["battery"],
@@ -389,8 +394,10 @@ def main() -> int:
             extra_files[name] = settings.UTILITY_MAP_DIR / name
     grid_path = settings.UTILITY_MAP_DIR / "utility_grid.parquet"
     utility_grid = pd.read_parquet(grid_path) if grid_path.exists() else None
+    links_path = settings.UTILITY_MAP_DIR / "hazard_validation.json"
+    links = json.loads(links_path.read_text()) if links_path.exists() else None
     release = upgrade(v1, crosswalk, load_offers(), tables=tables, utility_grid=utility_grid,
-                      county_fields=county_fields)
+                      county_fields=county_fields, outage_links=links)
     if flood_files:
         release["geometry"]["flood"] = flood_files
     hazards = {k: v for k, v in HAZARD_FILES.items() if (settings.UTILITY_MAP_DIR / v).exists()}

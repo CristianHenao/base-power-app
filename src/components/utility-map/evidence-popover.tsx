@@ -56,6 +56,12 @@ export function EvidencePopover({
               </dd>
             </dl>
             {meta.method ? <p className="text-muted-foreground">{meta.method}</p> : null}
+            {meta.outage_link?.rho != null && meta.id !== "outages" ? (
+              <p className={meta.outage_link.weak ? "font-semibold text-[var(--bp-red-80)]" : ""}>
+                Tracks long outages across {meta.outage_link.n} counties: ρ = {meta.outage_link.rho.toFixed(2)}
+                {meta.outage_link.weak ? " (weak link; don't read it as a cause of outages)" : ""}
+              </p>
+            ) : null}
             <p className="text-muted-foreground">Estimate. Ranked against Texas counties.</p>
           </>
         ) : (

@@ -18,18 +18,10 @@ const HATCH = "um-hatch";
 /** FEMA flood-zone colors (PRD v3 §12.3): the flood hue, light for 0.2%, full for 1%, dark floodway. */
 export const FLOOD_ZONE_COLORS = { "0.2pct": "#9ecae1", "1pct": "#2166ac", floodway: "#08306b" } as const;
 
-/** Fill color by the county's 1-5 level, from a five-step ramp (light to dark). */
+/** Fill color by the county's level 1..n from a ramp or class palette (n = colors.length). */
 function levelColor(colors: readonly string[]): ExpressionSpecification {
-  return [
-    "match",
-    ["coalesce", ["feature-state", "level"], 0],
-    1, colors[0],
-    2, colors[1],
-    3, colors[2],
-    4, colors[3],
-    5, colors[4],
-    NO_DATA_COLOR,
-  ];
+  const pairs = colors.flatMap((color, i) => [i + 1, color]);
+  return ["match", ["coalesce", ["feature-state", "level"], 0], ...pairs, NO_DATA_COLOR] as unknown as ExpressionSpecification;
 }
 
 const RISK_RAMP = [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
@@ -211,6 +203,76 @@ export function setFloodZones(map: Map, collections: GeoJSON.FeatureCollection[]
     },
     before,
   );
+}
+
+const SOURCE_TORNADO = "um-tornado";
+const SOURCE_HURRICANE = "um-hurricane";
+const LAYER_TORNADO = "um-tornado-line";
+const LAYER_HURRICANE = "um-hurricane-line";
+const LAYER_HURRICANE_LABEL = "um-hurricane-label";
+
+/** Tornado tracks (width by EF) and hurricane tracks (teal by category). null hides a set. */
+export function setHazardTracks(
+  map: Map,
+  tracks: { tornado: GeoJSON.FeatureCollection | null; hurricane: GeoJSON.FeatureCollection | null },
+  style: { tornado: string; hurricaneRamp: readonly string[] },
+) {
+  if (!map.getLayer(LAYER_TERRITORY_LINE)) return;
+  const empty: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+  const before = LAYER_TERRITORY_LINE;
+  if (!map.getSource(SOURCE_TORNADO)) {
+    map.addSource(SOURCE_TORNADO, { type: "geojson", data: empty });
+    map.addLayer(
+      {
+        id: LAYER_TORNADO,
+        type: "line",
+        source: SOURCE_TORNADO,
+        slot: "middle",
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": style.tornado,
+          "line-width": ["match", ["get", "ef"], 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 4.5, 1],
+          "line-opacity": ["interpolate", ["linear"], ["get", "year"], 2000, 0.45, 2025, 0.95],
+        },
+      },
+      before,
+    );
+  }
+  if (!map.getSource(SOURCE_HURRICANE)) {
+    map.addSource(SOURCE_HURRICANE, { type: "geojson", data: empty });
+    const [c0, c1, c2, c3, c4] = style.hurricaneRamp;
+    map.addLayer(
+      {
+        id: LAYER_HURRICANE,
+        type: "line",
+        source: SOURCE_HURRICANE,
+        slot: "middle",
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": ["step", ["get", "category"], c0, 1, c1, 2, c2, 3, c3, 4, c4],
+          "line-width": ["interpolate", ["linear"], ["get", "category"], 0, 1.5, 5, 5],
+          "line-opacity": 0.9,
+        },
+      },
+      before,
+    );
+    map.addLayer({
+      id: LAYER_HURRICANE_LABEL,
+      type: "symbol",
+      source: SOURCE_HURRICANE,
+      slot: "top",
+      filter: [">=", ["get", "category"], 3],
+      layout: {
+        "symbol-placement": "line-center",
+        "text-field": ["concat", ["get", "name"], " ", ["to-string", ["get", "year"]]],
+        "text-size": 11,
+        "text-allow-overlap": false,
+      },
+      paint: { "text-color": "#00564d", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+    });
+  }
+  (map.getSource(SOURCE_TORNADO) as GeoJSONSource).setData(tracks.tornado ?? empty);
+  (map.getSource(SOURCE_HURRICANE) as GeoJSONSource).setData(tracks.hurricane ?? empty);
 }
 
 export function setWarningsVisible(map: Map, visible: boolean) {
