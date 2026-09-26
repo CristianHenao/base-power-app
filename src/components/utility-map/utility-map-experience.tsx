@@ -6,7 +6,9 @@ import { MapViewClient } from "@/components/map/map-view-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ControlsPanel } from "@/components/utility-map/controls-panel";
 import { DetailPanel } from "@/components/utility-map/detail-panel";
+import { MapKey } from "@/components/utility-map/map-key";
 import { MethodsSheet } from "@/components/utility-map/methods-sheet";
+import { RiskTableSheet } from "@/components/utility-map/risk-table-sheet";
 import {
   LAYER_COUNTY_3D,
   LAYER_COUNTY_FILL,
@@ -16,7 +18,6 @@ import {
   paintCounty,
   paintTerritory,
   setFillRamp,
-  GRID_RAMP,
   setFloodZones,
   setGenerators,
   setHazardTracks,
@@ -25,27 +26,32 @@ import {
   setHover,
   setWarningsVisible,
 } from "@/components/utility-map/map-layers";
-import type { FleetShare } from "@/components/utility-map/fleet-card";
-import { BivariateLegend, SequentialLegend, SizeLegend } from "@/components/utility-map/legend";
-import { FLEET_COLORS, fleetLevel, fleetScenario } from "@/lib/utility-map/fleet";
-import {
-  BIVARIATE_COLORS,
-  HAZARDS,
-  bivariateClass,
-  hazardLevel,
-  isHazard,
-  outageShareLevel,
-  type SpotlightStorm,
-  overlapCount,
-  type HazardId,
-} from "@/lib/utility-map/hazard-style";
-import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-map/controls";
+import { describeView, overlays, scoreLayers } from "@/lib/utility-map/describe-view";
+import { HAZARDS, isHazard, type HazardId, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { mergeFetched, toFetch } from "@/lib/utility-map/fetch-cache";
-import { dataModeLabel, paintLabel, type PaintContext } from "@/lib/utility-map/format";
+import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
-import { LEVEL_COLORS, buildScoreModel } from "@/lib/utility-map/scoring";
-import { clickTarget, countyPaintState, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
-import type { CountyRecord, LayerId, Preset, UtilityMapData } from "@/lib/utility-map/types";
+import { buildScoreModel } from "@/lib/utility-map/scoring";
+import { clickTarget, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
+import type { UtilityMapData } from "@/lib/utility-map/types";
+import {
+  defaultViewState,
+  selectCounty,
+  selectUtility as selectUtilityIn,
+  setGridLayer,
+  setQuestion,
+  setShare,
+  showPatterns,
+  showStorm,
+  toggleHazard,
+  viewFromUrl,
+  viewToUrl,
+  type ViewContext,
+  type ViewState,
+} from "@/lib/utility-map/view";
+
+/** Query keys owned by the view; anything else in the URL (e.g. ?data=mock) is left alone. */
+const VIEW_KEYS = ["q", "mode", "scenario", "factors", "hazards", "sub", "storm", "demand", "plants", "share", "utility", "county"];
 
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
   [-106.65, 25.84],
@@ -97,24 +103,40 @@ function boundsOf(features: GeoJSON.Feature[]): [[number, number], [number, numb
   return [[minX, minY], [maxX, maxY]];
 }
 
+
 export function UtilityMapExperience() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [map, setMap] = useState<Map | null>(null);
-  const [activeLayers, setActiveLayers] = useState<LayerId[]>(["outages", "weather", "homes"]);
-  const [activePresetId, setActivePresetId] = useState<string | null>("winter");
+  // The one analytical state: question, its settings, and the place in focus (see lib/utility-map/view.ts).
+  const [view, setView] = useState<ViewState>(() => defaultViewState());
   const [showWarnings, setShowWarnings] = useState(false);
-  const [mode, setMode] = useState<ModeId>("risk");
-  const [fleetShare, setFleetShare] = useState<FleetShare>(0.01);
+  const [riskTableOpen, setRiskTableOpen] = useState(false);
+  const [view3d, setView3dOn] = useState(false);
+  const [pickerFips, setPickerFips] = useState<string | null>(null);
+  const [tooltip, setTooltip] = useState<Tooltip | null>(null);
   const [floodCache, setFloodCache] = useState<Record<string, GeoJSON.FeatureCollection>>({});
-  const [hazardPicks, setHazardPicks] = useState<HazardId[]>([]);
   const [trackCache, setTrackCache] = useState<
     Partial<Record<"tornado" | "hurricane" | "severe_storm", GeoJSON.FeatureCollection>>
   >({});
-  const [selectedUtilityId, setSelectedUtilityId] = useState<string | null>(null);
-  const [selectedFips, setSelectedFips] = useState<string | null>(null);
-  const [pickerFips, setPickerFips] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<Tooltip | null>(null);
+  const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
+  const [storms, setStorms] = useState<SpotlightStorm[]>([]);
+  const [stormsStatus, setStormsStatus] = useState<"loading" | "ok" | "failed">("loading");
+
+  const data = loaded?.data ?? null;
+  const ctx = useMemo<ViewContext | null>(
+    () =>
+      data
+        ? {
+            layers: data.layers,
+            utilityIds: new Set(data.utilities.map((u) => u.id)),
+            countyFips: new Set(data.counties.map((c) => c.fips)),
+            utilityCounties: new globalThis.Map(data.utilities.map((u) => [u.id, u.counties])),
+          }
+        : null,
+    [data],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -127,12 +149,15 @@ export function UtilityMapExperience() {
     loadUtilityMap(search, fetchJson)
       .then((result) => {
         setLoaded(result);
-        setMode(parseMode(search));
-        const lens = result.data.presets.find((p) => p.id === "winter") ?? result.data.presets[0];
-        if (lens) {
-          setActiveLayers(lens.layers);
-          setActivePresetId(lens.id);
-        }
+        const { data: d } = result;
+        setView(
+          viewFromUrl(search, {
+            layers: d.layers,
+            utilityIds: new Set(d.utilities.map((u) => u.id)),
+            countyFips: new Set(d.counties.map((c) => c.fips)),
+            utilityCounties: new globalThis.Map(d.utilities.map((u) => [u.id, u.counties])),
+          }),
+        );
       })
       .catch((err: unknown) => {
         if (!controller.signal.aborted) {
@@ -142,11 +167,16 @@ export function UtilityMapExperience() {
     return () => controller.abort();
   }, []);
 
-  const data = loaded?.data ?? null;
-  const model = useMemo(
-    () => (data ? buildScoreModel(data, activeLayers) : null),
-    [data, activeLayers],
-  );
+  // Keep the URL in step with the view, so a reload or a shared link opens the same analysis.
+  useEffect(() => {
+    if (!data) return;
+    const url = new URL(window.location.href);
+    for (const key of VIEW_KEYS) url.searchParams.delete(key);
+    for (const [key, value] of viewToUrl(view)) url.searchParams.set(key, value);
+    if (url.href !== window.location.href) window.history.replaceState(null, "", url);
+  }, [data, view]);
+
+  const model = useMemo(() => (data ? buildScoreModel(data, scoreLayers(view)) : null), [data, view]);
   const countiesByFips = useMemo(
     () => new globalThis.Map((data?.counties ?? []).map((c) => [c.fips, c])),
     [data],
@@ -155,51 +185,50 @@ export function UtilityMapExperience() {
     () => new globalThis.Map((data?.utilities ?? []).map((u) => [u.id, u])),
     [data],
   );
-  const selectedUtility = selectedUtilityId ? utilitiesById.get(selectedUtilityId) ?? null : null;
-
-  // Base fleet mode colors each utility by the share of its summer peak the fleet could cover.
-  const fleetModel = useMemo(() => {
-    if (!data || !model || mode !== "fleet") return model;
-    const utility = new globalThis.Map(
-      data.utilities.map((u) => {
-        const level = fleetLevel(fleetScenario(u, countiesByFips, fleetShare, data.battery).peakShare);
-        return [u.id, { score: null, level, rank: null }];
-      }),
-    );
-    const county = new globalThis.Map(
-      data.counties.map((c) => [c.fips, utility.get(c.primary_utility ?? c.utilities[0]) ?? { score: null, level: null, rank: null }]),
-    );
-    return { ...model, utility, county };
-  }, [data, model, mode, countiesByFips, fleetShare]);
-
-  // Hazards mode: each county colored by the picked hazards (1: that hazard's fifths,
-  // 2: a 3×3 bivariate class, 3+: how many are in Texas's top fifth).
+  const selectedUtility = view.utility ? utilitiesById.get(view.utility) ?? null : null;
+  const selectedCounty = view.county ? countiesByFips.get(view.county) ?? null : null;
   const availableHazards = useMemo(
     () => (data?.layers ?? []).filter((l) => l.available && isHazard(l.id)).map((l) => l.id as HazardId),
     [data],
   );
-  const [generators, setGeneratorsData] = useState<GeoJSON.FeatureCollection | null>(null);
-  const [live, setLive] = useState<UtilityMapData["live"] | null>(null);
-  const [view3d, setView3dOn] = useState(false);
-  const [storms, setStorms] = useState<SpotlightStorm[]>([]);
-  const [spotlightName, setSpotlightName] = useState<string | null>(null);
-  const spotlight = mode === "hazards" ? storms.find((s) => s.name === spotlightName) ?? null : null;
+  const shown = overlays(view);
+  const storm = shown.stormTrack ? storms.find((s) => s.name === view.storm) ?? null : null;
 
-  // Labeled storms for the spotlight, fetched the first time the Hazards mode opens.
+  const described = useMemo(
+    () =>
+      data && model
+        ? describeView(view, { data, model, countiesByFips, utilitiesById, storms, stormsStatus })
+        : null,
+    [data, model, view, countiesByFips, utilitiesById, storms, stormsStatus],
+  );
+
+  // Labeled storms, fetched the first time Explore hazards opens.
   useEffect(() => {
     const file = loaded?.data.geometry.hazards?.storms;
-    if (!loaded || mode !== "hazards" || storms.length || !file) return;
+    if (!loaded || (view.question !== "hazards" && !view.utility) || stormsStatus !== "loading") return;
     let cancelled = false;
+    if (!file) {
+      Promise.resolve().then(() => !cancelled && setStormsStatus("failed"));
+      return () => {
+        cancelled = true;
+      };
+    }
     fetch(`${loaded.base}/${file}`)
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((body: { storms: SpotlightStorm[] } | null) => {
-        if (!cancelled && body) setStorms(body.storms);
+        if (cancelled) return;
+        if (body?.storms) {
+          setStorms(body.storms);
+          setStormsStatus("ok");
+        } else {
+          setStormsStatus("failed");
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [loaded, mode, storms.length]);
+  }, [loaded, view.question, view.utility, stormsStatus]);
 
   // Live NWS warnings every 60 s while the tab is visible (not in the dummy mockup).
   useEffect(() => {
@@ -227,119 +256,69 @@ export function UtilityMapExperience() {
   useEffect(() => {
     if (map && viewData) setWarningCounties(map, viewData.live.alerts.map((a) => a.fips));
   }, [map, viewData, loaded]);
-  const hazardPaint = useMemo(() => {
-    if (data && mode === "grid") {
-      // Grid mode: estimated summer peak demand, in Texas fifths.
-      const levels = new globalThis.Map<string, number | null>(
-        data.counties.map((c) => [c.fips, hazardLevel(c.ranks.peak_demand)]),
-      );
-      return { levels, colors: GRID_RAMP as readonly string[], context: { kind: "grid" } as PaintContext };
-    }
-    if (data && spotlight) {
-      const byFips = new globalThis.Map(spotlight.counties.map((c) => [c.fips, c.peak_out_pct]));
-      const levels = new globalThis.Map<string, number | null>(
-        data.counties.map((c) => [c.fips, byFips.has(c.fips) ? outageShareLevel(byFips.get(c.fips)!) : null]),
-      );
-      return {
-        levels,
-        colors: [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]] as readonly string[],
-        context: { kind: "storm", name: spotlight.name } as PaintContext,
-      };
-    }
-    if (!data || mode !== "hazards" || hazardPicks.length === 0) return null;
-    const levels = new globalThis.Map<string, number | null>();
-    for (const c of data.counties) {
-      const ranks = hazardPicks.map((h) => c.ranks[h]);
-      levels.set(
-        c.fips,
-        hazardPicks.length === 1
-          ? hazardLevel(ranks[0])
-          : hazardPicks.length === 2
-            ? bivariateClass(ranks[0], ranks[1])
-            : Math.min(overlapCount(c, hazardPicks), 4) + 1,
-      );
-    }
-    const colors =
-      hazardPicks.length === 1
-        ? HAZARDS[hazardPicks[0]].ramp
-        : hazardPicks.length === 2
-          ? BIVARIATE_COLORS
-          : [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
-    const context: PaintContext =
-      hazardPicks.length === 1
-        ? { kind: "hazard", label: HAZARDS[hazardPicks[0]].label }
-        : hazardPicks.length === 2
-          ? { kind: "bivariate", first: HAZARDS[hazardPicks[0]].label, second: HAZARDS[hazardPicks[1]].label }
-          : { kind: "overlap", of: hazardPicks.length };
-    return { levels, colors: colors as readonly string[], context };
-  }, [data, mode, hazardPicks, spotlight]);
-
-  // One painter for every mode: the map fill and the tooltip read the same level and label.
-  const paint = useMemo(() => {
-    if (!fleetModel) return null;
-    const selected = selectedUtilityId ? utilitiesById.get(selectedUtilityId) : undefined;
-    if (hazardPaint) {
-      return {
-        colors: hazardPaint.colors,
-        context: hazardPaint.context,
-        stateFor: (county: CountyRecord) => {
-          const inSelection = selected?.counties.includes(county.fips) ?? false;
-          return { level: hazardPaint.levels.get(county.fips) ?? null, dim: selected != null && !inSelection, inSelection };
-        },
-      };
-    }
-    const fleet = mode === "fleet";
-    return {
-      colors: fleet ? (FLEET_COLORS as readonly string[]) : undefined,
-      context: (fleet ? { kind: "fleet" } : { kind: "risk" }) as PaintContext,
-      stateFor: (county: CountyRecord) =>
-        countyPaintState(
-          county,
-          utilitiesById,
-          selectedUtilityId,
-          fleet && selectedUtilityId
-            ? { ...fleetModel, county: new globalThis.Map([[county.fips, fleetModel.utility.get(selectedUtilityId)!]]) }
-            : fleetModel,
-        ),
-    };
-  }, [fleetModel, hazardPaint, mode, utilitiesById, selectedUtilityId]);
-  const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
+  const warningsStatus = !live
+    ? "Checking current warnings"
+    : live.status !== "ok"
+      ? "Warnings feed unavailable right now"
+      : `${new Set(live.alerts.map((a) => a.fips)).size} counties under warnings${
+          live.as_of
+            ? ` · checked ${new Date(live.as_of).toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" })} CT`
+            : ""
+        }`;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
-  const latest = useRef({ paint, countiesByFips, utilitiesById, data, selectedUtilityId });
+  const latest = useRef({ described, countiesByFips, utilitiesById, view });
   useEffect(() => {
-    latest.current = { paint, countiesByFips, utilitiesById, data, selectedUtilityId };
+    latest.current = { described, countiesByFips, utilitiesById, view };
   });
   // Files that failed to load are not requested again (a release can be pruned under an open tab).
   const trackFailed = useRef(new Set<string>());
   const floodFailed = useRef(new Set<string>());
 
+  const fitFips = useCallback(
+    (fips: Set<string>, maxZoom: number) => {
+      if (!map || !loaded) return;
+      const features = loaded.counties.features.filter((f) => fips.has(String(f.properties?.fips)));
+      if (features.length) map.fitBounds(boundsOf(features), { padding: mapPadding(), duration: 800, maxZoom });
+    },
+    [map, loaded],
+  );
   const fitUtility = useCallback(
     (utilityId: string | null) => {
       if (!map || !loaded) return;
-      if (!utilityId) {
+      const utility = utilityId ? loaded.data.utilities.find((u) => u.id === utilityId) : undefined;
+      if (!utility) {
         map.fitBounds(TEXAS_BOUNDS, { padding: mapPadding(), duration: 800 });
         return;
       }
-      const utility = loaded.data.utilities.find((u) => u.id === utilityId);
-      const features = loaded.counties.features.filter((f) =>
-        utility?.counties.includes(String(f.properties?.fips)),
-      );
-      if (features.length) {
-        map.fitBounds(boundsOf(features), { padding: mapPadding(), duration: 800, maxZoom: 8.5 });
-      }
+      fitFips(new Set(utility.counties), 8.5);
     },
-    [map, loaded],
+    [map, loaded, fitFips],
   );
 
   const selectUtility = useCallback(
     (id: string | null) => {
-      setSelectedUtilityId(id);
-      setSelectedFips(null);
+      setView((v) => selectUtilityIn(v, id));
       setPickerFips(null);
       fitUtility(id);
     },
     [fitUtility],
+  );
+  const selectFips = useCallback((fips: string | null) => {
+    setView((v) => selectCounty(v, fips));
+    setPickerFips(null);
+  }, []);
+  // A county from a list (e.g. a storm's counties): open it inside its main utility.
+  const openCounty = useCallback(
+    (fips: string) => {
+      const county = countiesByFips.get(fips);
+      const utility = county?.primary_utility ?? county?.utilities[0];
+      if (!county || !utility) return;
+      setView((v) => selectCounty(selectUtilityIn(v, utility), fips));
+      setPickerFips(null);
+      fitUtility(utility);
+    },
+    [countiesByFips, fitUtility],
   );
 
   // Add sources and layers once both the map and the data are ready.
@@ -351,7 +330,17 @@ export function UtilityMapExperience() {
       loaded.territories,
       loaded.data.live.alerts.map((a) => a.fips),
     );
-    map.fitBounds(TEXAS_BOUNDS, { padding: mapPadding(), duration: 0 });
+    const opening = latest.current.view.utility
+      ? loaded.data.utilities.find((u) => u.id === latest.current.view.utility)
+      : undefined;
+    const openingFeatures = opening
+      ? loaded.counties.features.filter((f) => opening.counties.includes(String(f.properties?.fips)))
+      : [];
+    if (openingFeatures.length) {
+      map.fitBounds(boundsOf(openingFeatures), { padding: mapPadding(), duration: 0, maxZoom: 8.5 });
+    } else {
+      map.fitBounds(TEXAS_BOUNDS, { padding: mapPadding(), duration: 0 });
+    }
 
     let hoveredCounty: number | null = null;
     let hoveredUtility: string | null = null;
@@ -366,16 +355,16 @@ export function UtilityMapExperience() {
     const onMove = (event: MapMouseEvent) => {
       const feature = map.queryRenderedFeatures(event.point, { layers: countyLayers() })[0];
       const fips = feature?.properties?.fips as string | undefined;
-      const { paint: p, countiesByFips: counties, utilitiesById: utilities, selectedUtilityId: sel } = latest.current;
+      const { described: d, countiesByFips: counties, utilitiesById: utilities, view: v } = latest.current;
       const county = fips ? counties.get(fips) : undefined;
-      if (!county || !p) {
+      if (!county || !d) {
         clearHover();
         map.getCanvas().style.cursor = "";
         setTooltip(null);
         return;
       }
-      const state = p.stateFor(county);
-      const utilityId = state.inSelection && sel ? sel : county.primary_utility ?? county.utilities[0];
+      const state = d.stateFor(county);
+      const utilityId = state.inSelection && v.utility ? v.utility : county.primary_utility ?? county.utilities[0];
       clearHover();
       hoveredCounty = Number(fips);
       hoveredUtility = utilityId;
@@ -391,10 +380,16 @@ export function UtilityMapExperience() {
           width: canvas.clientWidth,
           height: canvas.clientHeight,
         }),
-        title: state.inSelection
-          ? `${county.name} County`
-          : `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
-        detail: `${paintLabel(p.context, state.level)}${state.inSelection ? "" : ` · ${county.name} County`}`,
+        // Screening and fleet color a county by its utility; every other view by the county's own value.
+        ...(state.inSelection || (d.context.kind !== "risk" && d.context.kind !== "fleet")
+          ? {
+              title: `${county.name} County`,
+              detail: `${d.labelFor(county)}${state.inSelection ? "" : ` · ${utilityName}${others > 0 ? ` + ${others} more` : ""}`}`,
+            }
+          : {
+              title: `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
+              detail: `${d.labelFor(county)} · ${county.name} County`,
+            }),
       });
     };
 
@@ -407,24 +402,20 @@ export function UtilityMapExperience() {
     const onClick = (event: MapMouseEvent) => {
       const feature = map.queryRenderedFeatures(event.point, { layers: countyLayers() })[0];
       const fips = feature?.properties?.fips as string | undefined;
-      const { countiesByFips: counties, utilitiesById: utilities, selectedUtilityId: sel } =
-        latest.current;
+      const { countiesByFips: counties, utilitiesById: utilities, view: v } = latest.current;
       const county = fips ? counties.get(fips) : undefined;
       if (!county) return;
-      const target = clickTarget(county, sel, utilities);
+      const target = clickTarget(county, v.utility, utilities);
       if (target.kind === "county") {
-        setSelectedFips(target.fips);
+        setView((prev) => selectCounty(prev, target.fips));
         setPickerFips(null);
       } else if (target.kind === "picker") {
         setPickerFips(target.fips);
       } else {
-        setSelectedUtilityId(target.id);
-        setSelectedFips(null);
+        setView((prev) => selectUtilityIn(prev, target.id));
         setPickerFips(null);
         const utility = utilities.get(target.id);
-        const features = loaded.counties.features.filter((f) =>
-          utility?.counties.includes(String(f.properties?.fips)),
-        );
+        const features = loaded.counties.features.filter((f) => utility?.counties.includes(String(f.properties?.fips)));
         map.fitBounds(boundsOf(features), { padding: mapPadding(), duration: 800, maxZoom: 8.5 });
       }
     };
@@ -444,32 +435,30 @@ export function UtilityMapExperience() {
     };
   }, [map, loaded]);
 
-  // Repaint whenever scores or the selection change.
+  // Repaint whenever the view or the selection changes; the map, tooltip and details share `described`.
   useEffect(() => {
-    if (!map || !loaded || !paint || !map.getSource(SOURCE_COUNTIES)) return;
-    setFillRamp(map, paint.colors);
+    if (!map || !loaded || !described || !map.getSource(SOURCE_COUNTIES)) return;
+    setFillRamp(map, described.colors);
     for (const county of loaded.data.counties) {
       paintCounty(map, county.fips, {
-        ...(paint.stateFor(county) as { level: never; dim: boolean; inSelection: boolean }),
-        picked: county.fips === selectedFips || county.fips === pickerFips,
+        ...(described.stateFor(county) as { level: never; dim: boolean; inSelection: boolean }),
+        picked: county.fips === view.county || county.fips === pickerFips,
       });
     }
     for (const utility of loaded.data.utilities) {
-      paintTerritory(map, utility.id, utility.id === selectedUtilityId);
+      paintTerritory(map, utility.id, utility.id === view.utility);
     }
-  }, [map, loaded, paint, selectedUtilityId, selectedFips, pickerFips]);
+  }, [map, loaded, described, view.utility, view.county, pickerFips]);
 
-  // Tornado and hurricane tracks: fetched the first time they're picked.
+  // Tornado, hail and hurricane tracks: fetched the first time they're needed.
+  const trackKey = [...shown.tracks, storm?.track_storm_id ? "hurricane" : ""].join(",");
   useEffect(() => {
     if (!loaded) return;
     const files = loaded.data.geometry.hazards ?? {};
-    const wanted = toFetch(
-      (["tornado", "hurricane", "severe_storm"] as const).filter(
-        (h) => mode === "hazards" && hazardPicks.includes(h) && files[h],
-      ),
-      trackCache,
-      trackFailed.current,
-    ) as ("tornado" | "hurricane" | "severe_storm")[];
+    const needed = trackKey.split(",").filter((h): h is "tornado" | "hurricane" | "severe_storm" =>
+      (["tornado", "hurricane", "severe_storm"] as const).includes(h as never) && !!files[h as "tornado"],
+    );
+    const wanted = toFetch([...new Set(needed)], trackCache, trackFailed.current) as ("tornado" | "hurricane" | "severe_storm")[];
     if (wanted.length === 0) return;
     let cancelled = false;
     Promise.all(
@@ -488,18 +477,39 @@ export function UtilityMapExperience() {
     return () => {
       cancelled = true;
     };
-  }, [loaded, mode, hazardPicks, trackCache]);
-  // 3D view only in Risk mode; honor reduced motion.
+  }, [loaded, trackKey, trackCache]);
+  useEffect(() => {
+    if (!map || !loaded) return;
+    const show = (h: "tornado" | "hurricane" | "severe_storm") => {
+      if (storm) {
+        // Only the storm's own track, when it has one.
+        const track = h === "hurricane" && storm.track_storm_id ? trackCache.hurricane : null;
+        return track
+          ? { ...track, features: track.features.filter((f) => f.properties?.storm_id === storm.track_storm_id) }
+          : null;
+      }
+      return shown.tracks.includes(h) ? trackCache[h] ?? null : null;
+    };
+    setHazardTracks(
+      map,
+      { tornado: show("tornado"), hurricane: show("hurricane"), severe_storm: show("severe_storm") },
+      { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp, severe: HAZARDS.severe_storm.ramp[4] },
+    );
+    // `shown.tracks` is derived from `view`; trackKey captures it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, loaded, trackKey, trackCache, storm]);
+
+  // 3D only in Find opportunities; honor reduced motion.
   useEffect(() => {
     if (!map || !loaded) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setView3d(map, view3d && mode === "risk", !reduced);
-  }, [map, loaded, view3d, mode]);
+    setView3d(map, view3d && shown.view3d, !reduced);
+  }, [map, loaded, view3d, shown.view3d]);
 
-  // Power plants for the Grid mode, fetched the first time the mode opens.
+  // Power plants, fetched the first time the grid view opens; drawn only with their switch on.
   useEffect(() => {
     const file = loaded?.data.geometry.grid?.generators;
-    if (!loaded || mode !== "grid" || generators || !file) return;
+    if (!loaded || view.question !== "grid" || generators || !file) return;
     let cancelled = false;
     fetch(`${loaded.base}/${file}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -510,52 +520,15 @@ export function UtilityMapExperience() {
     return () => {
       cancelled = true;
     };
-  }, [loaded, mode, generators]);
+  }, [loaded, view.question, generators]);
   useEffect(() => {
-    if (map && loaded) setGenerators(map, mode === "grid" ? generators : null);
-  }, [map, loaded, mode, generators]);
+    if (map && loaded) setGenerators(map, shown.plants ? generators : null);
+  }, [map, loaded, shown.plants, generators]);
 
-  useEffect(() => {
-    if (!map || !loaded) return;
-    const show = (h: "tornado" | "hurricane" | "severe_storm") => {
-      if (mode !== "hazards") return null;
-      if (spotlight) {
-        // Only the spotlighted storm's own track, when it has one.
-        const track = h === "hurricane" && spotlight.track_storm_id ? trackCache.hurricane : null;
-        return track
-          ? { ...track, features: track.features.filter((f) => f.properties?.storm_id === spotlight.track_storm_id) }
-          : null;
-      }
-      return hazardPicks.includes(h) ? trackCache[h] ?? null : null;
-    };
-    setHazardTracks(
-      map,
-      { tornado: show("tornado"), hurricane: show("hurricane"), severe_storm: show("severe_storm") },
-      { tornado: HAZARDS.tornado.ramp[4], hurricaneRamp: HAZARDS.hurricane.ramp, severe: HAZARDS.severe_storm.ramp[4] },
-    );
-  }, [map, loaded, mode, hazardPicks, trackCache, spotlight]);
-
-  // Fit the map to a spotlighted storm's counties; also make sure its track file is loaded.
-  const onSpotlight = (name: string | null) => {
-    setSpotlightName(name);
-    const storm = storms.find((s) => s.name === name);
-    if (!storm || !map || !loaded) return;
-    if (storm.track_storm_id && !hazardPicks.includes("hurricane")) setHazardPicks((p) => [...p, "hurricane"]);
-    const fips = new Set(storm.counties.map((c) => c.fips));
-    const features = loaded.counties.features.filter((f) => fips.has(String(f.properties?.fips)));
-    if (features.length) map.fitBounds(boundsOf(features), { padding: mapPadding(), duration: 800, maxZoom: 8 });
-  };
-
-  // FEMA flood zones for demo counties in view; fetched once each, drawn only with the flood layer on.
+  // FEMA flood zones for demo counties in view; fetched once each, drawn only when flood is in the view.
   const floodInView = useMemo(
-    () =>
-      floodCountiesInView(
-        data?.geometry.flood,
-        selectedUtility,
-        selectedFips,
-        mode === "hazards" ? hazardPicks : activeLayers,
-      ),
-    [data, selectedUtility, selectedFips, activeLayers, mode, hazardPicks],
+    () => floodCountiesInView(data?.geometry.flood, selectedUtility, view.county, shown.flood ? ["flood"] : []),
+    [data, selectedUtility, view.county, shown.flood],
   );
   useEffect(() => {
     if (!loaded) return;
@@ -588,77 +561,16 @@ export function UtilityMapExperience() {
     if (map) setWarningsVisible(map, showWarnings);
   }, [map, showWarnings, loaded]);
 
-  const onPreset = (preset: Preset) => {
-    setActiveLayers(preset.layers);
-    setActivePresetId(preset.id);
+  const onStorm = (name: string) => {
+    setView((v) => showStorm(v, name));
+    const picked = storms.find((s) => s.name === name);
+    if (picked && !view.utility) fitFips(new Set(picked.counties.map((c) => c.fips)), 8);
   };
 
-  const onToggleHazard = (hazard: HazardId) =>
-    setHazardPicks((prev) => (prev.includes(hazard) ? prev.filter((h) => h !== hazard) : [...prev, hazard]));
-
-  const hazardLegend = spotlight ? (
-    <SequentialLegend
-      title={`${spotlight.name}: peak share of customers out`}
-      colors={[LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]]}
-      labels={["< 5%", "5–15%", "15–30%", "30–50%", "50%+"]}
-      note="Grey: no outage event labeled with this storm."
-    />
-  ) : mode === "grid" ? (
-      <>
-        <SequentialLegend
-          title="Estimated summer peak demand, Texas fifths"
-          colors={GRID_RAMP}
-          labels={["Lowest", "", "Middle", "", "Top fifth"]}
-          note="Each utility's 2024 peak split across its counties by customers."
-        />
-        <SizeLegend
-          title="Power plants (net summer MW, EIA-860 2024)"
-          stops={[
-            { label: "100", radius: 4 },
-            { label: "1,000", radius: 8 },
-            { label: "5,000", radius: 14 },
-          ]}
-        />
-      </>
-    ) : mode !== "hazards" || hazardPicks.length === 0 ? null : hazardPicks.length === 1 ? (
-      <SequentialLegend
-        title={`${HAZARDS[hazardPicks[0]].label}: Texas rank, in fifths`}
-        colors={HAZARDS[hazardPicks[0]].ramp}
-        labels={["Lowest", "", "Middle", "", "Top fifth"]}
-        note={data?.layers.find((l) => l.id === hazardPicks[0])?.unit ?? undefined}
-      />
-    ) : hazardPicks.length === 2 ? (
-      <BivariateLegend
-        colors={BIVARIATE_COLORS}
-        first={HAZARDS[hazardPicks[0]].label}
-        second={HAZARDS[hazardPicks[1]].label}
-      />
-    ) : (
-      <SequentialLegend
-        title={`Hazards where the county is in Texas's top fifth (of ${hazardPicks.length})`}
-        colors={[LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]]}
-        labels={["0", "1", "2", "3", "4+"]}
-      />
-    );
-
-  const onToggleLayer = (id: LayerId, on: boolean) => {
-    if (!data) return;
-    const next = toggleLayer(activeLayers, id, on, data.layers);
-    setActiveLayers(next);
-    setActivePresetId(matchPreset(next, data.presets));
-  };
-
-  const onMode = (next: ModeId) => {
-    setMode(next);
-    if (next === "hazards" && hazardPicks.length === 0) {
-      const fromLens = activeLayers.filter((l) => availableHazards.includes(l as HazardId)) as HazardId[];
-      setHazardPicks(fromLens.length ? fromLens.slice(0, 1) : availableHazards.slice(0, 1));
-    }
-    const url = new URL(window.location.href);
-    if (next === "risk") url.searchParams.delete("mode");
-    else url.searchParams.set("mode", next);
-    window.history.replaceState(null, "", url);
-  };
+  const floodShown = floodInView.some((fips) => floodCache[fips]);
+  const keyProps = described
+    ? { described, showFlood: floodShown, showPlants: shown.plants && generators != null }
+    : null;
 
   return (
     <main className="relative h-full w-full">
@@ -684,41 +596,50 @@ export function UtilityMapExperience() {
         </div>
       ) : null}
 
+
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
-        <div className="pointer-events-auto w-full space-y-3 lg:max-h-full lg:w-80 lg:overflow-y-auto">
-          <p className="bp-stamp inline-flex rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5">
+        <div className="pointer-events-auto flex max-h-[34dvh] w-full shrink-0 flex-col gap-3 overflow-y-auto lg:max-h-full lg:w-80">
+          <p className="order-3 rounded-xl bg-white px-3 py-2 text-[12px] leading-[18px] text-muted-foreground lg:hidden">
+            The utility map is built for desktop screens. On a narrow screen, scroll this panel and the details below.
+          </p>
+          <p className="bp-stamp order-2 inline-flex self-start rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5 lg:order-none">
             {data ? dataModeLabel(data.data_mode) : "Loading data"}
             {data?.release_id ? ` · ${data.as_of}` : ""}
           </p>
-          {data && model ? (
-            <div className="inline-flex rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)]">
-              <MethodsSheet data={data} model={model} activeLayers={activeLayers} countiesByFips={countiesByFips} />
+          {data && described ? (
+            <div className="order-2 inline-flex self-start rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)] lg:order-none">
+              <MethodsSheet data={data} described={described} />
             </div>
           ) : null}
-          {data ? (
+          {keyProps ? (
+            <>
+              <div className="order-1 lg:hidden">
+                <MapKey {...keyProps} defaultOpen={false} />
+              </div>
+              <div className="hidden lg:order-last lg:block">
+                <MapKey {...keyProps} />
+              </div>
+            </>
+          ) : null}
+          {data && ctx ? (
             <ControlsPanel
-              mode={mode}
-              onMode={onMode}
-              fleetShare={fleetShare}
-              floodCounties={floodInView.filter((fips) => floodCache[fips])}
+              className="order-first shrink-0 lg:order-none"
+              view={view}
+              data={data}
               availableHazards={availableHazards}
-              hazardPicks={hazardPicks}
-              onToggleHazard={onToggleHazard}
-              hazardLegend={hazardLegend}
               storms={storms}
-              spotlight={spotlight}
-              onSpotlight={onSpotlight}
+              stormsStatus={stormsStatus}
               countyName={(fips) => countiesByFips.get(fips)?.name ?? fips}
               view3d={view3d}
-              onView3d={setView3dOn}
-              sources={data.sources}
-              layers={data.layers}
-              presets={data.presets}
-              activeLayers={activeLayers}
-              activePresetId={activePresetId}
               showWarnings={showWarnings}
-              onPreset={onPreset}
-              onToggleLayer={onToggleLayer}
+              warningsStatus={warningsStatus}
+              onQuestion={(q) => setView((v) => setQuestion(v, q, ctx))}
+              onHazard={(h) => setView((v) => toggleHazard(v, h))}
+              onStorm={onStorm}
+              onPatterns={() => setView(showPatterns)}
+              onGrid={(layer, on) => setView((v) => setGridLayer(v, layer, on))}
+              onShare={(share) => setView((v) => setShare(v, share))}
+              onView3d={setView3dOn}
               onToggleWarnings={setShowWarnings}
             />
           ) : (
@@ -726,34 +647,49 @@ export function UtilityMapExperience() {
           )}
         </div>
 
-        <div className="pointer-events-auto mt-auto flex max-h-[45dvh] w-full min-h-0 lg:mt-0 lg:max-h-full lg:w-[400px]">
+        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full lg:mt-0 lg:max-h-full lg:w-[400px]">
           {loadError ? (
-            <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">
-              {loadError}
-            </p>
-          ) : data && model ? (
+            <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">{loadError}</p>
+          ) : data && model && described ? (
             <DetailPanel
-              key={selectedUtilityId ?? "all"}
+              key={view.utility ?? "all"}
               className="w-full"
               data={viewData ?? data}
               model={model}
-              activeLayers={activeLayers}
+              view={view}
+              described={described}
+              storm={storm}
+              storms={storms}
               countiesByFips={countiesByFips}
               utilitiesById={utilitiesById}
               pickerFips={pickerFips}
-              fleetShare={fleetShare}
-              onFleetShare={setFleetShare}
+              onShare={(share) => setView((v) => setShare(v, share))}
               onClosePicker={() => setPickerFips(null)}
               selectedUtility={selectedUtility}
               selectedCounty={selectedCounty}
               onSelectUtility={selectUtility}
-              onSelectCounty={setSelectedFips}
+              onSelectCounty={selectFips}
+              onOpenCounty={openCounty}
+              onOpenRiskTable={() => setRiskTableOpen(true)}
             />
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
           )}
         </div>
       </div>
+      {data ? (
+        <RiskTableSheet
+          open={riskTableOpen}
+          onOpenChange={setRiskTableOpen}
+          data={data}
+          countiesByFips={countiesByFips}
+          onPick={(row, kind) => {
+            setRiskTableOpen(false);
+            if (kind === "county") openCounty(row.id);
+            else selectUtility(row.id);
+          }}
+        />
+      ) : null}
     </main>
   );
 }

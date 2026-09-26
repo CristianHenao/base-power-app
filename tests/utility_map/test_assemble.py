@@ -286,3 +286,21 @@ def test_prune_keeps_the_current_and_previous_release(tmp_path: Path) -> None:
     removed = assemble.prune_releases(tmp_path, current="2026-09-26-dddd", keep=2)
     assert sorted(p.name for p in releases.iterdir()) == ["2026-09-26-cccc", "2026-09-26-dddd"]
     assert sorted(removed) == ["2026-09-26-aaaa", "2026-09-26-bbbb"]
+
+
+def test_every_county_and_utility_gets_a_grid_risk_index() -> None:
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS)
+    for record in release["counties"] + release["utilities"]:
+        risk = record["risk"]
+        assert risk["sources_total"] == 9
+        assert risk["index"] is None or 1 <= risk["index"] <= 100
+
+
+def test_check_rejects_a_missing_or_out_of_range_risk_index() -> None:
+    release = assemble.upgrade(_v1(), _crosswalk(), OFFERS)
+    assert assemble.check(release, expected_counties=2) == []
+    release["counties"][0]["risk"]["index"] = 140
+    del release["utilities"][0]["risk"]
+    problems = assemble.check(release, expected_counties=2)
+    assert any("48001" in p and "risk index" in p for p in problems)
+    assert any("risk index" in p and release["utilities"][0]["id"] in p for p in problems)

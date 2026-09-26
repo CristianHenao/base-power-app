@@ -22,6 +22,7 @@ import yaml
 
 from pipeline import settings
 from pipeline.map_layers import percentile_ranks
+from pipeline.utility_map.risk_index import attach_risk_index
 
 V1_DIR = settings.REPO_ROOT / "public" / "utility-map" / "data"
 PUBLIC_DIR = settings.REPO_ROOT / "public" / "utility-map"
@@ -95,11 +96,13 @@ LAYERS: list[dict] = [
     {"id": "weather", "group": "hazard", "label": "Weather hazard (FEMA)",
      "unit": "FEMA NRI risk score, 0-100 (mean of winter, ice, hurricane, wind, tornado, heat)",
      "period_start": None, "period_end": "2025-12-01", "source_ids": ["fema_nri"],
-     "method": "Mean of six FEMA NRI hazard risk scores. Stands in until the event-based hazard layers ship."},
-    {"id": "homes", "group": "exposure", "label": "Homes exposed",
+     "method": "Mean of six FEMA NRI hazard risk scores. Replaced in the map by the event-based hazard "
+               "layers; kept in the data for reference."},
+    {"id": "homes", "group": "exposure", "label": "Potential homes",
      "unit": "owner-occupied single-family homes (ACS 2020-2024)",
      "period_start": "2020-01-01", "period_end": "2024-12-31", "source_ids": ["acs_5yr"],
-     "method": "ACS 5-year table B25032, owner-occupied one-unit homes by county."},
+     "method": "ACS 5-year table B25032, owner-occupied one-unit homes by county: the homes that could "
+               "host a Core. Not a count of homes inside a flood zone or storm footprint."},
 ]
 LAYER_IDS = [layer["id"] for layer in LAYERS]
 HAZARD_IDS = [layer["id"] for layer in LAYERS if layer["group"] == "hazard" and layer["id"] != "weather"]
@@ -280,7 +283,7 @@ def upgrade(
         })
 
     available = {layer["id"] for layer in LAYERS if "pending" not in layer} | set(tables)
-    return {
+    release = {
         "schema_version": SCHEMA_VERSION,
         "release_id": None,
         "mock": False,
@@ -306,6 +309,12 @@ def upgrade(
             "rank_method": "(average tie rank - 1) / (n valid - 1); null when fewer than 2 values",
             "peer_scope": "texas_counties",
             "expansion_level": 3,
+            "risk_index": (
+                "Grid Risk Index 1-100: half hazard exposure (mean rank of flood, tornado, hail and wind, "
+                "hurricane, winter freeze, extreme heat), half grid stress (mean rank of long outages, price "
+                "spikes, summer peak demand), re-ranked across Texas counties; utilities use their "
+                "customer-weighted counties, re-ranked across utilities. Missing layers are left out, not zero."
+            ),
         },
         "sources": SOURCES,
         "live": {"status": "unavailable", "as_of": None, "ercot": None, "alerts": []},
@@ -313,6 +322,8 @@ def upgrade(
         "utilities": utilities,
         "geometry": v1["geometry"],
     }
+    # Grid Risk Index: one standardized 1-100 score per county and utility (risk_index.py).
+    return attach_risk_index(release)
 
 
 def release_id(release: dict, today: str) -> str:
@@ -355,6 +366,13 @@ def check(release: dict, expected_counties: int = TEXAS_COUNTIES) -> list[str]:
             share_sum[weight["fips"]] = share_sum.get(weight["fips"], 0.0) + weight["share"]
     problems += [f"{f}: utility shares sum to {total:.4f}, not 1"
                  for f, total in sorted(share_sum.items()) if abs(total - 1) > 1e-3]
+    for record in counties + release["utilities"]:
+        name = record.get("fips") or record.get("id")
+        index = (record.get("risk") or {}).get("index", "missing")
+        if index == "missing":
+            problems.append(f"{name}: no Grid Risk Index (risk index missing)")
+        elif index is not None and not (isinstance(index, int) and 1 <= index <= 100):
+            problems.append(f"{name}: risk index {index} outside 1-100")
     for layer in release["layers"]:
         if not layer["available"]:
             continue

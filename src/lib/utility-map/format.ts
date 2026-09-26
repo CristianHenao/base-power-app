@@ -82,7 +82,9 @@ export type PaintContext =
   | { kind: "hazard"; label: string }
   | { kind: "bivariate"; first: string; second: string }
   | { kind: "overlap"; of: number }
-  | { kind: "storm"; name: string };
+  | { kind: "storm"; name: string }
+  | { kind: "plain"; label: string }
+  | { kind: "index" };
 
 const RISK_LABELS = ["Low", "Moderate", "Elevated", "High", "Very high"];
 const FLEET_BINS_TEXT = ["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"];
@@ -91,10 +93,13 @@ const FIFTHS = ["lowest fifth", "2nd fifth", "middle fifth", "4th fifth", "top f
 const THIRDS = ["bottom third", "middle third", "top third"];
 
 export function paintLabel(context: PaintContext, level: number | null): string {
+  if (context.kind === "plain") return context.label;
   if (level == null) return "No data";
   switch (context.kind) {
     case "risk":
       return `Level ${level} · ${RISK_LABELS[level - 1]}`;
+    case "index":
+      return `Grid Risk Index: ${["1–20 Low", "21–40 Moderate", "41–60 Elevated", "61–80 High", "81–100 Severe"][level - 1]}`;
     case "fleet":
       return `${FLEET_BINS_TEXT[level - 1]} of summer peak`;
     case "grid":
@@ -106,6 +111,8 @@ export function paintLabel(context: PaintContext, level: number | null): string 
     case "overlap":
       return `Top fifth in ${level - 1}${level === 5 ? "+" : ""} of ${context.of} hazards`;
     case "storm":
-      return `${context.name}: ${STORM_BINS_TEXT[level - 1]} of customers out`;
+      return level === 6
+        ? `${context.name}: customers out, share unknown`
+        : `${context.name}: ${STORM_BINS_TEXT[level - 1]} of customers out`;
   }
 }

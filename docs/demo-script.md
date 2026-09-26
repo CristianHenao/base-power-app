@@ -60,10 +60,10 @@ Open `/utility-map` at laptop width. Everything on screen is from public data; t
 
 | Time | On screen | Say |
 |---|---|---|
-| 0:00-0:10 | Risk mode, Winter freeze lens, 3D on | "Every Texas county, scored on real outage history, hazards and grid stress. Taller is worse." |
-| 0:10-0:25 | Hazards mode, Tornadoes + Hurricanes | "Tornado tracks from NOAA, hurricane tracks since 1980. The dark corner is where both run high: East Texas and the upper coast." |
-| 0:25-0:35 | Storm spotlight: Hurricane Beryl | "Beryl put 1.66 million Harris County customers in the dark, 91% of them. That's EAGLE-I, county by county." |
-| 0:35-0:45 | Risk mode, Hurricane season, open CenterPoint, Flood on | "FEMA flood zones for Harris and Galveston; 60% of Galveston is in the 100-year floodplain." |
-| 0:45-0:60 | Base fleet mode, Oncor at 10% | "One Core in 10% of Oncor's homes: about 2,400 MW for two hours, 7.9% of its summer peak. And every number has its source one tap away." |
+| 0:00-0:10 | Grid Risk Index, 3D on, open CenterPoint | "Every Texas county and utility gets one Grid Risk Index, 1 to 100, from nine public sources: half hazard exposure, half grid stress. CenterPoint: 98, fourth of 150." |
+| 0:10-0:25 | Explore hazards → Historical patterns: turn off Winter freeze, pick Tornadoes + Hurricanes | "Tornado tracks from NOAA, hurricane tracks since 1980. The dark corner is where both run high: East Texas and the upper coast." |
+| 0:25-0:35 | Explore hazards → Past storms: Hurricane Beryl | "Beryl put 1.66 million Harris County customers in the dark, 91% of them. That's EAGLE-I, county by county." |
+| 0:35-0:45 | Explore hazards → Historical patterns, Flood, open CenterPoint → Harris | "FEMA flood zones for Harris and Galveston; 60% of Galveston is in the 100-year floodplain." |
+| 0:45-0:60 | Model Base impact, 10%, open Oncor | "One Core in 10% of Oncor's homes: about 2,400 MW for two hours, 7.9% of its summer peak. And every number has its source one tap away." |
 
 Checks before recording: `make export-map` gate report passes; `npm run test:web`, `python -m pytest -q`, `npm run build` pass.

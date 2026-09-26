@@ -3,28 +3,15 @@
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { formatLayerValue, formatPeriod } from "@/lib/utility-map/format";
-import { offerLabel, utilityLayerQuality, utilityLayerSummary, type ScoreModel } from "@/lib/utility-map/scoring";
-import type { CountyRecord, LayerId, UtilityMapData } from "@/lib/utility-map/types";
+import type { ViewDescription } from "@/lib/utility-map/describe-view";
+import { formatPeriod } from "@/lib/utility-map/format";
+import type { UtilityMapData } from "@/lib/utility-map/types";
 
-/** Every number on screen traced to a source: layers, methods, outage check, and the ranking as a table. */
-export function MethodsSheet({
-  data,
-  model,
-  activeLayers,
-  countiesByFips,
-}: {
-  data: UtilityMapData;
-  model: ScoreModel;
-  activeLayers: LayerId[];
-  countiesByFips: Map<string, CountyRecord>;
-}) {
+/** Every number on screen traced to a source, and the current view as a table: same question, every row. */
+export function MethodsSheet({ data, described }: { data: UtilityMapData; described: ViewDescription }) {
   const [tab, setTab] = useState<"sources" | "table">("sources");
   const sourceName = (id: string) => data.sources.find((s) => s.id === id);
-  const ranked = [...data.utilities]
-    .filter((u) => model.utility.get(u.id)?.score != null)
-    .sort((a, b) => (model.utility.get(b.id)?.score ?? 0) - (model.utility.get(a.id)?.score ?? 0))
-    .slice(0, 25);
+  const { table } = described;
   return (
     <Sheet>
       <SheetTrigger className="bp-link">
@@ -48,6 +35,12 @@ export function MethodsSheet({
         </div>
         {tab === "sources" ? (
           <ul className="space-y-4">
+            {data.scoring?.risk_index ? (
+              <li className="space-y-1 border-b pb-3 text-[13px] leading-[19px]">
+                <p className="text-[15px] font-semibold">Grid Risk Index</p>
+                <p className="text-muted-foreground">{data.scoring.risk_index}</p>
+              </li>
+            ) : null}
             {data.layers.map((layer) => (
               <li key={layer.id} className="space-y-1 border-b pb-3 text-[13px] leading-[19px]">
                 <p className="text-[15px] font-semibold">
@@ -91,34 +84,29 @@ export function MethodsSheet({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px] leading-[18px]">
-              <caption className="pb-2 text-left text-muted-foreground">Top 25 utilities for the layers on now.</caption>
+              <caption className="pb-2 text-left text-muted-foreground">
+                <span className="block font-semibold text-foreground">
+                  {described.caption.title} · {described.caption.qualifier}
+                </span>
+                {table.caption}.
+              </caption>
               <thead>
                 <tr className="border-b">
                   <th className="py-1 pr-2">#</th>
-                  <th className="py-1 pr-2">Utility</th>
-                  <th className="py-1 pr-2">Level</th>
-                  <th className="py-1 pr-2">Base offer</th>
-                  {activeLayers.map((id) => (
-                    <th key={id} className="py-1 pr-2">{data.layers.find((l) => l.id === id)?.label}</th>
+                  <th className="py-1 pr-2">{table.rowKind === "county" ? "County" : "Utility"}</th>
+                  {table.columns.map((col) => (
+                    <th key={col} className="py-1 pr-2">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {ranked.map((u, i) => (
-                  <tr key={u.id} className="border-b align-top">
+                {table.rows.map((row, i) => (
+                  <tr key={row.id} className="border-b align-top">
                     <td className="py-1 pr-2 tabular-nums">{i + 1}</td>
-                    <td className="py-1 pr-2 font-semibold">{u.name}</td>
-                    <td className="py-1 pr-2 tabular-nums">{model.utility.get(u.id)?.level ?? "—"}</td>
-                    <td className="py-1 pr-2">{offerLabel(u)}</td>
-                    {activeLayers.map((id) => {
-                      const meta = data.layers.find((l) => l.id === id)!;
-                      const { value } = utilityLayerSummary(u, countiesByFips, id);
-                      return (
-                        <td key={id} className="py-1 pr-2 tabular-nums">
-                          {formatLayerValue(meta, value, utilityLayerQuality(u, countiesByFips, id))}
-                        </td>
-                      );
-                    })}
+                    <td className="py-1 pr-2 font-semibold">{row.name}</td>
+                    {row.cells.map((cell, j) => (
+                      <td key={j} className="py-1 pr-2 tabular-nums">{cell}</td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

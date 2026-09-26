@@ -1,7 +1,7 @@
 {
-  "release_id": "2026-09-26-7b657075",
+  "release_id": "2026-09-26-f7c399ec",
   "passed": true,
-  "checked_at": "2026-09-26T21:35:56.540217+00:00",
+  "checked_at": "2026-09-26T23:14:03.237183+00:00",
   "counties": 254,
   "utilities": 150,
   "layers_available": [
@@ -30,7 +30,7 @@
     "hazards/tornado_tracks.geojson": 588644,
     "hazards/hurricane_tracks.geojson": 78311,
     "hazards/severe_reports.geojson": 730041,
-    "hazards/storms.json": 39815,
+    "hazards/storms.json": 52378,
     "hazards/generators.geojson": 133069
   }
 }

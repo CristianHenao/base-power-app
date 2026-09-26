@@ -66,6 +66,23 @@ export type CountyRecord = {
   sfha_land_pct?: number | null;
   /** Operable net summer capacity by fuel, MW (EIA-860 2024). */
   generation_mix?: Record<"solar" | "wind" | "gas" | "coal" | "nuclear" | "storage" | "other", number>;
+  risk?: RiskIndex;
+};
+
+/** Grid Risk Index (pipeline/utility_map/risk_index.py): 1-100 against Texas peers, higher = more at risk. */
+export type RiskIndex = {
+  index: number | null;
+  level: 1 | 2 | 3 | 4 | 5 | null;
+  band: string | null;
+  /** 1 = most at risk among `of` peers (counties or utilities). */
+  rank: number | null;
+  of: number;
+  /** Each half on its own 1-100 scale against the same peers. */
+  hazard: number | null;
+  stress: number | null;
+  raw: number | null;
+  sources: number;
+  sources_total: number;
 };
 
 /** A utility's estimated customers in one county (EIA-861 membership, modeled split). */
@@ -95,6 +112,7 @@ export type UtilityRecord = {
     residential_mwh: number | null;
     peak_source: "eia861" | "ercot_zone_estimate" | null;
   } | null;
+  risk?: RiskIndex;
 };
 
 export type LiveAlert = { fips: string; event: string };
@@ -110,6 +128,7 @@ export type UtilityMapData = {
   note: string;
   layers: MapLayerMeta[];
   presets: Preset[];
+  scoring?: { risk_index?: string };
   battery: {
     kwh_per_core: number;
     kw_per_core: number;

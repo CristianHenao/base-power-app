@@ -1,34 +1,44 @@
 "use client";
 
-import { X } from "lucide-react";
 import type { SpotlightStorm } from "@/lib/utility-map/hazard-style";
 
 const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const millions = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 
-/** Pick a labeled storm to see which counties it darkened (EAGLE-I, 2018 on). */
-export function StormSpotlight({
+/** Pick a labeled storm to see which counties it darkened (EAGLE-I, 2018 on). One storm at a time. */
+export function StormList({
   storms,
+  status,
   selected,
   countyName,
   onSelect,
 }: {
   storms: SpotlightStorm[];
+  status: "loading" | "ok" | "failed";
   selected: SpotlightStorm | null;
   countyName: (fips: string) => string;
-  onSelect: (name: string | null) => void;
+  onSelect: (name: string) => void;
 }) {
-  if (storms.length === 0) return null;
+  if (storms.length === 0) {
+    return (
+      <p className="text-[12px] leading-[18px] text-muted-foreground">
+        {status === "failed"
+          ? "Couldn't load the storm records. Refresh the page, or use Historical patterns."
+          : "Loading storms with outage records."}
+      </p>
+    );
+  }
   return (
     <div className="space-y-2">
-      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Storm spotlight</p>
-      <div className="flex flex-wrap gap-2">
+      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Storm</p>
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Storm">
         {storms.map((storm) => (
           <button
             key={storm.name}
             type="button"
-            aria-pressed={selected?.name === storm.name}
-            onClick={() => onSelect(selected?.name === storm.name ? null : storm.name)}
+            role="radio"
+            aria-checked={selected?.name === storm.name}
+            onClick={() => onSelect(storm.name)}
             className="bp-pill !px-2.5 !py-1 !text-[13px]"
           >
             {storm.name.replace(" (ice storm)", "").replace(" (Dallas derecho)", "")} {storm.start.slice(0, 4)}
@@ -37,12 +47,7 @@ export function StormSpotlight({
       </div>
       {selected ? (
         <div className="bp-info space-y-2 p-3 text-[12px] leading-[18px]">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[14px] leading-[21px] font-semibold">{selected.name}</p>
-            <button type="button" onClick={() => onSelect(null)} aria-label="Clear storm" className="rounded-full p-0.5 hover:bg-white/60">
-              <X className="size-4" aria-hidden />
-            </button>
-          </div>
+          <p className="text-[14px] leading-[21px] font-semibold">{selected.name}</p>
           <p>
             {selected.counties.length} counties with outages,{" "}
             {millions.format(selected.counties.reduce((sum, c) => sum + c.customer_hours, 0) / 1e6)}M customer-hours in the
@@ -53,16 +58,19 @@ export function StormSpotlight({
               <li key={c.fips} className="flex justify-between gap-2 tabular-nums">
                 <span className="font-semibold">{countyName(c.fips)}</span>
                 <span>
-                  {whole.format(c.peak_out)} out at peak ({whole.format(c.peak_out_pct)}%)
+                  {whole.format(c.peak_out)} out at peak
+                  {c.peak_out_pct == null ? " (share unknown)" : ` (${whole.format(c.peak_out_pct)}%)`}
                 </span>
               </li>
             ))}
           </ol>
-          <p className="opacity-80">EAGLE-I county outage records; storm windows from NWS, NHC and TDEM.</p>
+          <p className="opacity-80">
+            EAGLE-I county outage records; storm windows from NWS, NHC and TDEM. Harvey and Ike predate the records.
+          </p>
         </div>
       ) : (
         <p className="text-[12px] leading-[18px] text-muted-foreground">
-          Storms with outage records (2018 on). Harvey and Ike predate them.
+          Pick a storm to see its outages, county by county (EAGLE-I, 2018 on).
         </p>
       )}
     </div>

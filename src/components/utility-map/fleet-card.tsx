@@ -2,9 +2,9 @@
 
 import type { FleetScenario } from "@/lib/utility-map/fleet";
 import type { UtilityMapData, UtilityRecord } from "@/lib/utility-map/types";
+import { FLEET_SHARES, type FleetShare } from "@/lib/utility-map/view";
 
-export const FLEET_SHARES = [0.01, 0.05, 0.1] as const;
-export type FleetShare = (typeof FLEET_SHARES)[number];
+export { FLEET_SHARES, type FleetShare };
 
 const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const oneDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -99,7 +99,7 @@ export function FleetCard({
         ) : null}
         {spikeHours != null ? (
           <Stat
-            label="Per price spike"
+            label={`Energy over the ${data.battery.dispatch_window_h}-hour dispatch`}
             value={`${mw(fleet.spikeMwh)} MWh`}
             note={`${whole.format(spikeHours)} spike hours / yr in its zone`}
           />

@@ -19,7 +19,7 @@ const HATCH = "um-hatch";
 
 /** FEMA flood-zone colors (PRD v3 §12.3): the flood hue, light for 0.2%, full for 1%, dark floodway. */
 /** Grid mode: grey-blue ramp ending in the style guide's blue-100. */
-export const GRID_RAMP = ["#e6edf3", "#bccddb", "#8aa6bf", "#557da0", "#07314b"] as const;
+export { GRID_COLORS as GRID_RAMP } from "@/lib/utility-map/describe-view";
 
 export const FLOOD_ZONE_COLORS = { "0.2pct": "#9ecae1", "1pct": "#2166ac", floodway: "#08306b" } as const;
 
