@@ -18,6 +18,9 @@ STATEWIDE_ZONE = "TX"
 CUSTOMERS_CSV = REPO_ROOT / "data" / "raw" / "reference" / "MCC.csv"
 RAW_ERCOT_DIR = REPO_ROOT / "data" / "raw" / "ercot"
 ERCOT_CACHE_DIR = RAW_ERCOT_DIR / "cache"
+RAW_PRICES_DIR = REPO_ROOT / "data" / "raw" / "ercot_prices"
+GRID_VALUE_PARQUET = REPO_ROOT / "data" / "processed" / "grid_value.parquet"
+PRICE_YEARS = tuple(range(2019, 2026))
 
 # Rates and the event table both start here. Earlier EAGLE-I years have thin coverage.
 RATES_START = "2018-01-01"

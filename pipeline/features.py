@@ -8,6 +8,7 @@ Tables
   backup_monthly  hours by month for 1 and 2 Cores, normal and storm mode
   sizing          recommended Core count and its sentence
   assumptions     battery and simulator constants the numbers depend on
+  grid_value      per load zone and year, when pipeline.grid_value has run
 """
 from __future__ import annotations
 
@@ -154,13 +155,16 @@ def main() -> int:
     events.insert(0, "id", event_ids(events))
     monthly = backup_monthly(profiles)
     sizing = sizing_table(long_parts)
-    write_features({
+    tables = {
         "outlook": outlook,
         "events": events,
         "backup_monthly": monthly,
         "sizing": sizing,
         "assumptions": assumptions_table(),
-    })
+    }
+    if settings.GRID_VALUE_PARQUET.exists():
+        tables["grid_value"] = pd.read_parquet(settings.GRID_VALUE_PARQUET)
+    write_features(tables)
     skipped = int(events["backup_h_1"].isna().sum())
     print(f"wrote {settings.FEATURES_DUCKDB}")
     print(f"{len(events):,} events, {skipped} without a profile week on disk")
