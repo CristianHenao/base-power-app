@@ -53,3 +53,20 @@ def test_med_share_sums_years_before_dividing():
         "utility": ["A", "A"], "saidi_with_med": [100.0, 300.0], "saidi_without_med": [50.0, 50.0],
     })
     assert med_share(table).loc["A", "share_removed"] == pytest.approx(0.75)
+
+
+def test_state_reliability_keeps_every_texas_utility_and_its_standard():
+    from pipeline.sources.eia861_reliability import state_reliability
+
+    raw = _new_format()
+    saifi = raw.copy()
+    # Add SAIFI columns in the same layout the real file uses (after each SAIDI).
+    saifi.insert(6, "ieee_saifi_with", [np.nan, "All Events (With Major Event Days)", "SAIFI (times per year)", 3.7, ".", 1.0])
+    saifi.insert(8, "ieee_saifi_without", [np.nan, "Without Major Event Days", "SAIFI (times per year)", 1.6, ".", 1.0])
+    saifi.insert(11, "other_saifi_with", [np.nan, "All Events (With Major Event Days)", "SAIFI (times per year)", ".", 1.7, "."])
+    saifi.insert(13, "other_saifi_without", [np.nan, "Without Major Event Days", "SAIFI (times per year)", ".", 0.8, "."])
+    saifi.columns = range(saifi.shape[1])
+    table = state_reliability(saifi).set_index("utility_id")
+    assert table.loc[8901, ["standard", "saidi_with_med", "saifi_with_med"]].tolist() == ["IEEE", 4315.8, 3.7]
+    assert table.loc[44372, ["standard", "saidi_without_med", "saifi_without_med"]].tolist() == ["Other", 67.3, 0.8]
+    assert len(table) == 2  # the Oklahoma row is dropped
