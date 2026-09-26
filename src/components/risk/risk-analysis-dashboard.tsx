@@ -6,6 +6,7 @@ import { MapViewClient } from "@/components/map/map-view-client";
 import type { MapMarker } from "@/components/map/map-view";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { AnalysisCloseButton } from "@/components/risk/analysis-close-button";
+import { BasePowerToggle } from "@/components/risk/base-power-toggle";
 import { FrostPanel } from "@/components/risk/frost-panel";
 import {
   RiskBottomMenu,
@@ -240,37 +241,38 @@ export function RiskAnalysisDashboard() {
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between pt-[calc(3.5rem+var(--sat)+0.75rem)]">
         <div className="flex w-full flex-col items-start gap-3 px-4 sm:px-6">
           {inAnalysis ? (
-            <AnalysisCloseButton onClose={closeAnalysis} />
+            <div className="flex items-center gap-2">
+              <AnalysisCloseButton onClose={closeAnalysis} />
+              {activeOutage?.impactedHome ? (
+                <BasePowerToggle
+                  checked={showBasePower}
+                  onCheckedChange={setShowBasePower}
+                />
+              ) : null}
+            </div>
           ) : null}
 
           {!hasAddress || errorMessage ? (
             <FrostPanel className="pointer-events-auto w-full max-w-sm">
               <div className="p-4">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold">
                   {!hasAddress ? "Home address needed" : "Couldn’t place home"}
                 </p>
-                <p className="mt-1 text-xs text-white/65">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {!hasAddress
                     ? "Add your address in onboarding to center the map."
                     : errorMessage}
                 </p>
                 <Link
                   href="/onboarding/address"
-                  className={cn(
-                    buttonVariants({ size: "sm" }),
-                    "mt-3 border-white/20 bg-white text-black hover:bg-white/90",
-                  )}
+                  className={cn(buttonVariants({ size: "sm" }), "mt-3")}
                 >
                   {!hasAddress ? "Add your address" : "Update address"}
                 </Link>
               </div>
             </FrostPanel>
-          ) : activeOutage ? (
-            <OutageBatteryCallout
-              event={activeOutage}
-              showBasePower={showBasePower}
-              onShowBasePowerChange={setShowBasePower}
-            />
+          ) : activeOutage && !showBasePower ? (
+            <OutageBatteryCallout event={activeOutage} />
           ) : null}
         </div>
 

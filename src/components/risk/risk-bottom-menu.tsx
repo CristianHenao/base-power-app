@@ -66,7 +66,7 @@ export function RiskBottomMenu({
       {showAnalysisList ? (
         <FrostPanel>
           <nav aria-label="Analysis options">
-            <ul className="divide-y divide-white/10">
+            <ul className="divide-y divide-black/8">
               {RISK_ANALYSIS_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = item.id === activeAnalysisId;
@@ -79,16 +79,16 @@ export function RiskBottomMenu({
                       className={cn(
                         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
                         active
-                          ? "bg-white/15 text-white"
-                          : "text-white/70 hover:bg-white/10 hover:text-white",
+                          ? "bg-black/5 text-foreground"
+                          : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-9 shrink-0 items-center justify-center rounded-xl",
                           active
-                            ? "bg-white text-black"
-                            : "bg-white/10 text-white/80",
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-black/5 text-muted-foreground",
                         )}
                       >
                         <Icon className="size-4.5" aria-hidden />
@@ -118,8 +118,8 @@ export function RiskBottomMenu({
                     className={cn(
                       "flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
                       active
-                        ? "bg-white text-black"
-                        : "text-white/70 hover:bg-white/10 hover:text-white",
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4.5" aria-hidden />

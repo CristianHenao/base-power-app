@@ -19,10 +19,10 @@ export function SiteHeader({
   return (
     <header
       className={cn(
-        "relative z-40",
-        /* Transparent shell — glass/fill live on absolute children for Liquid Glass */
+        "relative z-40 text-foreground",
+        /* Transparent shell — light glass on absolute children for Liquid Glass */
         overlay
-          ? "absolute inset-x-0 top-0 text-white"
+          ? "absolute inset-x-0 top-0"
           : "sticky top-0 border-b border-border/60",
         className,
       )}
@@ -33,7 +33,7 @@ export function SiteHeader({
           <div aria-hidden className="frost-glass" />
           <div
             aria-hidden
-            className="frost-wash !bg-gradient-to-b from-black/55 via-black/35 to-transparent"
+            className="frost-wash !bg-gradient-to-b from-white/80 via-white/55 to-transparent"
           />
         </>
       ) : (

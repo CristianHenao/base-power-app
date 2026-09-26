@@ -171,7 +171,7 @@ export function OutageTimelineSlider({
         }
       }}
     >
-      {/* Bottom-up frosted glass — fades clear toward the map */}
+      {/* Bottom-up light Liquid Glass — fades clear toward the map */}
       <div
         aria-hidden
         className="frost-glass"
@@ -184,11 +184,11 @@ export function OutageTimelineSlider({
       />
       <div
         aria-hidden
-        className="frost-wash !bg-gradient-to-t from-black/75 via-black/40 to-transparent"
+        className="frost-wash !bg-gradient-to-t from-white/90 via-white/55 to-transparent"
       />
 
       <div className="relative mb-1 px-4 text-center">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-white/60">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Outage timeline
         </p>
         <p
@@ -198,7 +198,7 @@ export function OutageTimelineSlider({
           {shortMonth(active.startedAt)} {shortDay(active.startedAt)} ·{" "}
           {formatDurationHours(active.durationHours)}
         </p>
-        <p className="truncate text-xs text-white/75">{active.title}</p>
+        <p className="truncate text-xs text-muted-foreground">{active.title}</p>
       </div>
 
       <div
@@ -211,7 +211,7 @@ export function OutageTimelineSlider({
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-white/15 bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+          className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-black/10 bg-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
           style={{ width: wheelSize, height: wheelSize }}
         />
 
@@ -242,7 +242,7 @@ export function OutageTimelineSlider({
             const isActive = index === visualIndex;
             const tickColor = event.impactedHome
               ? WEATHER_HAZARD_META[event.causeKind].color
-              : "rgba(255,255,255,0.55)";
+              : "rgba(0,0,0,0.28)";
 
             return (
               <div key={event.id}>
@@ -257,7 +257,7 @@ export function OutageTimelineSlider({
                         }}
                       >
                         <span
-                          className="absolute left-0 h-2 w-px -translate-x-1/2 bg-white/25"
+                          className="absolute left-0 h-2 w-px -translate-x-1/2 bg-black/20"
                           style={{ top: -tickRadius }}
                         />
                       </div>
@@ -293,12 +293,12 @@ export function OutageTimelineSlider({
                     <span
                       className={cn(
                         "text-[13px] font-semibold leading-none",
-                        isActive ? "text-white" : "text-white/80",
+                        isActive ? "text-foreground" : "text-foreground/75",
                       )}
                     >
                       {shortDay(event.startedAt)}
                     </span>
-                    <span className="mt-0.5 text-[10px] uppercase tracking-wide text-white/45">
+                    <span className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                       {shortMonth(event.startedAt)}
                     </span>
                   </button>
