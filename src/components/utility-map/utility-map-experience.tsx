@@ -8,6 +8,7 @@ import { ControlsPanel } from "@/components/utility-map/controls-panel";
 import { DetailPanel } from "@/components/utility-map/detail-panel";
 import { MethodsSheet } from "@/components/utility-map/methods-sheet";
 import {
+  LAYER_COUNTY_3D,
   LAYER_COUNTY_FILL,
   SOURCE_COUNTIES,
   SOURCE_TERRITORIES,
@@ -39,11 +40,12 @@ import {
   type HazardId,
 } from "@/lib/utility-map/hazard-style";
 import { matchPreset, parseMode, toggleLayer, type ModeId } from "@/lib/utility-map/controls";
-import { dataModeLabel } from "@/lib/utility-map/format";
+import { mergeFetched, toFetch } from "@/lib/utility-map/fetch-cache";
+import { dataModeLabel, paintLabel, type PaintContext } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
-import { LEVEL_COLORS, LEVEL_LABELS, buildScoreModel } from "@/lib/utility-map/scoring";
+import { LEVEL_COLORS, buildScoreModel } from "@/lib/utility-map/scoring";
 import { clickTarget, countyPaintState, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
-import type { LayerId, Preset, UtilityMapData } from "@/lib/utility-map/types";
+import type { CountyRecord, LayerId, Preset, UtilityMapData } from "@/lib/utility-map/types";
 
 const TEXAS_BOUNDS: [[number, number], [number, number]] = [
   [-106.65, 25.84],
@@ -190,6 +192,7 @@ export function UtilityMapExperience() {
     let cancelled = false;
     fetch(`${loaded.base}/${file}`)
       .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
       .then((body: { storms: SpotlightStorm[] } | null) => {
         if (!cancelled && body) setStorms(body.storms);
       });
@@ -230,7 +233,7 @@ export function UtilityMapExperience() {
       const levels = new globalThis.Map<string, number | null>(
         data.counties.map((c) => [c.fips, hazardLevel(c.ranks.peak_demand)]),
       );
-      return { levels, colors: GRID_RAMP as readonly string[] };
+      return { levels, colors: GRID_RAMP as readonly string[], context: { kind: "grid" } as PaintContext };
     }
     if (data && spotlight) {
       const byFips = new globalThis.Map(spotlight.counties.map((c) => [c.fips, c.peak_out_pct]));
@@ -240,6 +243,7 @@ export function UtilityMapExperience() {
       return {
         levels,
         colors: [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]] as readonly string[],
+        context: { kind: "storm", name: spotlight.name } as PaintContext,
       };
     }
     if (!data || mode !== "hazards" || hazardPicks.length === 0) return null;
@@ -261,15 +265,54 @@ export function UtilityMapExperience() {
         : hazardPicks.length === 2
           ? BIVARIATE_COLORS
           : [LEVEL_COLORS[1], LEVEL_COLORS[2], LEVEL_COLORS[3], LEVEL_COLORS[4], LEVEL_COLORS[5]];
-    return { levels, colors: colors as readonly string[] };
+    const context: PaintContext =
+      hazardPicks.length === 1
+        ? { kind: "hazard", label: HAZARDS[hazardPicks[0]].label }
+        : hazardPicks.length === 2
+          ? { kind: "bivariate", first: HAZARDS[hazardPicks[0]].label, second: HAZARDS[hazardPicks[1]].label }
+          : { kind: "overlap", of: hazardPicks.length };
+    return { levels, colors: colors as readonly string[], context };
   }, [data, mode, hazardPicks, spotlight]);
+
+  // One painter for every mode: the map fill and the tooltip read the same level and label.
+  const paint = useMemo(() => {
+    if (!fleetModel) return null;
+    const selected = selectedUtilityId ? utilitiesById.get(selectedUtilityId) : undefined;
+    if (hazardPaint) {
+      return {
+        colors: hazardPaint.colors,
+        context: hazardPaint.context,
+        stateFor: (county: CountyRecord) => {
+          const inSelection = selected?.counties.includes(county.fips) ?? false;
+          return { level: hazardPaint.levels.get(county.fips) ?? null, dim: selected != null && !inSelection, inSelection };
+        },
+      };
+    }
+    const fleet = mode === "fleet";
+    return {
+      colors: fleet ? (FLEET_COLORS as readonly string[]) : undefined,
+      context: (fleet ? { kind: "fleet" } : { kind: "risk" }) as PaintContext,
+      stateFor: (county: CountyRecord) =>
+        countyPaintState(
+          county,
+          utilitiesById,
+          selectedUtilityId,
+          fleet && selectedUtilityId
+            ? { ...fleetModel, county: new globalThis.Map([[county.fips, fleetModel.utility.get(selectedUtilityId)!]]) }
+            : fleetModel,
+        ),
+    };
+  }, [fleetModel, hazardPaint, mode, utilitiesById, selectedUtilityId]);
   const selectedCounty = selectedFips ? countiesByFips.get(selectedFips) ?? null : null;
 
   // Handlers read the latest state through a ref; Mapbox keeps the first closure.
-  const latest = useRef({ model: fleetModel, countiesByFips, utilitiesById, data, selectedUtilityId });
+  const latest = useRef({ paint, countiesByFips, utilitiesById, data, selectedUtilityId });
   useEffect(() => {
-    latest.current = { model: fleetModel, countiesByFips, utilitiesById, data, selectedUtilityId };
+    latest.current = { paint, countiesByFips, utilitiesById, data, selectedUtilityId };
   });
+  // Files that failed to load are not requested again (a release can be pruned under an open tab).
+  const trackFailed = useRef(new Set<string>());
+  const floodFailed = useRef(new Set<string>());
 
   const fitUtility = useCallback(
     (utilityId: string | null) => {
@@ -319,24 +362,20 @@ export function UtilityMapExperience() {
       hoveredUtility = null;
     };
 
+    const countyLayers = () => [LAYER_COUNTY_FILL, LAYER_COUNTY_3D].filter((id) => map.getLayer(id));
     const onMove = (event: MapMouseEvent) => {
-      const feature = map.queryRenderedFeatures(event.point, { layers: [LAYER_COUNTY_FILL] })[0];
+      const feature = map.queryRenderedFeatures(event.point, { layers: countyLayers() })[0];
       const fips = feature?.properties?.fips as string | undefined;
-      const {
-        model: m,
-        countiesByFips: counties,
-        utilitiesById: utilities,
-        selectedUtilityId: sel,
-      } = latest.current;
+      const { paint: p, countiesByFips: counties, utilitiesById: utilities, selectedUtilityId: sel } = latest.current;
       const county = fips ? counties.get(fips) : undefined;
-      if (!county || !m) {
+      if (!county || !p) {
         clearHover();
         map.getCanvas().style.cursor = "";
         setTooltip(null);
         return;
       }
-      const paint = countyPaintState(county, utilities, sel, m);
-      const utilityId = paint.inSelection && sel ? sel : county.primary_utility ?? county.utilities[0];
+      const state = p.stateFor(county);
+      const utilityId = state.inSelection && sel ? sel : county.primary_utility ?? county.utilities[0];
       clearHover();
       hoveredCounty = Number(fips);
       hoveredUtility = utilityId;
@@ -352,12 +391,10 @@ export function UtilityMapExperience() {
           width: canvas.clientWidth,
           height: canvas.clientHeight,
         }),
-        title: paint.inSelection
+        title: state.inSelection
           ? `${county.name} County`
           : `${utilityName}${others > 0 ? ` + ${others} more` : ""}`,
-        detail: `${paint.level ? `Level ${paint.level} · ${LEVEL_LABELS[paint.level]}` : "No data"}${
-          paint.inSelection ? "" : ` · ${county.name} County`
-        }`,
+        detail: `${paintLabel(p.context, state.level)}${state.inSelection ? "" : ` · ${county.name} County`}`,
       });
     };
 
@@ -368,7 +405,7 @@ export function UtilityMapExperience() {
     };
 
     const onClick = (event: MapMouseEvent) => {
-      const feature = map.queryRenderedFeatures(event.point, { layers: [LAYER_COUNTY_FILL] })[0];
+      const feature = map.queryRenderedFeatures(event.point, { layers: countyLayers() })[0];
       const fips = feature?.properties?.fips as string | undefined;
       const { countiesByFips: counties, utilitiesById: utilities, selectedUtilityId: sel } =
         latest.current;
@@ -392,73 +429,62 @@ export function UtilityMapExperience() {
       }
     };
 
-    map.on("mousemove", LAYER_COUNTY_FILL, onMove);
-    map.on("mouseleave", LAYER_COUNTY_FILL, onLeave);
-    map.on("click", LAYER_COUNTY_FILL, onClick);
+    // Both the flat fill and the 3D extrusion answer hover and click (only one is visible).
+    for (const layer of [LAYER_COUNTY_FILL, LAYER_COUNTY_3D]) {
+      map.on("mousemove", layer, onMove);
+      map.on("mouseleave", layer, onLeave);
+      map.on("click", layer, onClick);
+    }
     return () => {
-      map.off("mousemove", LAYER_COUNTY_FILL, onMove);
-      map.off("mouseleave", LAYER_COUNTY_FILL, onLeave);
-      map.off("click", LAYER_COUNTY_FILL, onClick);
+      for (const layer of [LAYER_COUNTY_FILL, LAYER_COUNTY_3D]) {
+        map.off("mousemove", layer, onMove);
+        map.off("mouseleave", layer, onLeave);
+        map.off("click", layer, onClick);
+      }
     };
   }, [map, loaded]);
 
   // Repaint whenever scores or the selection change.
   useEffect(() => {
-    if (!map || !loaded || !fleetModel || !map.getSource(SOURCE_COUNTIES)) return;
-    if (hazardPaint) {
-      setFillRamp(map, hazardPaint.colors);
-      const selected = selectedUtilityId ? utilitiesById.get(selectedUtilityId) : undefined;
-      for (const county of loaded.data.counties) {
-        const inSelection = selected?.counties.includes(county.fips) ?? false;
-        paintCounty(map, county.fips, {
-          level: (hazardPaint.levels.get(county.fips) ?? null) as never,
-          dim: selected != null && !inSelection,
-          inSelection,
-          picked: county.fips === selectedFips || county.fips === pickerFips,
-        });
-      }
-      for (const utility of loaded.data.utilities) {
-        paintTerritory(map, utility.id, utility.id === selectedUtilityId);
-      }
-      return;
-    }
-    setFillRamp(map, mode === "fleet" ? FLEET_COLORS : undefined);
+    if (!map || !loaded || !paint || !map.getSource(SOURCE_COUNTIES)) return;
+    setFillRamp(map, paint.colors);
     for (const county of loaded.data.counties) {
-      const paintModel =
-        mode === "fleet" && selectedUtilityId
-          ? { ...fleetModel, county: new globalThis.Map([[county.fips, fleetModel.utility.get(selectedUtilityId)!]]) }
-          : fleetModel;
       paintCounty(map, county.fips, {
-        ...countyPaintState(county, utilitiesById, selectedUtilityId, paintModel),
+        ...(paint.stateFor(county) as { level: never; dim: boolean; inSelection: boolean }),
         picked: county.fips === selectedFips || county.fips === pickerFips,
       });
     }
     for (const utility of loaded.data.utilities) {
       paintTerritory(map, utility.id, utility.id === selectedUtilityId);
     }
-  }, [map, loaded, fleetModel, hazardPaint, mode, utilitiesById, selectedUtilityId, selectedFips, pickerFips]);
+  }, [map, loaded, paint, selectedUtilityId, selectedFips, pickerFips]);
 
   // Tornado and hurricane tracks: fetched the first time they're picked.
   useEffect(() => {
     if (!loaded) return;
     const files = loaded.data.geometry.hazards ?? {};
-    const wanted = (["tornado", "hurricane", "severe_storm"] as const).filter(
-      (h) => mode === "hazards" && hazardPicks.includes(h) && files[h] && !trackCache[h],
-    );
+    const wanted = toFetch(
+      (["tornado", "hurricane", "severe_storm"] as const).filter(
+        (h) => mode === "hazards" && hazardPicks.includes(h) && files[h],
+      ),
+      trackCache,
+      trackFailed.current,
+    ) as ("tornado" | "hurricane" | "severe_storm")[];
     if (wanted.length === 0) return;
     let cancelled = false;
-    Promise.all(wanted.map((h) => fetch(`${loaded.base}/${files[h]}`).then((r) => (r.ok ? r.json() : null)))).then(
-      (results) => {
-        if (cancelled) return;
-        setTrackCache((prev) => {
-          const next = { ...prev };
-          wanted.forEach((h, i) => {
-            if (results[i]) next[h] = results[i];
-          });
-          return next;
-        });
-      },
-    );
+    Promise.all(
+      wanted.map((h) =>
+        fetch(`${loaded.base}/${files[h]}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+      ),
+    ).then((results) => {
+      if (cancelled) return;
+      wanted.forEach((h, i) => {
+        if (results[i] == null) trackFailed.current.add(h);
+      });
+      setTrackCache((prev) => mergeFetched(prev, wanted, results).cache);
+    });
     return () => {
       cancelled = true;
     };
@@ -477,6 +503,7 @@ export function UtilityMapExperience() {
     let cancelled = false;
     fetch(`${loaded.base}/${file}`)
       .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
       .then((geo) => {
         if (!cancelled && geo) setGeneratorsData(geo);
       });
@@ -532,24 +559,21 @@ export function UtilityMapExperience() {
   );
   useEffect(() => {
     if (!loaded) return;
-    const missing = floodInView.filter((fips) => !floodCache[fips]);
+    const missing = toFetch(floodInView, floodCache, floodFailed.current);
     if (missing.length === 0) return;
     let cancelled = false;
     Promise.all(
       missing.map((fips) =>
-        fetch(`${loaded.base}/${loaded.data.geometry.flood?.[fips]}`).then((r) =>
-          r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null,
-        ),
+        fetch(`${loaded.base}/${loaded.data.geometry.flood?.[fips]}`)
+          .then((r) => (r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null))
+          .catch(() => null),
       ),
     ).then((files) => {
       if (cancelled) return;
-      setFloodCache((prev) => {
-        const next = { ...prev };
-        missing.forEach((fips, i) => {
-          if (files[i]) next[fips] = files[i];
-        });
-        return next;
+      missing.forEach((fips, i) => {
+        if (files[i] == null) floodFailed.current.add(fips);
       });
+      setFloodCache((prev) => mergeFetched(prev, missing, files).cache);
     });
     return () => {
       cancelled = true;

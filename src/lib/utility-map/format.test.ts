@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dataModeLabel, formatLayerValue, formatPeriod, generationSummary, liveSummary } from "./format.ts";
+import { dataModeLabel, formatLayerValue, formatPeriod, generationSummary, liveSummary, paintLabel } from "./format.ts";
 import type { MapLayerMeta } from "./types.ts";
 
 function meta(id: MapLayerMeta["id"], extra: Partial<MapLayerMeta> = {}): MapLayerMeta {
@@ -61,4 +61,17 @@ test("two warnings in one county count as one county", () => {
     liveSummary({ status: "ok", as_of: "x", ercot: null,
       alerts: [{ fips: "48371", event: "Flash Flood Warning" }, { fips: "48371", event: "Flash Flood Warning" }] }, ["48371"]),
     "1 county under Flash Flood Warning");
+});
+
+test("tooltip level text matches what the map is painting in each mode", () => {
+  assert.equal(paintLabel({ kind: "risk" }, 5), "Level 5 · Very high");
+  assert.equal(paintLabel({ kind: "fleet" }, 4), "2–5% of summer peak");
+  assert.equal(paintLabel({ kind: "hazard", label: "Tornadoes" }, 5), "Tornadoes: top fifth of Texas");
+  assert.equal(paintLabel({ kind: "hazard", label: "Tornadoes" }, 2), "Tornadoes: 2nd fifth of Texas");
+  assert.equal(paintLabel({ kind: "bivariate", first: "Tornadoes", second: "Hurricanes" }, 8),
+    "Tornadoes top third · Hurricanes middle third");
+  assert.equal(paintLabel({ kind: "overlap", of: 4 }, 3), "Top fifth in 2 of 4 hazards");
+  assert.equal(paintLabel({ kind: "grid" }, 5), "Peak demand: top fifth of Texas");
+  assert.equal(paintLabel({ kind: "storm", name: "Hurricane Beryl" }, 5), "Hurricane Beryl: 50%+ of customers out");
+  assert.equal(paintLabel({ kind: "risk" }, null), "No data");
 });

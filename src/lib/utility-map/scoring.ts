@@ -206,6 +206,16 @@ export function utilityLayerSummary(
     .map((w) => ({ w, c: counties.get(w.fips) }))
     .filter((x): x is { w: (typeof x)["w"]; c: CountyRecord } => x.c != null);
   const rank = weightedMean(mine.map(({ w, c }) => ({ value: c.ranks[layer], weight: w.customers_est })));
+  // The utility's own peak (reported to EIA, or estimated from ERCOT zone load), never a
+  // re-split of county peaks that already mix several utilities.
+  if (layer === "peak_demand" && utility.grid_stats?.summer_peak_mw != null) {
+    return { value: utility.grid_stats.summer_peak_mw, rank };
+  }
+  // Plants sit in counties, not in customer shares: count every plant in the utility's counties.
+  if (layer === "generation") {
+    const known = mine.filter(({ c }) => c.values.generation != null);
+    return { value: known.length ? known.reduce((sum, { c }) => sum + (c.values.generation ?? 0), 0) : null, rank };
+  }
   if (ADDITIVE_LAYERS.includes(layer)) {
     const known = mine.filter(({ c }) => c.values[layer] != null);
     return {

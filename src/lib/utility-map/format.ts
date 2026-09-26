@@ -73,3 +73,39 @@ export function generationSummary(mix: Record<string, number> | undefined): stri
   const total = parts.reduce((sum, [, mw]) => sum + mw, 0);
   return `${whole.format(total)} MW: ${parts.map(([fuel, mw]) => `${fuel} ${whole.format(mw)}`).join(", ")}`;
 }
+
+/** What the map is painting, so the tooltip can say the same thing. */
+export type PaintContext =
+  | { kind: "risk" }
+  | { kind: "fleet" }
+  | { kind: "grid" }
+  | { kind: "hazard"; label: string }
+  | { kind: "bivariate"; first: string; second: string }
+  | { kind: "overlap"; of: number }
+  | { kind: "storm"; name: string };
+
+const RISK_LABELS = ["Low", "Moderate", "Elevated", "High", "Very high"];
+const FLEET_BINS_TEXT = ["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"];
+const STORM_BINS_TEXT = ["< 5%", "5–15%", "15–30%", "30–50%", "50%+"];
+const FIFTHS = ["lowest fifth", "2nd fifth", "middle fifth", "4th fifth", "top fifth"];
+const THIRDS = ["bottom third", "middle third", "top third"];
+
+export function paintLabel(context: PaintContext, level: number | null): string {
+  if (level == null) return "No data";
+  switch (context.kind) {
+    case "risk":
+      return `Level ${level} · ${RISK_LABELS[level - 1]}`;
+    case "fleet":
+      return `${FLEET_BINS_TEXT[level - 1]} of summer peak`;
+    case "grid":
+      return `Peak demand: ${FIFTHS[level - 1]} of Texas`;
+    case "hazard":
+      return `${context.label}: ${FIFTHS[level - 1]} of Texas`;
+    case "bivariate":
+      return `${context.first} ${THIRDS[Math.floor((level - 1) / 3)]} · ${context.second} ${THIRDS[(level - 1) % 3]}`;
+    case "overlap":
+      return `Top fifth in ${level - 1}${level === 5 ? "+" : ""} of ${context.of} hazards`;
+    case "storm":
+      return `${context.name}: ${STORM_BINS_TEXT[level - 1]} of customers out`;
+  }
+}

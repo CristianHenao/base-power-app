@@ -138,3 +138,19 @@ test("a utility off the ERCOT grid is 'not applicable' for price spikes even if 
   assert.equal(utilityLayerQuality(wecc, counties, "price_spikes"), "not_applicable");
   assert.equal(utilityLayerQuality({ ...wecc, grids: ["ERCOT"] }, counties, "price_spikes"), "ok");
 });
+
+test("a utility's peak demand is its own reported or estimated peak, not a sum of mixed county peaks", () => {
+  const withPeak = (c: CountyRecord, mw: number) =>
+    ({ ...c, values: { ...c.values, peak_demand: mw }, quality: { ...c.quality, peak_demand: "ok" } }) as CountyRecord;
+  const counties = new Map([withPeak(A, 1000), withPeak(B, 200)].map((c) => [c.fips, c]));
+  const withStats = { ...alpha, grid_stats: { summer_peak_mw: 777, winter_peak_mw: null, sales_mwh: null,
+    residential_mwh: null, peak_source: "eia861" } } as UtilityRecord;
+  assert.equal(utilityLayerSummary(withStats, counties, "peak_demand").value, 777);
+});
+
+test("a utility's local generation is the plants in its counties, not split by customer share", () => {
+  const withGen = (c: CountyRecord, mw: number) =>
+    ({ ...c, values: { ...c.values, generation: mw }, quality: { ...c.quality, generation: "ok" } }) as CountyRecord;
+  const counties = new Map([withGen(A, 1000), withGen(B, 200)].map((c) => [c.fips, c]));
+  assert.equal(utilityLayerSummary(alpha, counties, "generation").value, 1200);
+});
