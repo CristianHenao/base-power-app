@@ -39,6 +39,8 @@ export type TableSpec = {
   caption: string;
   rowKind: "utility" | "county";
   columns: string[];
+  /** The column that matches the map's color, shown first in short lists. */
+  primary: number;
   rows: { id: string; name: string; cells: string[] }[];
 };
 
@@ -188,6 +190,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
     caption: `All ${data.utilities.length} utilities · ${caption}`,
     rowKind: "utility",
     columns: ["Level", "Base offer", ...layers.map((id) => layerLabel(data, id))],
+    primary: 0,
     rows: utilityRows(input, layers, byLevel, byScore),
   });
 
@@ -216,6 +219,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
         caption: `${title} · counties with outages, largest share out first`,
         rowKind: "county",
         columns: ["Peak share out", "Peak customers out", "Customer-hours out"],
+        primary: 0,
         rows: [...(storm?.counties ?? [])]
           .sort((a, b) => b.peak_out_pct - a.peak_out_pct)
           .map((c) => ({
@@ -237,7 +241,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
         colors: PLAIN_COLORS,
         context: { kind: "plain", label: "Pick a hazard to color the map" },
         stateFor: withSelection(state, utilitiesById, () => null),
-        table: { caption: "Pick a hazard to list utilities.", rowKind: "utility", columns: [], rows: [] },
+        table: { caption: "Pick a hazard to list utilities.", rowKind: "utility", columns: [], primary: 0, rows: [] },
       };
     }
     const historical = "Historical relative exposure";
@@ -306,6 +310,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
       caption: `All ${data.utilities.length} utilities · summer peak demand (2024) and local generation`,
       rowKind: "utility",
       columns: GRID_LAYERS.map((id) => layerLabel(data, id)),
+      primary: 0,
       rows,
     };
     if (!state.demand) {
@@ -366,6 +371,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
         caption: `All ${data.utilities.length} utilities · ${share} of eligible homes with one Core, estimates`,
         rowKind: "utility",
         columns: ["Cores", `MW for ${data.battery.dispatch_window_h} h`, "Share of summer peak"],
+        primary: 2,
         rows: [...data.utilities]
           .sort(
             (a, b) =>
@@ -397,7 +403,7 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
       colors: PLAIN_COLORS,
       context: { kind: "plain", label: "Pick at least one factor" },
       stateFor: withSelection(state, utilitiesById, () => null),
-      table: { caption: "Pick at least one factor to list utilities.", rowKind: "utility", columns: [], rows: [] },
+      table: { caption: "Pick at least one factor to list utilities.", rowKind: "utility", columns: [], primary: 0, rows: [] },
     };
   }
   const names = factors.map((id) => layerLabel(data, id));

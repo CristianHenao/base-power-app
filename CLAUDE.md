@@ -23,9 +23,13 @@ Full plan: https://claude.ai/artifact/5uJY9qNnrtjKM9MfZRT9q3 (sheets A-02 contra
 
 ## Utility map (Base sales)
 A map of Texas utilities and counties for Base sales: where hazards and grid stress overlap, where
-storms actually hit, how big each grid is, and what a Base fleet would add. Four modes (Risk,
-Hazards, Grid, Base fleet), five lenses, 12 layers from public data. Spec: docs/utility-map-prd-v3.md;
-tickets and status: docs/utility-map-roadmap.md (v1/v2 PRDs kept for history).
+storms actually hit, how big each grid is, and what a Base fleet would add. Four questions (Find
+opportunities, Explore hazards, Understand the grid, Model Base impact), five scenarios, 12 layers from
+public data. Spec: docs/utility-map-prd-v3.md; tickets and status: docs/utility-map-roadmap.md.
+- One view state (`src/lib/utility-map/view.ts`) drives everything; `describe-view.ts` turns it into the
+  caption, legend, county fill, detail rows and table, so they always answer the same question. The URL
+  holds the whole view (question, scenario, hazards, storm, share, utility, county): reloads and shared
+  links reopen it. Spec: docs/superpowers/specs/2026-09-26-utility-map-coherent-views-design.md.
 - Data build: `pipeline/utility_map/` (Alejandro). `make map-download` then `make export-map` rebuilds
   every table and publishes `public/utility-map/releases/<id>/` + `current.json` only if all gates
   pass (gate-report.json in each release; current + previous release kept). Raw files come from

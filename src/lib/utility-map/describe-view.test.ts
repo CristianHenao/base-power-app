@@ -98,7 +98,7 @@ function describe(state: ViewState) {
 const label = (id: LayerId) => LAYERS.find((l) => l.id === id)!.label;
 const start = () => defaultViewState(DATA.presets);
 const hazards = (...picks: (keyof typeof HAZARDS)[]) =>
-  picks.reduce((s, h) => toggleHazard(s, h), { ...setQuestion(start(), "hazards", CTX), hazards: [] });
+  picks.reduce<ViewState>((s, h) => toggleHazard(s, h), { ...setQuestion(start(), "hazards", CTX), hazards: [] });
 
 test("what ranks utilities follows the question", () => {
   assert.deepEqual(scoreLayers(start()), ["winter", "outages", "price_spikes", "homes"]);
@@ -157,6 +157,7 @@ test("past storm: map, caption and table all describe that storm's outages", () 
   assert.equal(d.stateFor(HIGH).level, outageShareLevel(64));
   assert.equal(d.stateFor(LOW).level, null);
   assert.deepEqual(d.table.rows.map((r) => r.id), ["48201", "48453"]);
+  assert.equal(d.table.columns[d.table.primary], "Peak share out");
   assert.deepEqual(detailLayers(s), []);
   assert.equal(hazardHighlights(s, HIGH), null);
 });
@@ -187,6 +188,7 @@ test("fleet: caption names the share and the table covers every utility, sorted 
   assert.match(d.caption.title, /5% Base fleet/);
   assert.equal(d.table.rows.length, DATA.utilities.length);
   assert.deepEqual(d.table.rows.map((r) => r.id), ["aen", "cnp"]);
+  assert.equal(d.table.columns[d.table.primary], "Share of summer peak");
 });
 
 test("the table holds every utility, not a top slice", () => {

@@ -1,168 +1,60 @@
 "use client";
 
+import { useRef, type KeyboardEvent } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { ReactNode } from "react";
 import { EvidencePopover } from "@/components/utility-map/evidence-popover";
 import { HazardPicker } from "@/components/utility-map/hazard-chip";
-import { StormSpotlight } from "@/components/utility-map/storm-spotlight";
+import { StormList } from "@/components/utility-map/storm-spotlight";
+import { FLEET_SHARES, QUESTIONS, selectableFactors, type FleetShare, type Question, type ViewState } from "@/lib/utility-map/view";
 import type { HazardId, SpotlightStorm } from "@/lib/utility-map/hazard-style";
-import { FloodZoneLegend, SequentialLegend } from "@/components/utility-map/legend";
-import { ModeSwitch } from "@/components/utility-map/mode-switch";
-import { FLEET_COLORS } from "@/lib/utility-map/fleet";
-import { MODES, lensCoverage, type ModeId } from "@/lib/utility-map/controls";
 import { LEVEL_COLORS, LEVEL_LABELS, type Level } from "@/lib/utility-map/scoring";
-import type {
-  LayerGroup,
-  LayerId,
-  MapLayerMeta,
-  Preset,
-  SourceRef,
-} from "@/lib/utility-map/types";
+import type { LayerGroup, LayerId, MapLayerMeta, Preset, SourceRef, UtilityMapData } from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
 
 const GROUPS: { id: LayerGroup; label: string }[] = [
-  { id: "grid", label: "Grid" },
   { id: "hazard", label: "Hazards" },
-  { id: "exposure", label: "Exposure" },
+  { id: "grid", label: "Grid stress" },
+  { id: "exposure", label: "Market size" },
 ];
 
-const LIVE_MODES: ModeId[] = ["risk", "hazards", "grid", "fleet"];
+export type ControlsActions = {
+  onQuestion: (question: Question) => void;
+  onScenario: (preset: Preset) => void;
+  onFactor: (id: LayerId, on: boolean) => void;
+  onHazard: (hazard: HazardId) => void;
+  onStorm: (name: string) => void;
+  onPatterns: () => void;
+  onGrid: (layer: "demand" | "plants", on: boolean) => void;
+  onShare: (share: FleetShare) => void;
+  onView3d: (on: boolean) => void;
+  onToggleWarnings: (on: boolean) => void;
+};
 
-type ControlsPanelProps = {
-  mode: ModeId;
-  fleetShare: number;
-  floodCounties: string[];
+type ControlsPanelProps = ControlsActions & {
+  view: ViewState;
+  data: UtilityMapData;
   availableHazards: HazardId[];
-  hazardPicks: HazardId[];
-  onToggleHazard: (hazard: HazardId) => void;
-  hazardLegend: ReactNode;
   storms: SpotlightStorm[];
-  spotlight: SpotlightStorm | null;
-  onSpotlight: (name: string | null) => void;
   countyName: (fips: string) => string;
   view3d: boolean;
-  onView3d: (on: boolean) => void;
-  layers: MapLayerMeta[];
-  presets: Preset[];
-  sources: SourceRef[];
-  activeLayers: LayerId[];
-  activePresetId: string | null;
   showWarnings: boolean;
-  onMode: (mode: ModeId) => void;
-  onPreset: (preset: Preset) => void;
-  onToggleLayer: (id: LayerId, on: boolean) => void;
-  onToggleWarnings: (on: boolean) => void;
+  warningsStatus: string;
   className?: string;
 };
 
-export function ControlsPanel({
-  mode,
-  fleetShare,
-  floodCounties,
-  availableHazards,
-  hazardPicks,
-  onToggleHazard,
-  hazardLegend,
-  storms,
-  spotlight,
-  onSpotlight,
-  countyName,
-  view3d,
-  onView3d,
-  layers,
-  presets,
-  sources,
-  activeLayers,
-  activePresetId,
-  showWarnings,
-  onMode,
-  onPreset,
-  onToggleLayer,
-  onToggleWarnings,
-  className,
-}: ControlsPanelProps) {
-  const activePreset = presets.find((p) => p.id === activePresetId);
-  const coverage = activePreset ? lensCoverage(activePreset, layers) : null;
-  const modeInfo = MODES.find((m) => m.id === mode);
-
+export function ControlsPanel(props: ControlsPanelProps) {
+  const { view, className } = props;
   return (
     <section aria-label="Map controls" className={cn("bp-panel space-y-5 p-5", className)}>
-      <div className="space-y-2">
-        <p className="bp-eyebrow">Grid stress</p>
-        <h1 className="text-[20px] leading-[27px]">Where Texas grids are stressed</h1>
+      <div className="space-y-3">
+        <h1 className="text-[20px] leading-[27px]">What do you want to understand?</h1>
+        <QuestionPicker question={view.question} onChange={props.onQuestion} />
       </div>
 
-      <div className="space-y-2">
-        <ModeSwitch mode={mode} onChange={onMode} />
-        {mode === "risk" ? (
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
-            <button type="button" aria-pressed={view3d} onClick={() => onView3d(!view3d)} className="bp-pill !px-2.5 !py-0.5 !text-[12px]">
-              3D
-            </button>
-          </div>
-        ) : LIVE_MODES.includes(mode) ? (
-          <p className="text-[12px] leading-[18px] text-muted-foreground">{modeInfo?.hint}.</p>
-        ) : (
-          <p className="bp-info px-3 py-2 text-[12px] leading-[18px]">
-            {modeInfo?.label} mode is coming in this release. The map shows Risk until then.
-          </p>
-        )}
-      </div>
-
-      {mode === "hazards" ? (
-        <>
-          <HazardPicker available={availableHazards} picked={hazardPicks} onToggle={onToggleHazard} />
-          <StormSpotlight storms={storms} selected={spotlight} countyName={countyName} onSelect={onSpotlight} />
-        </>
-      ) : null}
-
-      <div className="space-y-2">
-        <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Lens</p>
-        <div className="flex flex-wrap gap-2">
-          {presets.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              aria-pressed={preset.id === activePresetId}
-              onClick={() => onPreset(preset)}
-              className="bp-pill"
-            >
-              {preset.label}
-            </button>
-          ))}
-          {activePresetId == null ? (
-            <span className="bp-pill border-dashed text-muted-foreground">Custom</span>
-          ) : null}
-        </div>
-        {coverage && coverage.missing.length > 0 ? (
-          <p className="text-[12px] leading-[18px] text-muted-foreground">
-            {coverage.available} of {coverage.requested} layers in this lens have data so far
-            {activePreset?.layers.includes("weather") ? "; the FEMA weather score stands in" : ""}.
-          </p>
-        ) : null}
-      </div>
-
-      {GROUPS.map((group) => {
-        const members = layers.filter((l) => l.group === group.id);
-        if (members.length === 0) return null;
-        return (
-          <fieldset key={group.id} className="space-y-1">
-            <legend className="mb-2 text-[12px] leading-[18px] font-semibold text-muted-foreground">
-              {group.label}
-            </legend>
-            {members.map((layer) => (
-              <LayerRow
-                key={layer.id}
-                layer={layer}
-                sources={sources}
-                checked={activeLayers.includes(layer.id)}
-                onToggle={(on) => onToggleLayer(layer.id, on)}
-              />
-            ))}
-          </fieldset>
-        );
-      })}
+      {view.question === "opportunities" ? <OpportunityControls {...props} /> : null}
+      {view.question === "hazards" ? <HazardControls {...props} /> : null}
+      {view.question === "grid" ? <GridControls {...props} /> : null}
+      {view.question === "fleet" ? <FleetControls {...props} /> : null}
 
       <label
         htmlFor="layer-warnings"
@@ -171,38 +63,229 @@ export function ControlsPanel({
         <Checkbox
           id="layer-warnings"
           className="mt-0.5"
-          checked={showWarnings}
-          onCheckedChange={(checked) => onToggleWarnings(checked === true)}
+          checked={props.showWarnings}
+          onCheckedChange={(checked) => props.onToggleWarnings(checked === true)}
         />
         <span className="space-y-0.5">
           <span className="block text-[14px] leading-[21px] font-semibold">Live NWS warnings</span>
           <span className="block text-[12px] leading-[18px] text-muted-foreground">
-            Shown on the map, never part of the score
+            {props.warningsStatus}. Shown on the map, never part of the analysis.
           </span>
         </span>
       </label>
-
-      {hazardLegend ? (
-        hazardLegend
-      ) : mode === "fleet" ? (
-        <SequentialLegend
-          title={`Share of summer peak a ${Math.round(fleetShare * 100)}% Base fleet could supply for 2 h`}
-          colors={FLEET_COLORS}
-          labels={["< 0.5%", "0.5–1%", "1–2%", "2–5%", "5%+"]}
-          note="Grey: peak demand not known. Change the fleet size in a utility's panel."
-        />
-      ) : (
-        <>
-          <ScoreLegend />
-          {activeLayers.includes("price_spikes") ? (
-            <p className="text-[11px] leading-tight text-muted-foreground">
-              Price spikes apply only inside ERCOT, so counties and utilities outside it are compared with each other.
-            </p>
-          ) : null}
-        </>
-      )}
-      {floodCounties.length > 0 ? <FloodZoneLegend /> : null}
     </section>
+  );
+}
+
+/** Four questions as a 2×2 radio group; arrow keys move between them. */
+function QuestionPicker({ question, onChange }: { question: Question; onChange: (q: Question) => void }) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const index = QUESTIONS.findIndex((q) => q.id === question);
+    const next = (index + step + QUESTIONS.length) % QUESTIONS.length;
+    onChange(QUESTIONS[next].id);
+    refs.current[next]?.focus();
+  };
+  return (
+    <div role="radiogroup" aria-label="Question" onKeyDown={onKeyDown} className="grid grid-cols-2 gap-2">
+      {QUESTIONS.map((q, i) => {
+        const on = q.id === question;
+        return (
+          <button
+            key={q.id}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            tabIndex={on ? 0 : -1}
+            onClick={() => onChange(q.id)}
+            className={cn(
+              "rounded-xl border px-3 py-2 text-left transition-colors",
+              on
+                ? "border-[var(--bp-grey-100)] bg-[var(--bp-green-20)]"
+                : "border-[var(--bp-grey-20)] bg-white hover:border-[var(--bp-grey-60)]",
+            )}
+          >
+            <span className="block text-[14px] leading-[19px] font-semibold">{q.label}</span>
+            <span className="block text-[12px] leading-[16px] text-muted-foreground">{q.question}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">{children}</p>;
+}
+
+function OpportunityControls({ view, data, onScenario, onFactor, view3d, onView3d }: ControlsPanelProps) {
+  const factors = selectableFactors(data.layers);
+  const applied = view.factors.map((id) => data.layers.find((l) => l.id === id)).filter((l): l is MapLayerMeta => !!l);
+  return (
+    <>
+      <div className="space-y-2">
+        <SectionLabel>Scenario</SectionLabel>
+        <div className="flex flex-wrap gap-2">
+          {data.presets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              aria-pressed={preset.id === view.scenario}
+              onClick={() => onScenario(preset)}
+              className="bp-pill"
+            >
+              {preset.label}
+            </button>
+          ))}
+          {view.scenario == null ? <span className="bp-pill border-dashed text-muted-foreground">Custom</span> : null}
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <SectionLabel>Scored on {applied.length} factors, equally weighted</SectionLabel>
+        <ul className="space-y-0.5">
+          {applied.map((layer) => (
+            <li key={layer.id} className="flex items-center justify-between gap-2 text-[14px] leading-[21px]">
+              <span className="font-semibold">{layer.label}</span>
+              <EvidencePopover meta={layer} sources={data.sources} />
+            </li>
+          ))}
+        </ul>
+        <p className="text-[12px] leading-[18px] text-muted-foreground">
+          Each factor is a county&apos;s rank against Texas (0 to 100%). The score is their average: a screening aid,
+          not an outage forecast.
+        </p>
+      </div>
+
+      <details className="group space-y-2">
+        <summary className="bp-link cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <span className="group-open:hidden">Customize factors</span>
+          <span className="hidden group-open:inline">Hide factors</span>
+        </summary>
+        {GROUPS.map((group) => {
+          const members = data.layers.filter((l) => l.group === group.id && factors.includes(l.id));
+          if (members.length === 0) return null;
+          return (
+            <fieldset key={group.id} className="space-y-1 pt-2">
+              <legend className="mb-1 text-[12px] leading-[18px] font-semibold text-muted-foreground">{group.label}</legend>
+              {members.map((layer) => (
+                <LayerRow
+                  key={layer.id}
+                  layer={layer}
+                  sources={data.sources}
+                  checked={view.factors.includes(layer.id)}
+                  onToggle={(on) => onFactor(layer.id, on)}
+                />
+              ))}
+            </fieldset>
+          );
+        })}
+      </details>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[12px] leading-[18px] text-muted-foreground">
+          3D raises each county by its screening level. A presentation aid, not extra evidence.
+        </p>
+        <button type="button" aria-pressed={view3d} onClick={() => onView3d(!view3d)} className="bp-pill !px-2.5 !py-0.5 !text-[12px]">
+          3D
+        </button>
+      </div>
+    </>
+  );
+}
+
+function HazardControls({ view, availableHazards, storms, countyName, onHazard, onStorm, onPatterns }: ControlsPanelProps) {
+  const sub = view.hazardSub;
+  const tabs = [
+    { id: "patterns", label: "Historical patterns", hint: "Where each hazard runs high, 2000 on" },
+    { id: "storm", label: "Past storms", hint: "One storm's outages, 2018 on" },
+  ] as const;
+  const selected = storms.find((s) => s.name === view.storm) ?? null;
+  return (
+    <>
+      <div role="radiogroup" aria-label="Hazard view" className="grid grid-cols-2 gap-1 rounded-full bg-[var(--bp-grey-5)] p-1">
+        {tabs.map((tab) => {
+          const on = sub === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              title={tab.hint}
+              disabled={tab.id === "storm" && storms.length === 0}
+              onClick={() => (tab.id === "patterns" ? onPatterns() : onStorm(view.storm ?? storms[0]?.name))}
+              className={cn(
+                "rounded-full px-2 py-1.5 text-[13px] leading-[18px] font-semibold transition-colors disabled:opacity-50",
+                on ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]" : "text-muted-foreground hover:text-[var(--bp-grey-100)]",
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      {sub === "patterns" ? (
+        <HazardPicker available={availableHazards} picked={view.hazards} onToggle={onHazard} />
+      ) : (
+        <StormList storms={storms} selected={selected} countyName={countyName} onSelect={onStorm} />
+      )}
+    </>
+  );
+}
+
+function GridControls({ view, onGrid }: ControlsPanelProps) {
+  const rows = [
+    { id: "demand", label: "Demand shading", hint: "Each utility's 2024 summer peak, split across its counties" },
+    { id: "plants", label: "Power plants", hint: "Circles sized by net summer MW (EIA-860 2024)" },
+  ] as const;
+  return (
+    <fieldset className="space-y-1">
+      <legend className="mb-2 text-[12px] leading-[18px] font-semibold text-muted-foreground">On the map</legend>
+      {rows.map((row) => (
+        <label key={row.id} htmlFor={`grid-${row.id}`} className="bp-row flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5">
+          <Checkbox
+            id={`grid-${row.id}`}
+            className="mt-0.5"
+            checked={view[row.id]}
+            onCheckedChange={(value) => onGrid(row.id, value === true)}
+          />
+          <span className="space-y-0.5">
+            <span className="block text-[14px] leading-[21px] font-semibold">{row.label}</span>
+            <span className="block text-[12px] leading-[18px] text-muted-foreground">{row.hint}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function FleetControls({ view, data, onShare }: ControlsPanelProps) {
+  const b = data.battery;
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <SectionLabel>Adoption: share of eligible homes with one Core</SectionLabel>
+        <div className="flex gap-2" role="group" aria-label="Fleet size">
+          {FLEET_SHARES.map((value) => (
+            <button key={value} type="button" aria-pressed={view.share === value} onClick={() => onShare(value)} className="bp-pill">
+              {Math.round(value * 100)}%
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-[12px] leading-[18px] text-muted-foreground">
+        Assumptions: {b.kwh_per_core} kWh and {b.kw_per_core} kW per Core, {Math.round(b.reserve_fraction * 100)}% kept
+        for backup, dispatched over {b.dispatch_window_h} hours. Eligible homes are owner-occupied single-family homes.
+        Idealized ceilings, not a forecast.
+      </p>
+    </div>
   );
 }
 
@@ -219,49 +302,13 @@ function LayerRow({
 }) {
   const id = `layer-${layer.id}`;
   return (
-    <div
-      className={cn(
-        "bp-row flex items-start gap-3 rounded-lg px-2 py-1.5",
-        !layer.available && "opacity-60",
-      )}
-    >
-      <Checkbox
-        id={id}
-        className="mt-0.5"
-        disabled={!layer.available}
-        checked={checked}
-        onCheckedChange={(value) => onToggle(value === true)}
-      />
-      <label htmlFor={id} className={cn("min-w-0 flex-1 space-y-0.5", layer.available && "cursor-pointer")}>
+    <div className="bp-row flex items-start gap-3 rounded-lg px-2 py-1.5">
+      <Checkbox id={id} className="mt-0.5" checked={checked} onCheckedChange={(value) => onToggle(value === true)} />
+      <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer space-y-0.5">
         <span className="block text-[14px] leading-[21px] font-semibold">{layer.label}</span>
-        <span className="block text-[12px] leading-[18px] text-muted-foreground">
-          {layer.available ? layer.unit : "Coming in this release"}
-        </span>
+        <span className="block text-[12px] leading-[18px] text-muted-foreground">{layer.unit}</span>
       </label>
       <EvidencePopover meta={layer} sources={sources} />
-    </div>
-  );
-}
-
-export function ScoreLegend() {
-  const levels = [1, 2, 3, 4, 5] as Level[];
-  return (
-    <div className="space-y-2">
-      <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Stress level</p>
-      <ol className="grid grid-cols-5 gap-1">
-        {levels.map((level) => (
-          <li key={level} className="space-y-1">
-            <span
-              className="block h-3 rounded-sm ring-1 ring-black/10"
-              style={{ backgroundColor: LEVEL_COLORS[level] }}
-              aria-hidden
-            />
-            <span className="block text-[11px] leading-tight text-muted-foreground">
-              {level} {LEVEL_LABELS[level]}
-            </span>
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }
@@ -286,11 +333,7 @@ export function LevelChip({ level, className }: { level: Level | null; className
         className,
       )}
     >
-      <span
-        className="size-2.5 rounded-full ring-1 ring-black/10"
-        style={{ backgroundColor: LEVEL_COLORS[level] }}
-        aria-hidden
-      />
+      <span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ backgroundColor: LEVEL_COLORS[level] }} aria-hidden />
       {level} · {LEVEL_LABELS[level]}
     </span>
   );

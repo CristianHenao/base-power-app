@@ -75,12 +75,12 @@ export function HazardPicker({
 }) {
   const hint =
     picked.length === 0
-      ? "Pick a hazard to see where it happened."
+      ? "Pick a hazard to color the map."
       : picked.length === 1
-        ? "Pick a second hazard to see where both run high."
+        ? "Each county's Texas rank for this hazard, in fifths. Add a second to compare two."
         : picked.length === 2
-          ? "Counties colored by both hazards at once (3 × 3)."
-          : "Counties colored by how many picked hazards are in Texas's top fifth.";
+          ? "Each county colored by both hazards, each in Texas thirds (3 × 3)."
+          : "Each county colored by how many of the selected hazards put it in Texas's top fifth. Historical relative exposure, not the odds of events at the same time.";
   return (
     <div className="space-y-2">
       <p className="text-[12px] leading-[18px] font-semibold text-muted-foreground">Hazards</p>

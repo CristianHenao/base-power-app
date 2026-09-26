@@ -129,12 +129,14 @@
 .bp-theme .bp-pill:hover {
   border-color: var(--bp-grey-80);
 }
-.bp-theme .bp-pill[aria-pressed="true"] {
+.bp-theme .bp-pill[aria-pressed="true"],
+.bp-theme .bp-pill[aria-checked="true"] {
   background: var(--bp-green-20);
   border-color: var(--bp-green-20);
   color: var(--bp-green-90);
 }
-.bp-theme .bp-pill[aria-pressed="true"]:hover {
+.bp-theme .bp-pill[aria-pressed="true"]:hover,
+.bp-theme .bp-pill[aria-checked="true"]:hover {
   background: var(--bp-green-60);
   border-color: var(--bp-green-60);
 }

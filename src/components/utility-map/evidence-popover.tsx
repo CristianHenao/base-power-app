@@ -1,11 +1,17 @@
 "use client";
 
+import { Popover } from "@base-ui/react/popover";
 import { Info } from "lucide-react";
+import { useState } from "react";
 import { formatPeriod } from "@/lib/utility-map/format";
 import type { MapLayerMeta, SourceRef } from "@/lib/utility-map/types";
 import { cn } from "@/lib/utils";
 
-/** The ⓘ next to a layer: unit, source, period, method and how many counties have data. */
+/**
+ * The ⓘ next to a layer: unit, source, period, method and how many counties have data.
+ * The popup renders in a portal on the themed page root, so a scrolling panel never clips it,
+ * and it flips or shifts to stay on screen.
+ */
 export function EvidencePopover({
   meta,
   sources,
@@ -17,16 +23,23 @@ export function EvidencePopover({
 }) {
   const named = meta.source_ids.map((id) => sources.find((s) => s.id === id) ?? { id, name: id, url: "" });
   const { ok, missing, not_applicable: notApplicable } = meta.coverage;
+  const [container, setContainer] = useState<HTMLElement | null>(null);
   return (
-    <details className={cn("group relative inline-block", className)}>
-      <summary
-        className="flex size-6 cursor-pointer list-none items-center justify-center rounded-full text-muted-foreground hover:bg-[var(--bp-grey-5)] hover:text-foreground [&::-webkit-details-marker]:hidden"
+    <Popover.Root>
+      <Popover.Trigger
+        ref={(el: HTMLButtonElement | null) => setContainer(el?.closest<HTMLElement>(".bp-theme") ?? null)}
+        className={cn(
+          "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-[var(--bp-grey-5)] hover:text-foreground data-[popup-open]:bg-[var(--bp-grey-5)]",
+          className,
+        )}
         aria-label={`About ${meta.label}`}
       >
         <Info className="size-4" aria-hidden />
-      </summary>
-      <div className="absolute right-0 z-30 mt-1 w-72 space-y-2 rounded-2xl border bg-white p-4 text-left text-[12px] leading-[18px] font-medium shadow-[var(--bp-shadow-media)]">
-        <p className="text-[14px] leading-[21px] font-semibold">{meta.label}</p>
+      </Popover.Trigger>
+      <Popover.Portal container={container}>
+        <Popover.Positioner side="bottom" align="end" sideOffset={6} collisionPadding={12} className="z-50">
+          <Popover.Popup className="max-h-[min(420px,var(--available-height))] w-72 max-w-[calc(100vw-24px)] space-y-2 overflow-y-auto rounded-2xl border bg-white p-4 text-left text-[12px] leading-[18px] font-medium shadow-[var(--bp-shadow-media)] outline-none">
+        <Popover.Title className="text-[14px] leading-[21px] font-semibold">{meta.label}</Popover.Title>
         {meta.available ? (
           <>
             <p>{meta.unit}</p>
@@ -67,7 +80,9 @@ export function EvidencePopover({
         ) : (
           <p className="text-muted-foreground">{meta.unavailable_reason ?? "Not available yet."}</p>
         )}
-      </div>
-    </details>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
