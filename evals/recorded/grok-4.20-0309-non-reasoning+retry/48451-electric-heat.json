@@ -1,5 +1,5 @@
 {
-  "headline": "Power Backup Report for Tom Green County",
+  "headline": "Power Outlook for Tom Green County",
   "summary": "Homes in Tom Green County face an elevated risk of long power outages. Records from the past 8 years since 2018 show a long outage about once every 10 years. In February 2021, 49% of homes in the county lost power. The longest-waiting tenth faced about 73 hours. In May 2019, 48% of homes in the county lost power. The longest-waiting tenth faced about 13 hours. One Core lasts about 18 hours in August. One Core lasts about 36 hours in March. Two Cores last about 35 hours in August. Two Cores cover 85% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
@@ -16,7 +16,6 @@
     "backup.short_month",
     "backup.long_month",
     "backup.short_month_two_cores",
-    "sizing.cores",
     "sizing.share",
     "threshold.hours"
   ]

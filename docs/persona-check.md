@@ -22,23 +22,23 @@ Each report number is recomputed from the raw data (EAGLE-I, MCC.csv, ZIP and Ba
 | Sally | Backup by month, 1 Core (Feb / Aug) | 28 / 17 h | 2 Cores >= 1 Core every month: True | ok | range 16-35 h |
 | Thomas | ZIP 77084 lists CenterPoint Energy | True | 1 candidate(s) | ok |  |
 | Thomas | Base offer | energy_plus_backup | energy_plus_backup | ok |  |
-| Thomas | Outlook: once every N years | 4.5 | 1 / 0.221 = 4.5 | ok | High; 90% band 0.15-0.31 per year |
+| Thomas | Outlook: once every N years | 4.7 | 1 / 0.214 = 4.7 | ok | High; 90% band 0.14-0.30 per year |
 | Thomas | Hurricane Beryl: peak customers out | 1,660,703 | 1,660,703 (raw EAGLE-I max in window) | ok |  |
 | Thomas | Hurricane Beryl: share of county out | 90.9% | 1,660,703 / 1,827,686 = 90.9% | ok |  |
-| Thomas | Hurricane Beryl: 90% of homes back within | 175 h | event lasted 255 h | ok | a home cannot be out longer than the event |
+| Thomas | Hurricane Beryl: 90% of homes back within | 175 h | event lasted 256 h | ok | a home cannot be out longer than the event |
 | Thomas | Hurricane Beryl: p90 fits the outage curve | p90 175 h -> average at most 183 h | customer-hours / peak = 83 h | ok | if flagged, durations are too short, or homes rotated (rolling blackouts) |
 | Thomas | Hurricane Beryl: backup hours, 1 / 2 Cores | 20 / 38 h | implied average load 1.95 kW | ok | 39.2 kWh / hours; a home averages 0.5-4 kW |
-| Thomas | Houston derecho: peak customers out | 291,108 | 291,108 (raw EAGLE-I max in window) | ok |  |
-| Thomas | Houston derecho: share of county out | 15.9% | 291,108 / 1,827,686 = 15.9% | ok |  |
-| Thomas | Houston derecho: 90% of homes back within | 116 h | event lasted 138 h | ok | a home cannot be out longer than the event |
-| Thomas | Houston derecho: p90 fits the outage curve | p90 116 h -> average at most 118 h | customer-hours / peak = 63 h | ok | if flagged, durations are too short, or homes rotated (rolling blackouts) |
-| Thomas | Houston derecho: backup hours, 1 / 2 Cores | 20 / 40 h | implied average load 1.95 kW | ok | 39.2 kWh / hours; a home averages 0.5-4 kW |
+| Thomas | Houston derecho: peak customers out | 502,077 | 502,077 (raw EAGLE-I max in window) | ok |  |
+| Thomas | Houston derecho: share of county out | 27.5% | 502,077 / 1,827,686 = 27.5% | ok |  |
+| Thomas | Houston derecho: 90% of homes back within | 140 h | event lasted 169 h | ok | a home cannot be out longer than the event |
+| Thomas | Houston derecho: p90 fits the outage curve | p90 140 h -> average at most 143 h | customer-hours / peak = 60 h | ok | if flagged, durations are too short, or homes rotated (rolling blackouts) |
+| Thomas | Houston derecho: backup hours, 1 / 2 Cores | 22 / 48 h | implied average load 1.81 kW | ok | 39.2 kWh / hours; a home averages 0.5-4 kW |
 | Thomas | Winter Storm Uri: peak customers out | 455,986 | 455,986 (raw EAGLE-I max in window) | ok |  |
 | Thomas | Winter Storm Uri: share of county out | 24.9% | 455,986 / 1,827,686 = 24.9% | ok |  |
 | Thomas | Winter Storm Uri: 90% of homes back within | 51 h | event lasted 94 h | ok | a home cannot be out longer than the event |
 | Thomas | Winter Storm Uri: p90 fits the outage curve | p90 51 h -> average at most 55 h | customer-hours / peak = 33 h | ok | if flagged, durations are too short, or homes rotated (rolling blackouts) |
 | Thomas | Winter Storm Uri: backup hours, 1 / 2 Cores | 32 / 118 h | implied average load 1.22 kW | ok | 39.2 kWh / hours; a home averages 0.5-4 kW |
-| Thomas | Sizing sentence | Two Cores would have covered 48% of the 12-hour-plus outage ... | stay share 48.6% | ok |  |
+| Thomas | Sizing sentence | Two Cores would have covered 46% of the 12-hour-plus outage ... | stay share 46.6% | ok |  |
 | Thomas | Backup by month, 1 Core (Feb / Aug) | 41 / 15 h | 2 Cores >= 1 Core every month: True | ok | range 15-42 h |
 | Third persona | ZIP 78745 lists Austin Energy | True | 1 candidate(s) | ok |  |
 | Third persona | Base offer | backup_program | backup_program | ok |  |

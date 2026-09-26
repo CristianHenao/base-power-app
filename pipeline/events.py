@@ -23,6 +23,8 @@ import pandas as pd
 STEP_H = 0.25  # EAGLE-I resolution: 15 minutes
 ORDERS = ("rotate", "stay")
 SMOOTH_STEPS = 12  # 3 hours; long enough to drop count jitter, short enough to keep rotations
+# EAGLE-I drops single scrape rows mid-storm; up to 1 hour unobserved is bridged, longer ends the run.
+MAX_BRIDGE_STEPS = 4
 
 
 @dataclass(frozen=True)
@@ -103,14 +105,33 @@ def _as_utc(series: pd.Series) -> pd.Series:
     return s.tz_convert("UTC")
 
 
-def _reported_runs(series: pd.Series) -> list[pd.Series]:
-    """Contiguous 15-minute stretches of reported counts.
+def bridged(series: pd.Series, max_steps: int = MAX_BRIDGE_STEPS) -> pd.Series:
+    """The observation record on a full 15-minute grid.
 
-    A null count and a missing timestamp both end the stretch. Reported zeros stay,
-    so a source-reported quiet interval can still end or merge an event. Nothing
-    here inserts a zero for an interval the observation record does not contain.
+    A stretch of up to `max_steps` unobserved quarter-hours (no row, or a null count)
+    carries the last reported count forward: customers are never read as restored
+    without a report. Longer stretches stay null and end the observed run.
     """
-    s = _as_utc(series).dropna()
+    s = _as_utc(series)
+    s = s[s.notna().cummax() & s[::-1].notna().cummax()[::-1]]  # trim unobserved ends
+    if s.empty:
+        return s
+    grid = s.reindex(pd.date_range(s.index[0], s.index[-1], freq="15min", tz="UTC"))
+    missing = grid.isna()
+    stretch = (missing != missing.shift()).cumsum()
+    length = missing.groupby(stretch).transform("sum")
+    short = missing & (length <= max_steps)
+    grid[short] = grid.ffill()[short]
+    return grid
+
+
+def _reported_runs(series: pd.Series) -> list[pd.Series]:
+    """Contiguous 15-minute stretches of observed (or bridged) counts.
+
+    Reported zeros stay, so a source-reported quiet interval can still end or merge
+    an event. Nothing here inserts a zero for an interval the record does not contain.
+    """
+    s = bridged(series).dropna()
     if s.empty:
         return []
     step = pd.Timedelta(minutes=15)
@@ -123,9 +144,10 @@ def event_curve(series: pd.Series, start, end) -> np.ndarray:
     """Customers out on the same 15-minute grid `extract_events` used.
 
     `end` is exclusive, matching the timestamp stored on an event row.
-    The window must already be fully reported. Missing slots are not filled with zero.
+    Short unobserved stretches are bridged as in `extract_events`; longer ones make the
+    window invalid. Missing slots are never filled with zero.
     """
-    s = _as_utc(series)
+    s = bridged(series)
     start = pd.Timestamp(start)
     end = pd.Timestamp(end)
     if start.tzinfo is None:

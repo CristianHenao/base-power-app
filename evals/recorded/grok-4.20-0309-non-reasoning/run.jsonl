@@ -1,24 +1,24 @@
-{"fixture": "48085-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.04, "failures": []}
-{"fixture": "48085-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.2, "failures": []}
-{"fixture": "48085-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.25, "failures": []}
-{"fixture": "48201-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.28, "failures": []}
-{"fixture": "48201-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.94, "failures": []}
-{"fixture": "48201-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.1, "failures": []}
-{"fixture": "48215-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.17, "failures": []}
-{"fixture": "48215-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.87, "failures": []}
-{"fixture": "48215-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.94, "failures": []}
-{"fixture": "48329-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.84, "failures": []}
-{"fixture": "48329-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.67, "failures": []}
-{"fixture": "48329-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.09, "failures": []}
-{"fixture": "48423-electric-heat.json", "status": "retried", "attempts": 2, "seconds": 5.52, "failures": [["out of context: 30 should read like \"about 30 hours on two Cores in January\", or cite the fact this number comes from"]]}
-{"fixture": "48423-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.42, "failures": []}
-{"fixture": "48423-large-gas-heat.json", "status": "retried", "attempts": 2, "seconds": 6.3, "failures": [["summary has 121 words; the cap is 120", "number 12 does not match a cited fact"]]}
-{"fixture": "48451-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.29, "failures": []}
-{"fixture": "48451-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.25, "failures": []}
-{"fixture": "48451-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.39, "failures": []}
-{"fixture": "48453-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.33, "failures": []}
-{"fixture": "48453-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.92, "failures": []}
-{"fixture": "48453-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.3, "failures": []}
-{"fixture": "48485-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.97, "failures": []}
-{"fixture": "48485-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.29, "failures": []}
-{"fixture": "48485-large-gas-heat.json", "status": "retried", "attempts": 2, "seconds": 5.51, "failures": [["out of context: 12 should read like \"12% of homes in the county\", or cite the fact this number comes from"]]}
+{"fixture": "48085-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.71, "failures": []}
+{"fixture": "48085-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.92, "failures": []}
+{"fixture": "48085-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.98, "failures": []}
+{"fixture": "48201-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.18, "failures": []}
+{"fixture": "48201-gas-heat.json", "status": "template", "attempts": 2, "seconds": 5.09, "failures": [["number 2024 does not match a cited fact", "out of context: 42 should read like \"about 42 hours on one Core in January\", or cite the fact this number comes from"], ["number 12 does not match a cited fact"]]}
+{"fixture": "48201-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.86, "failures": []}
+{"fixture": "48215-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.9, "failures": []}
+{"fixture": "48215-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.01, "failures": []}
+{"fixture": "48215-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.18, "failures": []}
+{"fixture": "48329-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.98, "failures": []}
+{"fixture": "48329-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.95, "failures": []}
+{"fixture": "48329-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.99, "failures": []}
+{"fixture": "48423-electric-heat.json", "status": "retried", "attempts": 2, "seconds": 4.97, "failures": [["number 12 does not match a cited fact"]]}
+{"fixture": "48423-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.4, "failures": []}
+{"fixture": "48423-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.0, "failures": []}
+{"fixture": "48451-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.76, "failures": []}
+{"fixture": "48451-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.66, "failures": []}
+{"fixture": "48451-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 3.04, "failures": []}
+{"fixture": "48453-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 2.77, "failures": []}
+{"fixture": "48453-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.96, "failures": []}
+{"fixture": "48453-large-gas-heat.json", "status": "retried", "attempts": 2, "seconds": 6.63, "failures": [["summary has 138 words; the cap is 120", "out of context: 2 should read like \"2 Cores\", or cite the fact this number comes from", "out of context: 2 should read like \"2 Cores\", or cite the fact this number comes from", "out of context: 2 should read like \"2 Cores\", or cite the fact this number comes from", "out of context: 2 should read like \"2 Cores\", or cite the fact this number comes from"]]}
+{"fixture": "48485-electric-heat.json", "status": "ok", "attempts": 1, "seconds": 3.09, "failures": []}
+{"fixture": "48485-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.97, "failures": []}
+{"fixture": "48485-large-gas-heat.json", "status": "ok", "attempts": 1, "seconds": 2.95, "failures": []}

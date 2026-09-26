@@ -38,26 +38,26 @@
 <text class="muted" x="680.0" y="348" font-size="11" text-anchor="middle">100%</text>
 <path class="s1" d="M126.6,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
 <path class="s1" d="M157.4,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
-<path class="s1" d="M188.2,330 v-4.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v4.7 z"/>
-<path class="s1" d="M219.0,330 v-13.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v13.4 z"/>
-<path class="s1" d="M249.8,330 v-57.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v57.0 z"/>
+<path class="s1" d="M188.2,330 v-9.1 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v9.1 z"/>
+<path class="s1" d="M219.0,330 v-17.8 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v17.8 z"/>
+<path class="s1" d="M249.8,330 v-48.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v48.3 z"/>
 <path class="s1" d="M280.6,330 v-57.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v57.0 z"/>
-<path class="s1" d="M311.4,330 v-113.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v113.7 z"/>
-<path class="s1" d="M342.2,330 v-96.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v96.3 z"/>
+<path class="s1" d="M311.4,330 v-135.5 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v135.5 z"/>
+<path class="s1" d="M342.2,330 v-83.2 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v83.2 z"/>
 <path class="s1" d="M373.0,330 v-139.9 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v139.9 z"/>
-<path class="s1" d="M403.8,330 v-153.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v153.0 z"/>
-<path class="s1" d="M434.6,330 v-157.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v157.3 z"/>
-<path class="s1" d="M465.4,330 v-78.8 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v78.8 z"/>
-<path class="s1" d="M496.2,330 v-78.8 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v78.8 z"/>
+<path class="s1" d="M403.8,330 v-157.3 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v157.3 z"/>
+<path class="s1" d="M434.6,330 v-148.6 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v148.6 z"/>
+<path class="s1" d="M465.4,330 v-83.2 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v83.2 z"/>
+<path class="s1" d="M496.2,330 v-70.1 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v70.1 z"/>
 <path class="s1" d="M527.0,330 v-39.6 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v39.6 z"/>
 <path class="s1" d="M557.8,330 v-44.0 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v44.0 z"/>
 <path class="s1" d="M588.6,330 v-4.7 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v4.7 z"/>
 <path class="s1" d="M619.4,330 v-0.4 a4,4 0 0 1 4,-4 h20.8 a4,4 0 0 1 4,4 v0.4 z"/>
-<line class="axis" x1="439.7" y1="92" x2="439.7" y2="330"/>
-<text class="ink" x="439.7" y="88" font-size="12" text-anchor="middle">Collin 61%</text>
-<line class="axis" x1="584.0" y1="92" x2="584.0" y2="330"/>
-<text class="ink" x="579.0" y="88" font-size="12" text-anchor="end">Travis 84%</text>
-<line class="axis" x1="603.2" y1="92" x2="603.2" y2="330"/>
-<text class="ink" x="608.2" y="88" font-size="12" text-anchor="start">Harris 88%</text>
+<line class="axis" x1="439.2" y1="92" x2="439.2" y2="330"/>
+<text class="ink" x="439.2" y="88" font-size="12" text-anchor="middle">Collin 61%</text>
+<line class="axis" x1="583.4" y1="92" x2="583.4" y2="330"/>
+<text class="ink" x="578.4" y="88" font-size="12" text-anchor="end">Travis 84%</text>
+<line class="axis" x1="608.1" y1="92" x2="608.1" y2="330"/>
+<text class="ink" x="613.1" y="88" font-size="12" text-anchor="start">Harris 88%</text>
 <text class="muted" x="24" y="386" font-size="11">Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/insights.py. Counts only hours inside detected events.</text>
 </svg>

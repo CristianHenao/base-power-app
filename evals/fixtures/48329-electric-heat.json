@@ -11,8 +11,8 @@
   },
   "outlook": {
     "label": "Moderate",
-    "long_outages_per_year": 0.0773,
-    "once_every_years": 12.93,
+    "long_outages_per_year": 0.0775,
+    "once_every_years": 12.9,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -81,6 +81,6 @@
   },
   "sizing": {
     "cores": 2,
-    "share": 0.8893
+    "share": 0.8891
   }
 }

@@ -13,20 +13,20 @@
   "zero_train_counties_with_test_outages": 5,
   "methods": {
     "empirical_bayes": {
-      "poisson_deviance": 125.0238,
-      "spearman": 0.4152
+      "poisson_deviance": 122.5005,
+      "spearman": 0.4153
     },
     "zone_mean": {
-      "poisson_deviance": 128.0756,
-      "spearman": 0.3347
+      "poisson_deviance": 125.5576,
+      "spearman": 0.3366
     },
     "statewide_mean": {
-      "poisson_deviance": 154.7567,
+      "poisson_deviance": 151.8122,
       "spearman": null
     },
     "raw_rate": {
       "poisson_deviance": "inf",
-      "spearman": 0.3222
+      "spearman": 0.323
     }
   }
 }

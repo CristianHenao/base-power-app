@@ -3,30 +3,30 @@
     "top_events": 5,
     "since": "2018",
     "counties": 254,
-    "median_share": 0.562,
+    "median_share": 0.559,
     "quartiles": [
-      0.45,
-      0.647
+      0.443,
+      0.641
     ],
-    "counties_over_half": 168,
+    "counties_over_half": 166,
     "demo": [
       {
         "county_fips": "48085",
         "county": "Collin",
-        "events": 1300,
-        "top_share": 0.61
+        "events": 1312,
+        "top_share": 0.609
       },
       {
         "county_fips": "48201",
         "county": "Harris",
-        "events": 1764,
-        "top_share": 0.875
+        "events": 1763,
+        "top_share": 0.883
       },
       {
         "county_fips": "48453",
         "county": "Travis",
-        "events": 1155,
-        "top_share": 0.844
+        "events": 1168,
+        "top_share": 0.843
       }
     ]
   },

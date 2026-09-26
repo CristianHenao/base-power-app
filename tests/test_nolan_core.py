@@ -64,15 +64,28 @@ def test_coverage_bounds():
 
 
 def test_unobserved_interval_does_not_count_as_restored():
-    idx = pd.date_range("2024-07-08", periods=8, freq="15min", tz="UTC")
-    reported = pd.Series(5_000.0, index=idx).drop(idx[3:5])
+    # Five unobserved quarter-hours (over an hour) end the run; nothing is read as restored.
+    idx = pd.date_range("2024-07-08", periods=11, freq="15min", tz="UTC")
+    reported = pd.Series(5_000.0, index=idx).drop(idx[3:8])
     blank = pd.Series(5_000.0, index=idx)
-    blank.iloc[3:5] = np.nan
+    blank.iloc[3:8] = np.nan
     for series in (reported, blank):
         events = extract_events(series, customers_total=100_000, cfg=EventConfig())
         assert len(events) == 2
         assert events[0]["customer_hours"] == pytest.approx(5_000 * 0.25 * 3)
         assert events[1]["customer_hours"] == pytest.approx(5_000 * 0.25 * 3)
+
+
+def test_a_dropped_scrape_row_is_bridged_not_split():
+    idx = pd.date_range("2024-07-08", periods=8, freq="15min", tz="UTC")
+    counts = pd.Series([5_000.0, 5_000, 5_000, 6_000, 7_000, 7_000, 7_000, 7_000], index=idx).drop(idx[3:5])
+    events = extract_events(counts, customers_total=100_000, cfg=EventConfig())
+    assert len(events) == 1
+    # The two missing rows carry 5,000 forward rather than a guess or a restoration.
+    assert events[0]["customer_hours"] == pytest.approx((5 * 5_000 + 3 * 7_000) * 0.25)
+    from pipeline.events import event_curve
+
+    assert len(event_curve(counts, idx[0], idx[-1] + pd.Timedelta(minutes=15))) == 8
 
 
 def test_extract_events_merges_short_gaps_and_drops_blips():

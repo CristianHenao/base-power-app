@@ -11,8 +11,8 @@
   },
   "outlook": {
     "label": "High",
-    "long_outages_per_year": 0.2211,
-    "once_every_years": 4.52,
+    "long_outages_per_year": 0.2143,
+    "once_every_years": 4.67,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -32,16 +32,16 @@
       }
     },
     {
-      "start": "2024-05-18T01:45:00-05:00",
-      "peak_out_pct": 15.93,
+      "start": "2024-05-16T18:00:00-05:00",
+      "peak_out_pct": 27.47,
       "duration_h": {
         "p50": [
-          39.92,
-          38.79
+          47.94,
+          44.94
         ],
         "p90": [
-          117.44,
-          115.55
+          141.65,
+          140.02
         ]
       }
     }
@@ -81,6 +81,6 @@
   },
   "sizing": {
     "cores": 2,
-    "share": 0.4935
+    "share": 0.4656
   }
 }

@@ -1,10 +1,11 @@
 {
-  "headline": "Travis County Power Backup Report",
-  "summary": "Homes in Travis County face an elevated risk. A long outage of 12 hours or more happens about once every 10 years based on 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth faced about 96 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth faced about 132 hours. One Core lasts about 14 hours in August. One Core lasts about 30 hours in February. Two Cores last about 21 hours in August. Two Cores cover 74% of past 12-hour-plus outage hours for a home with gas heat and a larger footprint. Base confirms sizing at install.",
+  "headline": "Backup Report for Travis County Homes",
+  "summary": "Homes in Travis County face an elevated risk. Records from 8 years since 2018 show a long outage of 12 hours or more about once every 10 years. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth faced about 96 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth faced about 132 hours. One Core lasts about 14 hours in August. One Core lasts about 30 hours in February. Two Cores last about 21 hours in August. 2 Cores from sizing.cores cover 74% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "outlook.label",
     "outlook.once_every_years",
+    "threshold.hours",
     "outlook.years_of_data",
     "outlook.since",
     "event.1.start",
@@ -17,8 +18,6 @@
     "backup.long_month",
     "backup.short_month_two_cores",
     "sizing.cores",
-    "sizing.share",
-    "threshold.hours",
-    "home.label"
+    "sizing.share"
   ]
 }
