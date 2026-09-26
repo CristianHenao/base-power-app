@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { ensureProfile } from "@/lib/supabase/profile";
 import { cn } from "@/lib/utils";
 
 export function SignUpForm() {
@@ -13,14 +15,51 @@ export function SignUpForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(event: React.FormEvent) {
+  async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    // Auth provider wiring comes later — advance into onboarding.
-    void fullName;
-    void email;
-    void password;
-    router.push("/onboarding/address");
+    setSubmitting(true);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/onboarding/address`,
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      if (data.user && data.session) {
+        await ensureProfile(supabase, data.user, { fullName });
+        router.push("/onboarding/address");
+        router.refresh();
+        return;
+      }
+
+      // Email confirmation required — no session yet.
+      setInfo(
+        "Check your email to confirm your account, then sign in to continue.",
+      );
+      setSubmitting(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to create your account.",
+      );
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -58,8 +97,18 @@ export function SignUpForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
-      <Button type="submit" className="w-full">
-        Create account
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {info ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {info}
+        </p>
+      ) : null}
+      <Button type="submit" className="w-full" disabled={submitting}>
+        {submitting ? "Creating account…" : "Create account"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

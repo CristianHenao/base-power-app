@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function ConsumerShell({ children }: { children: ReactNode }) {
           >
             Risk analysis
           </Link>
+          <SignOutButton />
         </div>
       </SiteHeader>
 

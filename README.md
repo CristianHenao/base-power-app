@@ -11,11 +11,20 @@ Built with **Next.js**, **shadcn/ui**, **Mapbox GL**, and **Three.js**.
 
 ```bash
 cp .env.example .env.local
-# add NEXT_MAPBOX_ACCESS_TOKEN to .env.local
+# add NEXT_MAPBOX_ACCESS_TOKEN and Supabase keys to .env.local
 
 npm install
 npm run dev
 ```
+
+### Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Copy **Project URL** and **publishable/anon key** into `.env.local`
+3. Run `supabase/migrations/20260326000000_profiles.sql` in the SQL editor
+4. In Auth → URL configuration, add `http://localhost:3000/auth/confirm` (and `/auth/callback`) to redirect URLs
+
+Auth protects `/onboarding`, `/risk`, and `/crm`. Sign-in lives at `/`.
 
 Open [http://localhost:3000](http://localhost:3000).
 

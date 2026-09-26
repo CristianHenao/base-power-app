@@ -1,24 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { ensureProfile } from "@/lib/supabase/profile";
 import { cn } from "@/lib/utils";
 
 export function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") || "/risk";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(event: React.FormEvent) {
+  async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    void email;
-    void password;
-    // Stub: assume returning users who finished onboarding go to risk.
-    router.push("/risk");
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error: signInError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
+
+      if (signInError) {
+        setError(signInError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      if (data.user) {
+        await ensureProfile(supabase, data.user);
+      }
+
+      router.push(nextPath.startsWith("/") ? nextPath : "/risk");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to sign in right now.",
+      );
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -45,8 +77,13 @@ export function SignInForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
-      <Button type="submit" className="w-full">
-        Sign in
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <Button type="submit" className="w-full" disabled={submitting}>
+        {submitting ? "Signing in…" : "Sign in"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         New here?{" "}
