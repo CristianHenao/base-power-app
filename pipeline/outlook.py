@@ -61,12 +61,12 @@ def zone_dispersion(events: pd.DataFrame, zone: pd.Series, col: str) -> pd.Serie
 
 
 def county_outlook(events: pd.DataFrame, years: pd.Series, zone: pd.Series,
-                   order: str = "lifo") -> pd.DataFrame:
+                   order: str = "stay") -> pd.DataFrame:
     """Outlook table indexed by county_fips.
 
     events: rows from extract_events plus a county_fips column.
     years, zone: Series indexed by county_fips (years of usable coverage, ERCOT weather zone).
-    LIFO is the conservative (long-tail) default for 12h+ shares.
+    The stay bound is the conservative (long-tail) default for 12h+ shares.
     """
     col = f"share_12h_{order}"
     counts = events.groupby("county_fips")[col].sum().reindex(years.index, fill_value=0.0)

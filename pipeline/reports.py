@@ -46,7 +46,7 @@ def _num(value: float, digits: int) -> float | None:
 
 
 def event_record(row: pd.Series, order: str = settings.LONG_OUTAGE_ORDER) -> dict:
-    """One contract event. Duration pairs are [fifo, lifo]; `covered` uses `order`."""
+    """One contract event. Duration pairs are [rotate, stay]; `covered` uses `order`."""
     start = pd.Timestamp(row["start"]).tz_convert(CENTRAL)
     return {
         "id": row["id"],
@@ -54,8 +54,8 @@ def event_record(row: pd.Series, order: str = settings.LONG_OUTAGE_ORDER) -> dic
         "start": start.isoformat(),
         "peak_out_pct": _num(row["peak_out_pct"], 1),
         "duration_h": {
-            "p50": [_num(row["p50_h_fifo"], 1), _num(row["p50_h_lifo"], 1)],
-            "p90": [_num(row["p90_h_fifo"], 1), _num(row["p90_h_lifo"], 1)],
+            "p50": [_num(row["p50_h_rotate"], 1), _num(row["p50_h_stay"], 1)],
+            "p90": [_num(row["p90_h_rotate"], 1), _num(row["p90_h_stay"], 1)],
         },
         "covered": {
             f"cores_{n}": {

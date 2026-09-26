@@ -1,6 +1,6 @@
 {
   "headline": "Hidalgo County Power Backup Report",
-  "summary": "Homes in Hidalgo County face a moderate outlook. They see a long outage of 12 hours or more about once every 10 years. This comes from 8 years of records since 2018. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth faced about 78 hours. In July 2020, 20% of homes in the county lost power. The longest-waiting tenth faced about 24 hours. One Core lasts about 15 hours in June. One Core lasts about 36 hours in February. Two Cores last about 26 hours in June. The suggested number of Cores is 2 Cores. This covers 79% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "summary": "Homes in Hidalgo County face an elevated risk of long power outages. Records from the past 8 years since 2018 show a long outage about once every 10 years. In February 2021, 16% of homes in the county lost power. The longest-waiting tenth waited about 90 hours. In July 2020, 20% of homes in the county lost power. The longest-waiting tenth waited about 76 hours. One Core lasts about 15 hours in June. One Core lasts about 36 hours in February. Two Cores last about 26 hours in June. Two Cores cover 74% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "outlook.label",
@@ -16,7 +16,6 @@
     "backup.short_month",
     "backup.long_month",
     "backup.short_month_two_cores",
-    "sizing.cores",
     "sizing.share",
     "threshold.hours"
   ]

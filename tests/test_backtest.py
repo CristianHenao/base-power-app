@@ -27,7 +27,7 @@ def test_long_counts_use_the_start_window_end_exclusive():
         {
             "county_fips": ["48085", "48085", "48085"],
             "start": pd.to_datetime(["2022-12-31 23:45", "2023-01-01 00:00", "2021-02-15 06:00"], utc=True),
-            "share_12h_lifo": [0.1, 0.2, 0.3],
+            "share_12h_stay": [0.1, 0.2, 0.3],
         }
     )
     train = long_counts(events, "2018-01-01", "2023-01-01")

@@ -1,6 +1,6 @@
 {
   "headline": "Power Backup Report for Harris County",
-  "summary": "Homes in Harris County face a long outage about once every 4 years based on 8 years of records since 2018. In July 2024, 91% of homes in the county lost power. The longest-waiting tenth waited about 29 hours. In May 2024, 16% of homes in the county lost power. The longest-waiting tenth waited about 63 hours. One Core lasts about 17 hours in August. One Core lasts about 38 hours in March. Two Cores last about 35 hours in August. Two Cores cover 64% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "summary": "Homes in Harris County face a long outage about once every 5 years based on 8 years of records since 2018. In July 2024, 91% of homes in the county lost power. The longest-waiting tenth faced about 175 hours. In May 2024, 16% of homes in the county lost power. The longest-waiting tenth faced about 116 hours. One Core lasts about 17 hours on one Core in August. One Core lasts about 38 hours on one Core in March. Two Cores last about 35 hours on two Cores in August. Two Cores cover 49% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "outlook.once_every_years",

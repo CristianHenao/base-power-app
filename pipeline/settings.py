@@ -47,7 +47,7 @@ RATES_START = "2018-01-01"
 BACKTEST_TRAIN = ("2018-01-01", "2023-01-01")
 BACKTEST_TEST = ("2023-01-01", "2025-01-01")
 # 12-hour-plus shares use the conservative long-tail ordering.
-LONG_OUTAGE_ORDER = "lifo"
+LONG_OUTAGE_ORDER = "stay"
 
 DEMO_COUNTIES: dict[str, str] = {
     "48085": "Collin",

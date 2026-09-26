@@ -60,8 +60,8 @@ def test_event_curve_matches_extracted_event():
     events = extract_events(series, customers_total=100_000)
     curve = event_curve(series, events[0]["start"], events[0]["end"])
     assert curve.max() == events[0]["peak_out"]
-    durations, weights = customer_durations(curve, order="lifo")
-    assert weighted_quantile(durations, weights, 0.9) == pytest.approx(events[0]["p90_h_lifo"])
+    durations, weights = customer_durations(curve, order="stay")
+    assert weighted_quantile(durations, weights, 0.9) == pytest.approx(events[0]["p90_h_stay"])
 
 
 def test_long_backup_covers_a_ten_hour_outage():
@@ -69,8 +69,8 @@ def test_long_backup_covers_a_ten_hour_outage():
     week = np.full(96 * 5, (KWH_PER_CORE / 36.0) * STEP_H)
     result = replay_coverage(curve, week, profile_annual_kwh=1.0, home_annual_kwh=1.0)
     assert result["hours"][1] == pytest.approx(36.0)
-    assert result["covered"]["fifo"][1]["homes"] == pytest.approx(1.0)
-    assert result["covered"]["lifo"][1]["hours"] == pytest.approx(1.0)
+    assert result["covered"]["rotate"][1]["homes"] == pytest.approx(1.0)
+    assert result["covered"]["stay"][1]["hours"] == pytest.approx(1.0)
 
 
 def test_nine_hour_backup_covers_part_of_a_ten_hour_outage():
@@ -78,6 +78,6 @@ def test_nine_hour_backup_covers_part_of_a_ten_hour_outage():
     week = np.full(96 * 5, 4.0 * (KWH_PER_CORE / 36.0) * STEP_H)
     result = replay_coverage(curve, week, profile_annual_kwh=1.0, home_annual_kwh=1.0)
     assert result["hours"][1] == pytest.approx(9.0)
-    covered = result["covered"]["fifo"][1]
+    covered = result["covered"]["rotate"][1]
     assert covered["homes"] == pytest.approx(0.0)
     assert covered["hours"] == pytest.approx(0.9)

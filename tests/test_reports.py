@@ -18,11 +18,11 @@ def _event(**overrides) -> dict:
         "id": "48201-2024-07-08", "county_fips": "48201",
         "start": pd.Timestamp("2024-07-08 14:15", tz="UTC"), "end": pd.Timestamp("2024-07-12", tz="UTC"),
         "peak_out": 1.0, "peak_out_pct": 90.86, "customer_hours": 100.0,
-        "p50_h_fifo": 1.75, "p90_h_fifo": 42.25, "share_12h_fifo": 0.5,
-        "p50_h_lifo": 1.75, "p90_h_lifo": 29.15, "share_12h_lifo": 0.6,
+        "p50_h_rotate": 1.75, "p90_h_rotate": 42.25, "share_12h_rotate": 0.5,
+        "p50_h_stay": 1.75, "p90_h_stay": 29.15, "share_12h_stay": 0.6,
         "backup_h_1": 20.1, "backup_h_2": 38.5,
     }
-    for order in ("fifo", "lifo"):
+    for order in ("rotate", "stay"):
         for n in (1, 2):
             row[f"covered_{order}_{n}_homes"] = 0.5 + 0.1 * n
             row[f"covered_{order}_{n}_hours"] = 0.4 + 0.1 * n
@@ -48,8 +48,8 @@ def con() -> duckdb.DuckDBPyConnection:
             for mode in ("normal", "storm") for n in (1, 2) for m in range(1, 13)
         ]),
         "sizing": pd.DataFrame([{
-            "county_fips": "48201", "cores": 2, "reason": "Two Cores would have covered 63%.", "order": "lifo",
-            "lifo_share_1": 0.48, "lifo_share_2": 0.637, "fifo_share_1": 0.5, "fifo_share_2": 0.67,
+            "county_fips": "48201", "cores": 2, "reason": "Two Cores would have covered 63%.", "order": "stay",
+            "stay_share_1": 0.48, "stay_share_2": 0.637, "rotate_share_1": 0.5, "rotate_share_2": 0.67,
         }]),
         "assumptions": pd.DataFrame({
             "name": ["kwh_per_core", "kw_per_core", "start_soc", "backup_profile_year"],
@@ -70,11 +70,11 @@ def test_storm_label_names_known_windows_and_falls_back_to_month():
 
 
 def test_event_record_uses_central_time_and_the_chosen_order():
-    record = event_record(pd.Series(_event()), order="lifo")
+    record = event_record(pd.Series(_event()), order="stay")
     assert record["start"] == "2024-07-08T09:15:00-05:00"
     assert record["duration_h"]["p90"] == [42.2, 29.1]
     assert record["covered"]["cores_2"] == {"homes": 0.7, "hours": 0.6}
-    assert record["covered_order"] == "lifo"
+    assert record["covered_order"] == "stay"
 
 
 def test_build_report_has_every_contract_key(con):

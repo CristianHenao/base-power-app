@@ -1,9 +1,16 @@
 """Outage events and per-home durations from EAGLE-I county time series.
 
 EAGLE-I reports how many customers are out in a county every 15 minutes, not who.
-We cut the series into events, then replay each event as a queue (rises = homes going
-dark, falls = homes restored) under two orderings. FIFO and LIFO give the same
-customer-hours but bracket the duration tail, so we report both as a band.
+We cut the series into events and read per-home durations two ways, reported as a band:
+
+- "stay" (upper bound): the same homes stay dark while the county count is above them.
+  The k-th home is out whenever the curve is at or above k. No tuning, and a 15-minute
+  blip in the count cannot split one home into many.
+- "rotate" (lower bound): a first-out-first-restored queue on a 3-hour rolling median,
+  so homes can take turns being dark, as in the February 2021 rolling blackouts.
+
+A queue on the raw 15-minute curve turned count jitter into 2-9x more homes than were
+ever out, which made durations far too short (Beryl in Harris: median 1.8 h).
 """
 from __future__ import annotations
 
@@ -14,6 +21,8 @@ import numpy as np
 import pandas as pd
 
 STEP_H = 0.25  # EAGLE-I resolution: 15 minutes
+ORDERS = ("rotate", "stay")
+SMOOTH_STEPS = 12  # 3 hours; long enough to drop count jitter, short enough to keep rotations
 
 
 @dataclass(frozen=True)
@@ -24,8 +33,31 @@ class EventConfig:
     min_steps: int = 2             # drop events shorter than 30 minutes
 
 
-def customer_durations(customers_out, dt_h: float = STEP_H, order: str = "fifo"):
-    """Split one event curve into per-customer durations (hours) and customer weights."""
+def customer_durations(customers_out, dt_h: float = STEP_H, order: str = "stay"):
+    """Per-home durations (hours) and home weights for one event curve, under `order`."""
+    if order == "stay":
+        return layer_durations(customers_out, dt_h)
+    if order == "rotate":
+        smooth = pd.Series(np.asarray(customers_out, float)).rolling(SMOOTH_STEPS, center=True, min_periods=1).median()
+        return queue_durations(smooth.to_numpy(), dt_h, "fifo")
+    raise ValueError(f"order must be one of {ORDERS}")
+
+
+def layer_durations(customers_out, dt_h: float = STEP_H):
+    """Each slice of the curve between two distinct counts is one layer of homes, dark
+    whenever the count is at or above it. Weights sum to the peak; hours are kept exactly."""
+    c = np.clip(np.asarray(customers_out, float), 0.0, None)
+    levels = np.unique(c[c > 0])
+    if levels.size == 0:
+        return np.array([]), np.array([])
+    weights = np.diff(np.concatenate(([0.0], levels)))
+    ordered = np.sort(c)
+    steps_at_or_above = c.size - np.searchsorted(ordered, levels, side="left")
+    return steps_at_or_above * dt_h, weights
+
+
+def queue_durations(customers_out, dt_h: float = STEP_H, order: str = "fifo"):
+    """Replay a curve as a queue: rises are homes going dark, falls are homes restored."""
     if order not in ("fifo", "lifo"):
         raise ValueError("order must be 'fifo' or 'lifo'")
     c = np.asarray(customers_out, dtype=float)
@@ -136,11 +168,11 @@ def extract_events(series: pd.Series, customers_total: float,
             "peak_out_pct": float(100 * curve.max() / customers_total) if customers_total else float("nan"),
             "customer_hours": float(curve.sum() * STEP_H),
         }
-        for order in ("fifo", "lifo"):
+        for order in ORDERS:
             d, w = customer_durations(curve, order=order)
             row[f"p50_h_{order}"] = weighted_quantile(d, w, 0.5)
             row[f"p90_h_{order}"] = weighted_quantile(d, w, 0.9)
-            # Queue replay of a noisy curve re-darkens homes; one event is at most its peak share.
+            # A queue can still re-darken homes after smoothing; one event is at most its peak share.
             share = float(w[d >= 12].sum() / customers_total) if customers_total else 0.0
             row[f"share_12h_{order}"] = min(share, float(curve.max()) / customers_total) if customers_total else 0.0
         events.append(row)

@@ -1,6 +1,6 @@
 {
   "headline": "High outlook for long outages in Harris County",
-  "summary": "Homes in Harris County lose power for 12 hours or more about once every 4 years. That comes from 8 years of records since 2018. The largest outage here began on July 8, 2024. At its peak, 91% of homes in the county were dark. For a home with gas heat and a larger footprint, one Core lasts about 12 hours in August and about 28 hours in January. We suggest two Cores. That would have covered 49% of past long outage hours. Base confirms sizing at install.",
+  "summary": "Homes in Harris County lose power for 12 hours or more about once every 5 years. That comes from 8 years of records since 2018. The largest outage here began on July 8, 2024. At its peak, 91% of homes in the county were dark. For a home with gas heat and a larger footprint, one Core lasts about 12 hours in August and about 28 hours in January. We suggest two Cores. That would have covered 34% of past long outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "home.label",

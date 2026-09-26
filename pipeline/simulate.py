@@ -59,16 +59,16 @@ def replay_coverage(
     home_annual_kwh: float,
     storm_factor: float = 1.0,
 ) -> dict[str, dict]:
-    """Hours until empty, and coverage of the FIFO and LIFO duration distributions.
+    """Hours until empty, and coverage of the rotate and stay duration distributions.
 
     The trace is the ERCOT profile for the seven days at the event, scaled to the
     home. Coverage is the share of affected homes fully covered and the share of
     their dark hours covered.
     """
     hours: dict[int, float] = {}
-    covered: dict[str, dict[int, dict[str, float]]] = {"fifo": {}, "lifo": {}}
+    covered: dict[str, dict[int, dict[str, float]]] = {"rotate": {}, "stay": {}}
     durations = {
-        order: customer_durations(curve, order=order) for order in ("fifo", "lifo")
+        order: customer_durations(curve, order=order) for order in ("rotate", "stay")
     }
     for cores in (1, 2):
         hours[cores] = backup_hours(
@@ -245,12 +245,12 @@ def replay_demo() -> int:
 def _print_replay(label: str, result: dict) -> None:
     for cores in (1, 2):
         hours = _hours_text(result["hours"][cores])
-        fifo = result["covered"]["fifo"][cores]
-        lifo = result["covered"]["lifo"][cores]
+        rotate = result["covered"]["rotate"][cores]
+        stay = result["covered"]["stay"][cores]
         print(
             f"  {cores} Core {label:<6} {hours:>7}  "
-            f"fifo homes {fifo['homes']:.0%} hours {fifo['hours']:.0%}  "
-            f"lifo homes {lifo['homes']:.0%} hours {lifo['hours']:.0%}"
+            f"rotate homes {rotate['homes']:.0%} hours {rotate['hours']:.0%}  "
+            f"stay homes {stay['homes']:.0%} hours {stay['hours']:.0%}"
         )
 
 

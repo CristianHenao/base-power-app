@@ -1,6 +1,6 @@
 {
-  "headline": "Moderate outlook for long outages in Collin County",
-  "summary": "Homes in Collin County lose power for 12 hours or more about once every 11 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 34% of homes in the county were dark. For a home with gas heat, one Core lasts about 15 hours in August and about 38 hours in February. We suggest two Cores. That would have covered 95% of past long outage hours. Base confirms sizing at install.",
+  "headline": "Elevated outlook for long outages in Collin County",
+  "summary": "Homes in Collin County lose power for 12 hours or more about once every 9 years. That comes from 8 years of records since 2018. The largest outage here began on February 14, 2021. At its peak, 34% of homes in the county were dark. For a home with gas heat, one Core lasts about 15 hours in August and about 38 hours in February. We suggest two Cores. That would have covered 94% of past long outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "home.label",

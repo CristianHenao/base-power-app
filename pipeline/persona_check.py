@@ -85,7 +85,7 @@ def check_persona(persona: dict, con: duckdb.DuckDBPyConnection, raw: pd.DataFra
         checks.append(Check(name, f"{storm}: share of county out", f"{event['peak_out_pct']:.1f}%",
                             f"{peak:,.0f} / {customers[fips]:,.0f} = {share:.1f}%", close(event["peak_out_pct"], share)))
         hours_long = (end - start).total_seconds() / 3600
-        p90 = event["p90_h_lifo"]
+        p90 = event["p90_h_stay"]
         checks.append(Check(name, f"{storm}: 90% of homes back within", f"{p90:.0f} h",
                             f"event lasted {hours_long:.0f} h", p90 <= hours_long + 0.5,
                             "a home cannot be out longer than the event"))
@@ -104,11 +104,12 @@ def check_persona(persona: dict, con: duckdb.DuckDBPyConnection, raw: pd.DataFra
                                 f"implied average load {load:.2f} kW", 0.2 <= load <= 6 and two >= one,
                                 f"{KWH_PER_CORE} kWh / hours; a home averages 0.5-4 kW"))
 
-    # Sizing sentence quotes the LIFO share it was computed from.
+    # Sizing sentence quotes the stay share it was computed from.
     sizing = con.execute("select * from sizing where county_fips = ?", [fips]).df().iloc[0]
-    share = sizing[f"lifo_share_{int(sizing['cores'])}"]
-    quoted = f"{round(100 * share)}%"
-    checks.append(Check(name, "Sizing sentence", sizing["reason"][:60] + "...", f"LIFO share {100 * share:.1f}%",
+    share = sizing[f"stay_share_{int(sizing['cores'])}"]
+    # sizing_reason truncates so 89.8% never reads as meeting the 90% target.
+    quoted = f"{int(100 * share + 1e-9)}%"
+    checks.append(Check(name, "Sizing sentence", sizing["reason"][:60] + "...", f"stay share {100 * share:.1f}%",
                         quoted in sizing["reason"]))
 
     # Monthly backup hours: two Cores last at least as long as one, and winter/summer differ for electric heat.

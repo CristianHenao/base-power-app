@@ -100,10 +100,10 @@ def test_build_events_writes_parquet_with_county_fips(tmp_path: Path):
     assert loaded["peak_out"].iloc[0] == 5_000
     assert set(loaded.columns) >= {
         "county_fips",
-        "p50_h_fifo",
-        "p50_h_lifo",
-        "p90_h_fifo",
-        "p90_h_lifo",
+        "p50_h_rotate",
+        "p50_h_stay",
+        "p90_h_rotate",
+        "p90_h_stay",
     }
     assert loaded["start"].iloc[0].year == 2021
 

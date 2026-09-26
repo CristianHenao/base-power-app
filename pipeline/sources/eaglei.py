@@ -22,12 +22,12 @@ EVENT_COLUMNS = (
     "peak_out",
     "peak_out_pct",
     "customer_hours",
-    "p50_h_fifo",
-    "p90_h_fifo",
-    "share_12h_fifo",
-    "p50_h_lifo",
-    "p90_h_lifo",
-    "share_12h_lifo",
+    "p50_h_rotate",
+    "p90_h_rotate",
+    "share_12h_rotate",
+    "p50_h_stay",
+    "p90_h_stay",
+    "share_12h_stay",
 )
 
 

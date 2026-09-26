@@ -18,14 +18,14 @@
   },
   "base_offer": null,
   "outlook": {
-    "level": 2,
-    "label": "Moderate",
-    "long_outages_per_year": 0.091,
+    "level": 3,
+    "label": "Elevated",
+    "long_outages_per_year": 0.101,
     "interval_90": [
-      0.059,
-      0.128
+      0.065,
+      0.143
     ],
-    "once_every_years": 11.0,
+    "once_every_years": 9.9,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -37,25 +37,25 @@
       "peak_out_pct": 42.7,
       "duration_h": {
         "p50": [
-          21.8,
-          1.2
+          59.2,
+          67.3
         ],
         "p90": [
-          29.0,
-          74.4
+          66.5,
+          95.7
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.776,
-          "hours": 0.704
+          "homes": 0.28,
+          "hours": 0.618
         },
         "cores_2": {
-          "homes": 1.0,
-          "hours": 1.0
+          "homes": 0.976,
+          "hours": 0.995
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 44.7,
         "cores_2": 128.0
@@ -68,25 +68,25 @@
       "peak_out_pct": 28.8,
       "duration_h": {
         "p50": [
-          32.0,
-          3.5
+          62.9,
+          63.4
         ],
         "p90": [
-          58.5,
-          106.4
+          115.0,
+          131.6
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.612,
-          "hours": 0.439
+          "homes": 0.183,
+          "hours": 0.432
         },
         "cores_2": {
-          "homes": 0.8,
-          "hours": 0.761
+          "homes": 0.589,
+          "hours": 0.757
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 33.3,
         "cores_2": 68.8
@@ -99,25 +99,25 @@
       "peak_out_pct": 11.4,
       "duration_h": {
         "p50": [
-          5.5,
-          2.6
+          17.2,
+          11.1
         ],
         "p90": [
-          13.2,
-          17.5
+          28.7,
+          45.0
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.96,
-          "hours": 0.884
+          "homes": 0.754,
+          "hours": 0.704
         },
         "cores_2": {
-          "homes": 0.983,
-          "hours": 0.97
+          "homes": 0.905,
+          "hours": 0.907
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 23.3,
         "cores_2": 45.9
@@ -130,25 +130,25 @@
       "peak_out_pct": 5.0,
       "duration_h": {
         "p50": [
-          4.0,
-          0.8
+          16.0,
+          15.4
         ],
         "p90": [
-          6.8,
-          14.8
+          27.2,
+          36.0
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.983,
-          "hours": 0.966
+          "homes": 0.878,
+          "hours": 0.942
         },
         "cores_2": {
           "homes": 1.0,
           "hours": 1.0
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 34.2,
         "cores_2": 66.1
@@ -161,25 +161,25 @@
       "peak_out_pct": 7.0,
       "duration_h": {
         "p50": [
-          7.0,
-          5.7
+          8.1,
+          7.2
         ],
         "p90": [
-          19.8,
-          24.0
+          27.0,
+          26.5
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.91,
-          "hours": 0.851
+          "homes": 0.885,
+          "hours": 0.842
         },
         "cores_2": {
-          "homes": 0.972,
-          "hours": 0.977
+          "homes": 0.963,
+          "hours": 0.976
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 25.5,
         "cores_2": 53.6
@@ -261,7 +261,7 @@
   "sizing": {
     "cores": 2,
     "reason": "Two Cores would have covered 89% of the 12-hour-plus outage hours in Travis County since 2018, the most of the options we model. Base confirms sizing at install.",
-    "share": 0.899
+    "share": 0.898
   },
   "live": {
     "alerts": [],
@@ -269,10 +269,11 @@
   },
   "narrative": {
     "status": "ok",
-    "headline": "Power Backup Report for Travis County",
-    "summary": "Homes in Travis County face a long outage about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth faced about 74 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth faced about 106 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores last about 34 hours in August. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "headline": "Travis County Home Backup Report",
+    "summary": "Homes in Travis County face an elevated risk. A long outage of 12 hours or more happens about once every 10 years based on 8 years of records since 2018. In February 2021, 43% of homes in the county lost power. The longest-waiting tenth waited about 96 hours. In February 2023, 29% of homes in the county lost power. The longest-waiting tenth waited about 132 hours. One Core lasts about 18 hours in August. One Core lasts about 44 hours in February. Two Cores are suggested. Two Cores cover 89% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
+      "outlook.label",
       "outlook.once_every_years",
       "outlook.years_of_data",
       "outlook.since",
@@ -284,7 +285,7 @@
       "event.2.p90_hours",
       "backup.short_month",
       "backup.long_month",
-      "backup.short_month_two_cores",
+      "sizing.cores",
       "sizing.share",
       "threshold.hours"
     ],

@@ -18,14 +18,14 @@
   },
   "base_offer": null,
   "outlook": {
-    "level": 2,
-    "label": "Moderate",
-    "long_outages_per_year": 0.094,
+    "level": 3,
+    "label": "Elevated",
+    "long_outages_per_year": 0.105,
     "interval_90": [
-      0.04,
-      0.166
+      0.051,
+      0.175
     ],
-    "once_every_years": 10.7,
+    "once_every_years": 9.5,
     "years_of_data": 8.0,
     "since": 2018
   },
@@ -37,25 +37,25 @@
       "peak_out_pct": 34.5,
       "duration_h": {
         "p50": [
-          12.0,
-          1.0
+          33.8,
+          51.1
         ],
         "p90": [
-          14.5,
-          54.1
+          41.5,
+          73.2
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.818,
-          "hours": 0.27
+          "homes": 0.152,
+          "hours": 0.18
         },
         "cores_2": {
-          "homes": 0.826,
-          "hours": 0.379
+          "homes": 0.195,
+          "hours": 0.307
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 8.6,
         "cores_2": 15.3
@@ -68,25 +68,25 @@
       "peak_out_pct": 22.6,
       "duration_h": {
         "p50": [
-          10.5,
-          5.9
+          11.3,
+          8.5
         ],
         "p90": [
-          38.8,
-          45.3
+          50.5,
+          51.0
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.792,
-          "hours": 0.621
+          "homes": 0.735,
+          "hours": 0.603
         },
         "cores_2": {
-          "homes": 0.923,
-          "hours": 0.862
+          "homes": 0.887,
+          "hours": 0.846
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 23.4,
         "cores_2": 46.9
@@ -99,17 +99,17 @@
       "peak_out_pct": 21.5,
       "duration_h": {
         "p50": [
-          7.0,
-          3.2
+          8.2,
+          5.6
         ],
         "p90": [
-          12.0,
-          18.9
+          27.3,
+          23.1
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.969,
+          "homes": 0.96,
           "hours": 0.983
         },
         "cores_2": {
@@ -117,7 +117,7 @@
           "hours": 1.0
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 33.1,
         "cores_2": 58.3
@@ -130,25 +130,25 @@
       "peak_out_pct": 3.8,
       "duration_h": {
         "p50": [
-          4.8,
-          2.0
+          18.5,
+          16.4
         ],
         "p90": [
-          21.1,
-          35.6
+          44.0,
+          59.6
         ]
       },
       "covered": {
         "cores_1": {
-          "homes": 0.82,
-          "hours": 0.602
+          "homes": 0.531,
+          "hours": 0.556
         },
         "cores_2": {
-          "homes": 0.877,
-          "hours": 0.776
+          "homes": 0.711,
+          "hours": 0.733
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 19.2,
         "cores_2": 30.6
@@ -161,12 +161,12 @@
       "peak_out_pct": 13.2,
       "duration_h": {
         "p50": [
-          4.2,
-          4.1
+          5.0,
+          4.3
         ],
         "p90": [
-          10.2,
-          10.0
+          12.2,
+          11.8
         ]
       },
       "covered": {
@@ -179,7 +179,7 @@
           "hours": 1.0
         }
       },
-      "covered_order": "lifo",
+      "covered_order": "stay",
       "backup_h": {
         "cores_1": 33.5,
         "cores_2": 62.9
@@ -260,8 +260,8 @@
   },
   "sizing": {
     "cores": 2,
-    "reason": "Two Cores would have covered 52% of the 12-hour-plus outage hours in Collin County since 2018, the most of the options we model. Base confirms sizing at install.",
-    "share": 0.52
+    "reason": "Two Cores would have covered 51% of the 12-hour-plus outage hours in Collin County since 2018, the most of the options we model. Base confirms sizing at install.",
+    "share": 0.516
   },
   "live": {
     "alerts": [],
@@ -269,10 +269,11 @@
   },
   "narrative": {
     "status": "ok",
-    "headline": "Power Backup Report for Collin County",
-    "summary": "Homes in Collin County face a long outage about once every 11 years. This comes from 8 years of records since 2018. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth waited about 54 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth waited about 45 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores last about 32 hours in January. The suggested number of Cores is 2 Cores. Two Cores cover 52% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+    "headline": "Collin County Power Backup Report",
+    "summary": "Homes in Collin County face an elevated risk of long power outages. Records from the past 8 years since 2018 show a long outage about once every 10 years. In February 2021, 34% of homes in the county lost power. The longest-waiting tenth faced about 73 hours. In May 2024, 23% of homes in the county lost power. The longest-waiting tenth faced about 51 hours. One Core lasts about 16 hours in January. One Core lasts about 35 hours in November. Two Cores are suggested. Two Cores last about 32 hours in January. The 2 Cores cover 51% of past 12-hour-plus outage hours. Base confirms sizing at install.",
     "fact_ids": [
       "county.name",
+      "outlook.label",
       "outlook.once_every_years",
       "outlook.years_of_data",
       "outlook.since",

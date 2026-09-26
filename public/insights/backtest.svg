@@ -29,14 +29,14 @@
 <line class="grid" x1="640.0" y1="82" x2="640.0" y2="298"/>
 <text class="muted" x="640.0" y="314" font-size="11" text-anchor="middle">200</text>
 <text class="ink" x="198" y="112.0" font-size="13" text-anchor="end">Empirical Bayes (ours)</text>
-<path class="s1" d="M210,90 h281.5 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-281.5 z"/>
-<text class="ink" x="503.5" y="112.0" font-size="13">133</text>
+<path class="s1" d="M210,90 h264.8 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-264.8 z"/>
+<text class="ink" x="486.8" y="112.0" font-size="13">125</text>
 <text class="ink" x="198" y="164.0" font-size="13" text-anchor="end">Weather-zone mean</text>
-<path class="s1" d="M210,142 h287.4 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-287.4 z"/>
-<text class="ink" x="509.4" y="164.0" font-size="13">136</text>
+<path class="s1" d="M210,142 h271.4 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-271.4 z"/>
+<text class="ink" x="493.4" y="164.0" font-size="13">128</text>
 <text class="ink" x="198" y="216.0" font-size="13" text-anchor="end">Statewide mean</text>
-<path class="s1" d="M210,194 h346.3 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-346.3 z"/>
-<text class="ink" x="568.3" y="216.0" font-size="13">163</text>
+<path class="s1" d="M210,194 h328.7 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-328.7 z"/>
+<text class="ink" x="550.7" y="216.0" font-size="13">155</text>
 <text class="ink" x="198" y="268.0" font-size="13" text-anchor="end">County&#x27;s own rate</text>
 <text class="ink2" x="214" y="268.0" font-size="13">infinite: 5 counties had none in training, some in testing</text>
 <text class="muted" x="24" y="386" font-size="11">Source: EAGLE-I (ORNL) county outages; Porchlight pipeline/backtest.py. Estimates.</text>

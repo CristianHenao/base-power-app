@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pipeline.events import EventConfig, coverage, customer_durations, extract_events
+from pipeline.events import EventConfig, coverage, customer_durations, extract_events, layer_durations, queue_durations
 from pipeline.outlook import county_outlook, shrink_rates
 from api.app.sim.backup import KWH_PER_CORE, hours_until_empty, recommend_cores
 
@@ -15,15 +15,46 @@ def storm_curve():
 
 
 @pytest.mark.parametrize("order", ["fifo", "lifo"])
-def test_durations_conserve_customer_hours(order):
+def test_queue_conserves_customer_hours(order):
     c = storm_curve()
-    d, w = customer_durations(c, order=order)
+    d, w = queue_durations(c, order=order)
     assert (d * w).sum() == pytest.approx(c.sum() * 0.25, rel=1e-9)
 
 
-def test_lifo_has_longer_tail_than_fifo():
+def test_queue_lifo_has_longer_tail_than_fifo():
     c = storm_curve()
-    assert customer_durations(c, order="lifo")[0].max() >= customer_durations(c, order="fifo")[0].max()
+    assert queue_durations(c, order="lifo")[0].max() >= queue_durations(c, order="fifo")[0].max()
+
+
+def test_layers_keep_hours_and_never_count_more_homes_than_the_peak():
+    c = storm_curve()
+    d, w = layer_durations(c)
+    assert (d * w).sum() == pytest.approx(c.sum() * 0.25, rel=1e-9)
+    assert w.sum() == pytest.approx(c.max())
+
+
+def test_jitter_does_not_split_homes_under_the_stay_bound():
+    # 100 homes out for 50 h while 20 of them blink every 15 minutes.
+    c = np.where(np.arange(200) % 2 == 0, 100.0, 80.0)
+    d, w = customer_durations(c, order="stay")
+    assert w.sum() == pytest.approx(100.0)
+    assert d.max() == pytest.approx(50.0)
+    raw_d, raw_w = queue_durations(c, order="fifo")
+    assert raw_w.sum() > 1_000  # the raw queue counts every blink as new homes
+
+
+def test_rotate_is_the_shorter_bound_on_a_storm():
+    c = storm_curve()
+    rotate_d, rotate_w = customer_durations(c, order="rotate")
+    stay_d, stay_w = customer_durations(c, order="stay")
+    from pipeline.events import weighted_quantile
+
+    assert weighted_quantile(rotate_d, rotate_w, 0.9) <= weighted_quantile(stay_d, stay_w, 0.9) + 1e-9
+
+
+def test_unknown_order_fails():
+    with pytest.raises(ValueError):
+        customer_durations(storm_curve(), order="lifo")
 
 
 def test_coverage_bounds():
@@ -80,7 +111,7 @@ def test_empirical_bayes_beats_raw_rates():
 
 def test_county_outlook_shapes_and_levels():
     fips = [f"48{i:03d}" for i in range(1, 11)]
-    events = pd.DataFrame({"county_fips": fips * 2, "share_12h_lifo": np.linspace(0, 0.5, 20)})
+    events = pd.DataFrame({"county_fips": fips * 2, "share_12h_stay": np.linspace(0, 0.5, 20)})
     years = pd.Series(7.0, index=fips)
     zone = pd.Series(["NCENT"] * 5 + ["COAST"] * 5, index=fips)
     out = county_outlook(events, years, zone)
@@ -103,4 +134,4 @@ def test_long_share_is_capped_at_the_event_peak_share():
     values = np.where(np.arange(200) % 2 == 0, 100.0, 80.0)
     events = extract_events(pd.Series(values, index=idx), customers_total=100.0)
     assert len(events) == 1
-    assert events[0]["share_12h_lifo"] <= events[0]["peak_out"] / 100.0 + 1e-12
+    assert events[0]["share_12h_stay"] <= events[0]["peak_out"] / 100.0 + 1e-12

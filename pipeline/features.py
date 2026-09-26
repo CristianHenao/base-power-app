@@ -34,7 +34,7 @@ from pipeline.sources.ercot_profiles import typical_day
 
 BACKUP_YEAR = 2024
 CORES = (1, 2)
-ORDERS = ("fifo", "lifo")
+ORDERS = ("rotate", "stay")
 
 
 def event_ids(events: pd.DataFrame) -> pd.Series:
@@ -171,7 +171,7 @@ def main() -> int:
     skipped = int(events["backup_h_1"].isna().sum())
     print(f"wrote {settings.FEATURES_DUCKDB}")
     print(f"{len(events):,} events, {skipped} without a profile week on disk")
-    print(sizing[["county_fips", "cores", "lifo_share_1", "lifo_share_2", "fifo_share_1", "fifo_share_2", "events_used"]]
+    print(sizing[["county_fips", "cores", "stay_share_1", "stay_share_2", "rotate_share_1", "rotate_share_2", "events_used"]]
           .to_string(index=False, float_format=lambda v: f"{v:.3f}"))
     for reason in sizing["reason"]:
         print(f"  {reason}")

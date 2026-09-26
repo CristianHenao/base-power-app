@@ -1,6 +1,6 @@
 {
-  "headline": "Midland County Home Backup Report",
-  "summary": "Homes in Midland County face a long outage about once every 15 years based on 8 years of records since 2018. In February 2021, 28% of homes in the county lost power. The longest-waiting tenth faced about 47 hours. In May 2024, 7% of homes in the county lost power. The longest-waiting tenth faced about 16 hours. One Core lasts about 20 hours in August. One Core lasts about 50 hours in November. Two Cores last about 40 hours in August. Two Cores cover 99% of past 12-hour-plus outage hours. Base confirms sizing at install.",
+  "headline": "Midland County Power Backup Report",
+  "summary": "Homes in Midland County face a long outage about once every 13 years. This comes from 8 years of records since 2018. In February 2021, 28% of homes in the county lost power. The longest-waiting tenth faced about 65 hours. In May 2024, 7% of homes in the county lost power. The longest-waiting tenth faced about 23 hours. One Core lasts about 20 hours in August. One Core lasts about 50 hours in November. Two Cores last about 40 hours in August. 2 Cores cover 99% of past 12-hour-plus outage hours. Base confirms sizing at install.",
   "fact_ids": [
     "county.name",
     "outlook.once_every_years",
@@ -15,6 +15,7 @@
     "backup.short_month",
     "backup.long_month",
     "backup.short_month_two_cores",
+    "sizing.cores",
     "sizing.share",
     "threshold.hours"
   ]

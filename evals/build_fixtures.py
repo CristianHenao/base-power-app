@@ -96,8 +96,8 @@ def build() -> list[Path]:
                         "start": _central_iso(event["start"]),
                         "peak_out_pct": round(float(event["peak_out_pct"]), 2),
                         "duration_h": {
-                            "p50": [round(float(event["p50_h_fifo"]), 2), round(float(event["p50_h_lifo"]), 2)],
-                            "p90": [round(float(event["p90_h_fifo"]), 2), round(float(event["p90_h_lifo"]), 2)],
+                            "p50": [round(float(event["p50_h_rotate"]), 2), round(float(event["p50_h_stay"]), 2)],
+                            "p90": [round(float(event["p90_h_rotate"]), 2), round(float(event["p90_h_stay"]), 2)],
                         },
                     }
                     for _, event in county_events.head(2).iterrows()
