@@ -1,0 +1,19 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose
+        run: docker compose config > /dev/null
+      # ponytail: web image is a Next dev server; boot the data plane and stubs until image builds are worth the CI minutes
+      - name: Boot data plane and stubs
+        run: docker compose up -d --wait --build postgres redis api worker
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
