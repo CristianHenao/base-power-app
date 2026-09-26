@@ -144,6 +144,23 @@ eight years plus its weather zone already carry what these features know. The ou
 empirical Bayes, and `backtest.json` records both. NRI is a 2025 snapshot, so that experiment also
 saw slightly later information than its training years.
 
+A single two-year test window is noisy, so `backtest.json` also has a rolling-origin backtest: train
+from 2018 up to each year, test that year and the next (2021-22, 2022-23, 2023-24, 2024-25).
+
+| Method | 2021-22 | 2022-23 | 2023-24 | 2024-25 | Mean rank correlation |
+|---|---|---|---|---|---|
+| Empirical Bayes (used) | 258 | 86 | 123 | 99 | 0.24 |
+| Covariate prior | 232 | 85 | 123 | 94 | 0.19 |
+| Weather-zone mean | 246 | 88 | 126 | 96 | 0.19 |
+| Statewide mean | 172 | 97 | 152 | 118 | n/a |
+
+The 2021-22 window trains on three calm years and then Uri hits the whole state: every model ranks
+counties backwards there, and the flat statewide mean scores best. In the other three windows the
+covariate prior predicts the level of outages a little better in two, but empirical Bayes ranks
+counties best in all three (0.34, 0.42, 0.43 against 0.28, 0.33, 0.38). The outlook's job is to
+rank and label counties, so it keeps empirical Bayes; using covariates to calibrate the level is
+listed in docs/NEXT.md.
+
 ## Household backup gap (`pipeline/hazards.py`, `pipeline/durations.py`, `pipeline/household_gap.py`)
 
 The outlook says how often long outages hit a county. The gap says how many hours a year this home

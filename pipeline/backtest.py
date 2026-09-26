@@ -88,13 +88,15 @@ def statewide_events(frame: pd.DataFrame, customers: dict[str, float], cfg: Even
 
 
 def run_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series,
-                 covariates: pd.DataFrame | None = None) -> tuple[pd.DataFrame, int]:
+                 covariates: pd.DataFrame | None = None,
+                 train_window: tuple[str, str] = settings.BACKTEST_TRAIN,
+                 test_window: tuple[str, str] = settings.BACKTEST_TEST) -> tuple[pd.DataFrame, int]:
     """Scores, and how many counties had no long outages in training but some in testing.
 
     Those counties make the raw rate's deviance infinite.
     """
-    train_start, train_end = settings.BACKTEST_TRAIN
-    test_start, test_end = settings.BACKTEST_TEST
+    train_start, train_end = train_window
+    test_start, test_end = test_window
     train_years = years_in_window(first, train_start, train_end)
     test_years = years_in_window(first, test_start, test_end)
     usable = train_years.index[(train_years > 0) & (test_years > 0)]
@@ -129,6 +131,36 @@ def _json_value(value: float) -> float | str | None:
     if np.isinf(value):
         return "inf"
     return round(float(value), 4)
+
+
+def rolling_backtest(events: pd.DataFrame, first: pd.Series, zones: pd.Series,
+                     covariates: pd.DataFrame | None,
+                     test_starts: tuple[int, ...] = settings.ROLLING_TEST_STARTS) -> pd.DataFrame:
+    """Train from RATES_START up to each test start, score the next two years; one row per method and fold."""
+    rows = []
+    for year in test_starts:
+        train = (settings.RATES_START, f"{year}-01-01")
+        test = (f"{year}-01-01", f"{year + 2}-01-01")
+        scores, _ = run_backtest(events, first, zones, covariates, train, test)
+        for method, row in scores.iterrows():
+            rows.append({"test": f"{year}-{year + 1}", "method": method,
+                         "poisson_deviance": row["poisson_deviance"], "spearman": row["spearman"]})
+    return pd.DataFrame(rows)
+
+
+def rolling_summary(folds: pd.DataFrame) -> dict:
+    """Per method: deviance summed over folds, mean rank correlation, and folds where it beat empirical Bayes."""
+    eb = folds.loc[folds["method"] == "empirical_bayes"].set_index("test")["poisson_deviance"]
+    out = {}
+    for method, part in folds.groupby("method"):
+        dev = part.set_index("test")["poisson_deviance"]
+        out[method] = {
+            "total_deviance": _json_value(float(dev.sum())),
+            "mean_spearman": _json_value(float(part["spearman"].mean())),
+            "folds_better_than_empirical_bayes": int((dev < eb.reindex(dev.index)).sum()),
+            "folds": int(len(part)),
+        }
+    return out
 
 
 def backtest_record(scores: pd.DataFrame, prior_scope: str, counties: int, surprises: int) -> dict:
@@ -179,6 +211,10 @@ def main() -> int:
             print(f"no covariates ({error}); scoring without the covariate model")
     scores, surprises = run_backtest(events, first, zones, covariates)
     record = backtest_record(scores, scope, int(len(first)), surprises)
+    folds = rolling_backtest(events, first, zones, covariates)
+    record["rolling"] = {"tests": sorted(folds["test"].unique().tolist()), "summary": rolling_summary(folds)}
+    print("rolling backtest (four two-year test windows):")
+    print(pd.DataFrame(record["rolling"]["summary"]).T.to_string())
     settings.BACKTEST_JSON.write_text(json.dumps(record, indent=2) + "\n")
 
     print(f"{len(events):,} events across {events['county_fips'].nunique()} counties, data through {data_end:%Y-%m-%d}")

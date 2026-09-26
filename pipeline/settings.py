@@ -59,6 +59,8 @@ RATES_START = "2018-01-01"
 # Backtest windows, UTC, end exclusive.
 BACKTEST_TRAIN = ("2018-01-01", "2023-01-01")
 BACKTEST_TEST = ("2023-01-01", "2025-01-01")
+# Rolling-origin backtest: train from RATES_START to each year, test that year and the next.
+ROLLING_TEST_STARTS = (2021, 2022, 2023, 2024)
 # 12-hour-plus shares use the conservative long-tail ordering.
 LONG_OUTAGE_ORDER = "stay"
 

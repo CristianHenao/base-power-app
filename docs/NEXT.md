@@ -19,9 +19,10 @@ starts in the code.
 5. **The worst storms' tails.** The duration model underestimates Beryl-class hurricanes and 2024-scale
    derechos (tropical p90 119 h predicted vs 154 h observed). Candidates: a heavier-tailed distribution
    (log-logistic or a mixture), or storm-specific covariates such as NHC wind radii and NOAA damage.
-6. **A fairer frequency backtest.** One two-year test window is noisy. Rolling-origin backtests
-   (train through 2020, 2021, 2022; test the next two years) would show whether county covariates
-   help after all; one window said no (`MODEL_CARD.md`).
+6. **Covariates for the level, empirical Bayes for the ranking.** The rolling-origin backtest
+   (`backtest.json`, `MODEL_CARD.md`) shows the county-covariate prior predicts the level of outages a
+   little better in two of three normal windows, while empirical Bayes ranks counties best in all three.
+   A blend could use each for what it does well.
 7. **Live storm conditioning.** When NWS issues a hurricane or winter storm warning, show "outages from
    this kind of storm here last p50/p90 hours" from the duration model, and a charge-up prompt.
 
