@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APPLIANCES, type LoadItem } from "@/lib/report/core-runtime";
 import { type CoresAnswer, householdAnswer } from "@/lib/report/household-answer";
+import { scannedLoadItems, useScannedDevices } from "@/lib/report/use-scanned-devices";
 import type { HouseholdGap } from "@/lib/report/types";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +67,9 @@ export function HouseholdGapCard({ gap, county, electricHeat }: { gap: Household
   const items: LoadItem[] = useMemo(() => Object.entries(choices)
     .filter(([, c]) => c.on).map(([id, c]) => ({ applianceId: id, priority: c.priority })), [choices]);
   const answer = useMemo(() => householdAnswer(gap, items), [gap, items]);
+  const devices = useScannedDevices();
+  const scanned = useMemo(() => (devices.length ? householdAnswer(gap, scannedLoadItems(devices)) : null),
+    [gap, devices]);
   const typical = gap.typical_home;
   const [lo, hi] = typical.interval_scale;
   const toggle = (id: string, key: keyof Choice) =>
@@ -128,6 +132,8 @@ export function HouseholdGapCard({ gap, county, electricHeat }: { gap: Household
             <tbody>
               <AnswerRow label="Everything checked" answer={answer.cores} />
               {answer.priority && <AnswerRow label="Starred only" answer={answer.priority} />}
+              {scanned && <AnswerRow label={`Your ${devices.length} scanned devices`} answer={scanned.cores} />}
+              {scanned?.priority && <AnswerRow label="Scanned priority devices" answer={scanned.priority} />}
             </tbody>
           </table>
           <p className="mt-2 text-xs text-muted-foreground">
