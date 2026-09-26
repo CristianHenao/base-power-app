@@ -9,11 +9,12 @@ requirements.txt
 Pipfile
 Pipfile.lock
 
-# Offline pipeline / API / evals — not part of the web deploy
-pipeline/
-api/
-evals/
-tests/
-data/raw/
-data/features.duckdb
+# Offline pipeline / API / evals — not part of the web deploy.
+# Leading `/` anchors to repo root so we do NOT ignore Next.js `src/app/api`.
+/pipeline/
+/api/
+/evals/
+/tests/
+/data/raw/
+/data/features.duckdb
 Makefile
