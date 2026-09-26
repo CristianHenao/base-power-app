@@ -116,13 +116,17 @@ rate must say it is for 12-hour-plus outages. Banned phrases, a reading grade of
 length caps are also checked. A failing reply gets one retry with the reasons, then a deterministic
 template. Details are in [MODEL_CARD.md](MODEL_CARD.md).
 
-24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 2.2 s per report.
+24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 2.6 s per report.
+Latest recorded run:
 
 | Source | Cases | Passed | Pass rate |
 |---|---|---|---|
-| Grok, first reply | 24 | 23 | 96% |
+| Grok, first reply | 24 | 24 | 100% |
 | Grok, after one retry | 24 | 24 | 100% |
 | Template fallback | 24 | 24 | 100% |
+
+Across runs the first reply has passed 92-100% and the retried reply 96-100%. Whatever fails
+both tries falls back to the template, so the page never shows unvalidated text.
 
 ```
 echo "XAI_API_KEY=..." > .env     # gitignored
