@@ -1,0 +1,50 @@
+# Marquee Texas storms, 2018 on, for labeling outage events.
+# An event gets a storm's name when it overlaps the storm's window (Central dates, inclusive)
+# and its county sits in one of the storm's ERCOT weather zones (data/processed/county_weather_zone.csv).
+# Windows run through the end of restoration seen in EAGLE-I, not just the weather.
+# Every date was checked against the events in data/processed/events_texas.parquet.
+
+as_of: 2026-09-26
+
+storms:
+  - name: Winter Storm Uri
+    start: 2021-02-11
+    end: 2021-02-21
+    zones: all
+    source: https://tdem.texas.gov/disasters/winter-storm-uri
+    note: FEMA DR-4586 incident period Feb 11-21; ERCOT rotating outages Feb 15-18.
+
+  - name: Hurricane Nicholas
+    start: 2021-09-13
+    end: 2021-09-18
+    zones: [COAST, EAST]
+    source: https://www.nhc.noaa.gov/data/tcr/AL142021_Nicholas.pdf
+    note: Category 1 landfall on the Matagorda Peninsula, Sep 14.
+
+  - name: Winter Storm Mara (ice storm)
+    start: 2023-01-30
+    end: 2023-02-08
+    zones: [SCENT, SOUTH, NCENT]
+    source: https://www.weather.gov/ewx/wxevents
+    note: Worst Central Texas icing in 15+ years, Jan 31-Feb 2; Austin restoration ran about a week.
+
+  - name: Houston derecho
+    start: 2024-05-16
+    end: 2024-05-23
+    zones: [COAST]
+    source: https://www.weather.gov/hgx/
+    note: Evening of May 16; winds near 100 mph in downtown Houston.
+
+  - name: Memorial Day storms (Dallas derecho)
+    start: 2024-05-28
+    end: 2024-06-01
+    zones: [NCENT, NORTH, EAST, COAST]
+    source: https://www.weather.gov/fwd/events
+    note: Dawn of May 28 in Dallas-Fort Worth; storms also hit Houston that afternoon.
+
+  - name: Hurricane Beryl
+    start: 2024-07-07
+    end: 2024-07-19
+    zones: [COAST, EAST]
+    source: https://www.weather.gov/hgx/beryl2024
+    note: Category 1 landfall near Matagorda, 4 AM Jul 8; about 2.2M CenterPoint customers out.
