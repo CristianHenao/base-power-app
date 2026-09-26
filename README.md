@@ -106,3 +106,26 @@ src/
     crm/               # mock leads for CRM scaffold
     map/
 ```
+
+## Narrator evals
+
+The report summary is written by Grok (`grok-4.20-0309-non-reasoning`, xAI) from a list of facts.
+The model never calculates. Every number it writes must match a fact it cites, carry that fact's
+unit, and keep its meaning: hours on one Core cannot be written as two Cores, and the long-outage
+rate must say it is for 12-hour-plus outages. Banned phrases, a reading grade of 7 or lower, and
+length caps are also checked. A failing reply gets one retry with the reasons, then a deterministic
+template. Details are in [MODEL_CARD.md](MODEL_CARD.md).
+
+24 fixtures (8 counties, one per ERCOT weather zone, by 3 homes). Median model time 2.2 s per report.
+
+| Source | Cases | Passed | Pass rate |
+|---|---|---|---|
+| Grok, first reply | 24 | 23 | 96% |
+| Grok, after one retry | 24 | 24 | 100% |
+| Template fallback | 24 | 24 | 100% |
+
+```
+echo "XAI_API_KEY=..." > .env     # gitignored
+python -m evals.record            # records evals/recorded/<model>/ and <model>+retry/
+python -m evals.score             # writes evals/results.md
+```

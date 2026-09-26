@@ -56,3 +56,11 @@ def test_write_parquets_splits_demo_counties(tmp_path: Path) -> None:
     demo_frame = pd.read_parquet(tmp_path / "demo.parquet")
     assert set(demo_frame["county_fips"]) == {"48085"}
     assert demo_frame["timestamp"].iloc[0] == pd.Timestamp("2021-02-15 06:00", tz="UTC")
+
+
+def test_extract_year_reads_the_2023_sum_column(tmp_path: Path) -> None:
+    path = _national(tmp_path, 2023)
+    path.write_text(NATIONAL_CSV.replace("customers_out", "sum", 1))
+    out = tmp_path / "tx" / "eaglei_outages_2023.csv"
+    assert extract_year(duckdb.connect(), path, out) == 3
+    assert pd.read_csv(out).columns.tolist()[3] == "customers_out"
