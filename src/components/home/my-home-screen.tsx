@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import {
   BatteryCharging,
   CircuitBoard,
@@ -9,6 +10,7 @@ import {
   ScanLine,
   Snowflake,
 } from "lucide-react";
+import { DeviceDetailSheet } from "@/components/home/device-detail-sheet";
 import { DeviceScanSheet } from "@/components/home/device-scan-sheet";
 import {
   groupDevicesByCategory,
@@ -21,6 +23,7 @@ import { cn } from "@/lib/utils";
 type MyHomeScreenProps = {
   devices: HomeDevice[];
   onAddDevice: (device: HomeDevice) => void;
+  onUpdateDevice: (device: HomeDevice) => void;
   scanOpen: boolean;
   onScanOpenChange: (open: boolean) => void;
   className?: string;
@@ -36,15 +39,19 @@ function kindIcon(kind: HomeDeviceKind) {
 export function MyHomeScreen({
   devices,
   onAddDevice,
+  onUpdateDevice,
   scanOpen,
   onScanOpenChange,
   className,
 }: MyHomeScreenProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const empty = devices.length === 0;
   const grouped = groupDevicesByCategory(devices);
   const criticalCount = devices.filter(
     (device) => device.isMedical || device.needsRefrigeration,
   ).length;
+  const selectedDevice =
+    devices.find((device) => device.id === selectedId) ?? null;
 
   return (
     <>
@@ -114,70 +121,79 @@ export function MyHomeScreen({
                       const critical =
                         device.isMedical || device.needsRefrigeration;
                       return (
-                        <li
-                          key={device.id}
-                          className={cn(
-                            "flex items-center gap-3 rounded-2xl border bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
-                            critical
-                              ? "border-rose-200 bg-rose-50/60"
-                              : "border-black/8",
-                          )}
-                        >
-                          {device.thumbnailUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={device.thumbnailUrl}
-                              alt=""
-                              className={cn(
-                                "size-12 shrink-0 rounded-xl object-cover ring-1",
-                                critical
-                                  ? "ring-rose-200"
-                                  : "ring-black/10",
-                              )}
-                            />
-                          ) : (
-                            <span
-                              className={cn(
-                                "flex size-12 shrink-0 items-center justify-center rounded-xl",
-                                critical
-                                  ? "bg-rose-500/15 text-rose-800"
-                                  : "bg-amber-400/15 text-amber-800",
-                              )}
-                            >
-                              <Icon className="size-4.5" aria-hidden />
-                            </span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {device.name}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {HOME_DEVICE_CATEGORY_META[device.category].label}
-                              {device.brand ? ` · ${device.brand}` : null}
-                              {device.watts > 0
-                                ? ` · ${device.watts} W est.`
-                                : null}
-                            </p>
-                            {critical ? (
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {device.isMedical ? (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
-                                    <Cross className="size-2.5" aria-hidden />
-                                    Medical
-                                  </span>
-                                ) : null}
-                                {device.needsRefrigeration ? (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-800">
-                                    <Snowflake
-                                      className="size-2.5"
-                                      aria-hidden
-                                    />
-                                    Needs refrigeration
-                                  </span>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </div>
+                        <li key={device.id}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedId(device.id)}
+                            className={cn(
+                              "flex w-full items-center gap-3 rounded-2xl border bg-white px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors",
+                              critical
+                                ? "border-rose-200 bg-rose-50/60"
+                                : "border-black/8 hover:bg-black/[0.02]",
+                            )}
+                          >
+                            {device.thumbnailUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={device.thumbnailUrl}
+                                alt=""
+                                className={cn(
+                                  "size-12 shrink-0 rounded-xl object-cover ring-1",
+                                  critical
+                                    ? "ring-rose-200"
+                                    : "ring-black/10",
+                                )}
+                              />
+                            ) : (
+                              <span
+                                className={cn(
+                                  "flex size-12 shrink-0 items-center justify-center rounded-xl",
+                                  critical
+                                    ? "bg-rose-500/15 text-rose-800"
+                                    : "bg-amber-400/15 text-amber-800",
+                                )}
+                              >
+                                <Icon className="size-4.5" aria-hidden />
+                              </span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {device.name}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {
+                                  HOME_DEVICE_CATEGORY_META[device.category]
+                                    .label
+                                }
+                                {device.brand ? ` · ${device.brand}` : null}
+                                {device.watts > 0
+                                  ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
+                                  : null}
+                              </p>
+                              {critical ? (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {device.isMedical ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-800">
+                                      <Cross
+                                        className="size-2.5"
+                                        aria-hidden
+                                      />
+                                      Medical
+                                    </span>
+                                  ) : null}
+                                  {device.needsRefrigeration ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-800">
+                                      <Snowflake
+                                        className="size-2.5"
+                                        aria-hidden
+                                      />
+                                      Needs refrigeration
+                                    </span>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
+                          </button>
                         </li>
                       );
                     })}
@@ -194,6 +210,15 @@ export function MyHomeScreen({
         onClose={() => onScanOpenChange(false)}
         onDeviceFound={onAddDevice}
         existingCount={devices.length}
+      />
+
+      <DeviceDetailSheet
+        device={selectedDevice}
+        open={selectedId != null}
+        onOpenChange={(next) => {
+          if (!next) setSelectedId(null);
+        }}
+        onDeviceUpdate={onUpdateDevice}
       />
     </>
   );
