@@ -75,6 +75,10 @@ export function fingerprintRows(ranks: Partial<Record<HazardId, number | null>>)
 }
 
 /** Storm spotlight: peak share of customers out, binned <5, 5-15, 15-30, 30-50, 50%+. */
+/** Map level for a storm county whose share out is unknown; drawn in its own neutral color. */
+export const SHARE_UNKNOWN_LEVEL = 6;
+export const SHARE_UNKNOWN_COLOR = "#8c8781";
+
 export function outageShareLevel(pct: number): 1 | 2 | 3 | 4 | 5 {
   return (1 + [5, 15, 30, 50].filter((cut) => pct >= cut).length) as 1 | 2 | 3 | 4 | 5;
 }
@@ -86,5 +90,13 @@ export type SpotlightStorm = {
   source: string | null;
   note: string | null;
   track_storm_id: string | null;
-  counties: { fips: string; peak_out: number; peak_out_pct: number; customer_hours: number }[];
+  /** peak_out_pct is null where the county's customer count was raised to its peak outage
+   * (customers_floored): the share would read 100% by construction. */
+  counties: {
+    fips: string;
+    peak_out: number;
+    peak_out_pct: number | null;
+    customers_floored?: boolean;
+    customer_hours: number;
+  }[];
 };

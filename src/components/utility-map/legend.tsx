@@ -8,11 +8,13 @@ export function SequentialLegend({
   colors,
   labels,
   note,
+  extra,
 }: {
   title: string;
   colors: readonly string[];
   labels: readonly string[];
   note?: string;
+  extra?: { color: string; label: string };
 }) {
   return (
     <div className="space-y-2">
@@ -25,6 +27,12 @@ export function SequentialLegend({
           </li>
         ))}
       </ol>
+      {extra ? (
+        <p className="flex items-start gap-2 text-[11px] leading-tight text-muted-foreground">
+          <span className="mt-px block h-3 w-5 shrink-0 rounded-sm ring-1 ring-black/10" style={{ backgroundColor: extra.color }} aria-hidden />
+          {extra.label}
+        </p>
+      ) : null}
       {note ? <p className="text-[11px] leading-tight text-muted-foreground">{note}</p> : null}
     </div>
   );

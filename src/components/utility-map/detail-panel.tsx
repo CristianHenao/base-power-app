@@ -341,7 +341,15 @@ function StormImpact({ storm, counties, countiesByFips }: {
   counties: string[];
   countiesByFips: Map<string, CountyRecord>;
 }) {
-  const hits = storm.counties.filter((c) => counties.includes(c.fips)).sort((a, b) => b.peak_out_pct - a.peak_out_pct);
+  const hits = storm.counties
+    .filter((c) => counties.includes(c.fips))
+    .sort(
+      (a, b) =>
+        Number(a.peak_out_pct == null) - Number(b.peak_out_pct == null) ||
+        (b.peak_out_pct ?? 0) - (a.peak_out_pct ?? 0) ||
+        b.peak_out - a.peak_out,
+    );
+  const anyUnknown = hits.some((c) => c.peak_out_pct == null);
   const title = `${storm.name} ${storm.start.slice(0, 4)}`;
   return (
     <div className="space-y-2">
@@ -354,13 +362,21 @@ function StormImpact({ storm, counties, countiesByFips }: {
             <li key={c.fips} className="flex items-center justify-between gap-2 px-4 py-2.5 text-[14px] leading-[21px]">
               <span className="font-semibold">{countiesByFips.get(c.fips)?.name ?? c.fips} County</span>
               <span className="text-right tabular-nums text-muted-foreground">
-                {number.format(c.peak_out_pct)}% out at peak · {number.format(c.peak_out)} customers ·{" "}
+                {c.peak_out_pct == null ? "Share unknown" : `${number.format(c.peak_out_pct)}% out at peak`} ·{" "}
+                {number.format(c.peak_out)} customers ·{" "}
                 {number.format(c.customer_hours)} customer-h
               </span>
             </li>
           ))}
         </ul>
       )}
+      {anyUnknown ? (
+        <p className="bp-info px-4 py-3 text-[12px] leading-[18px]">
+          Share unknown: EAGLE-I reported more customers out at some point than this county&apos;s modeled customer
+          count, so the count was raised to that peak and a share would read 100% by construction. The customers-out
+          count is as reported.
+        </p>
+      ) : null}
       <p className="text-[12px] leading-[18px] text-muted-foreground">
         EAGLE-I county records, {storm.start} to {storm.end}. Homes in the county, not any single home.
       </p>

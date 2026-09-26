@@ -570,9 +570,9 @@ export function UtilityMapExperience() {
   };
 
   const floodShown = floodInView.some((fips) => floodCache[fips]);
-  const mapKey = described ? (
-    <MapKey described={described} showFlood={floodShown} showPlants={shown.plants && generators != null} />
-  ) : null;
+  const keyProps = described
+    ? { described, showFlood: floodShown, showPlants: shown.plants && generators != null }
+    : null;
 
   return (
     <main className="relative h-full w-full">
@@ -598,29 +598,34 @@ export function UtilityMapExperience() {
         </div>
       ) : null}
 
-      {mapKey ? (
+      {keyProps ? (
         <div className="pointer-events-auto absolute bottom-8 left-[calc(22rem+env(safe-area-inset-left))] z-10 hidden w-[min(20rem,calc(100vw-22rem-432px))] lg:block">
-          {mapKey}
+          <MapKey {...keyProps} />
         </div>
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
-        <div className="pointer-events-auto max-h-[34dvh] w-full shrink-0 space-y-3 overflow-y-auto lg:max-h-full lg:w-80">
-          <p className="rounded-xl bg-white px-3 py-2 text-[12px] leading-[18px] text-muted-foreground lg:hidden">
+        <div className="pointer-events-auto flex max-h-[34dvh] w-full shrink-0 flex-col gap-3 overflow-y-auto lg:max-h-full lg:w-80">
+          <p className="order-3 rounded-xl bg-white px-3 py-2 text-[12px] leading-[18px] text-muted-foreground lg:hidden">
             The utility map is built for desktop screens. On a narrow screen, scroll this panel and the details below.
           </p>
-          <p className="bp-stamp inline-flex rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5">
+          <p className="bp-stamp order-2 inline-flex self-start rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5 lg:order-none">
             {data ? dataModeLabel(data.data_mode) : "Loading data"}
             {data?.release_id ? ` · ${data.as_of}` : ""}
           </p>
           {data && described ? (
-            <div className="inline-flex rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)]">
+            <div className="order-2 inline-flex self-start rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)] lg:order-none">
               <MethodsSheet data={data} described={described} />
             </div>
           ) : null}
-          {mapKey ? <div className="lg:hidden">{mapKey}</div> : null}
+          {keyProps ? (
+            <div className="order-1 lg:hidden">
+              <MapKey {...keyProps} defaultOpen={false} />
+            </div>
+          ) : null}
           {data && ctx ? (
             <ControlsPanel
+              className="order-first shrink-0 lg:order-none"
               view={view}
               data={data}
               availableHazards={availableHazards}

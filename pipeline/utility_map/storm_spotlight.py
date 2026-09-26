@@ -6,6 +6,10 @@ event rows (events_texas.parquet). Per county: worst peak customers out (and sha
 customers) and total customer-hours across the storm's events. EAGLE-I starts in 2018,
 so storms before then (Harvey, Ike) have no outage footprint here.
 
+Where a county's modeled customer count was below its peak outage, the pipeline raises the
+count to that peak (outlook.customers_floored). The share out then reads 100% by construction,
+so it is left out (null) and flagged, as the address reports do (pipeline.reports.event_record).
+
 Run: python -m pipeline.utility_map.storm_spotlight
 """
 from __future__ import annotations
@@ -25,14 +29,18 @@ TRACKS = {"Hurricane Beryl": "AL022024", "Hurricane Nicholas": "AL142021"}
 OUT = settings.UTILITY_MAP_DIR / "hazards" / "storms.json"
 
 
-def storm_counties(events: pd.DataFrame, labels: pd.DataFrame, storm: str) -> list[dict]:
+def storm_counties(
+    events: pd.DataFrame, labels: pd.DataFrame, storm: str, floored: set[str] | frozenset[str] = frozenset(),
+) -> list[dict]:
     mine = labels.loc[labels["storm"] == storm, ["county_fips", "start"]]
     joined = events.merge(mine, on=["county_fips", "start"], how="inner")
     per_county = joined.groupby("county_fips").agg(
         peak_out=("peak_out", "max"), peak_out_pct=("peak_out_pct", "max"), customer_hours=("customer_hours", "sum"),
     ).sort_values("customer_hours", ascending=False)
     return [
-        {"fips": fips, "peak_out": int(round(r.peak_out)), "peak_out_pct": round(float(r.peak_out_pct), 1),
+        {"fips": fips, "peak_out": int(round(r.peak_out)),
+         "peak_out_pct": None if fips in floored else round(float(r.peak_out_pct), 1),
+         "customers_floored": fips in floored,
          "customer_hours": float(round(r.customer_hours))}
         for fips, r in per_county.iterrows()
     ]
@@ -43,9 +51,11 @@ def main() -> int:
     events["start"] = pd.to_datetime(events["start"], utc=True)
     labels = pd.read_csv(LABELS, dtype={"county_fips": str})
     labels["start"] = pd.to_datetime(labels["start"], utc=True)
+    outlook = pd.read_parquet(settings.OUTLOOK_PARQUET)
+    floored = set(outlook.index[outlook["customers_floored"].astype(bool)].astype(str))
     storms = []
     for storm in yaml.safe_load(STORMS_YAML.read_text())["storms"]:
-        counties = storm_counties(events, labels, storm["name"])
+        counties = storm_counties(events, labels, storm["name"], floored)
         if not counties:
             continue
         storms.append({

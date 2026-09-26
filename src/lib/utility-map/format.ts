@@ -108,6 +108,8 @@ export function paintLabel(context: PaintContext, level: number | null): string 
     case "overlap":
       return `Top fifth in ${level - 1}${level === 5 ? "+" : ""} of ${context.of} hazards`;
     case "storm":
-      return `${context.name}: ${STORM_BINS_TEXT[level - 1]} of customers out`;
+      return level === 6
+        ? `${context.name}: customers out, share unknown`
+        : `${context.name}: ${STORM_BINS_TEXT[level - 1]} of customers out`;
   }
 }

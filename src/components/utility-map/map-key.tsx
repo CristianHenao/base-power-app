@@ -12,15 +12,17 @@ export function MapKey({
   described,
   showFlood,
   showPlants,
+  defaultOpen = true,
   className,
 }: {
   described: ViewDescription;
   showFlood: boolean;
   showPlants: boolean;
+  defaultOpen?: boolean;
   className?: string;
 }) {
   const { caption, legend } = described;
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <section aria-label="Map key" aria-live="polite" className={cn("bp-panel space-y-3 p-4", className)}>
       <div className="flex items-start justify-between gap-2">
@@ -42,7 +44,13 @@ export function MapKey({
       {open ? (
         <>
           {legend.kind === "sequential" ? (
-            <SequentialLegend title={legend.title} colors={legend.colors} labels={legend.labels} note={legend.note} />
+            <SequentialLegend
+              title={legend.title}
+              colors={legend.colors}
+              labels={legend.labels}
+              note={legend.note}
+              extra={legend.extra}
+            />
           ) : legend.kind === "bivariate" ? (
             <BivariateLegend colors={BIVARIATE_COLORS} first={legend.first} second={legend.second} />
           ) : (

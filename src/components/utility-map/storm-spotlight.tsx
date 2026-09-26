@@ -58,7 +58,8 @@ export function StormList({
               <li key={c.fips} className="flex justify-between gap-2 tabular-nums">
                 <span className="font-semibold">{countyName(c.fips)}</span>
                 <span>
-                  {whole.format(c.peak_out)} out at peak ({whole.format(c.peak_out_pct)}%)
+                  {whole.format(c.peak_out)} out at peak
+                  {c.peak_out_pct == null ? " (share unknown)" : ` (${whole.format(c.peak_out_pct)}%)`}
                 </span>
               </li>
             ))}

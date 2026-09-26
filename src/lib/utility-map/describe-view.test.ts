@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { describeView, detailLayers, hazardHighlights, overlays, scoreLayers } from "./describe-view.ts";
 import { HAZARDS, outageShareLevel, type SpotlightStorm } from "./hazard-style.ts";
 import { buildScoreModel } from "./scoring.ts";
+import { paintLabel } from "./format.ts";
 import type { CountyRecord, LayerId, MapLayerMeta, UtilityMapData, UtilityRecord } from "./types.ts";
 import {
   defaultViewState,
@@ -226,4 +227,30 @@ test("a storm missing from the release says so instead of loading forever", () =
   assert.match((failed.legend as { message: string }).message, /Couldn't load/);
   const loading = describeView(s, { ...input, storms: [], stormsStatus: "loading" });
   assert.match((loading.legend as { message: string }).message, /Loading/);
+});
+
+test("a county whose share out is unknown gets its own color, legend entry and place in the table", () => {
+  const storm: SpotlightStorm = {
+    ...BERYL,
+    counties: [
+      { fips: "48001", peak_out: 5000, peak_out_pct: null, customers_floored: true, customer_hours: 99999 },
+      ...BERYL.counties,
+    ],
+  };
+  const s = showStorm(hazards("winter"), "Hurricane Beryl");
+  const d = describeView(s, {
+    data: DATA,
+    model: buildScoreModel(DATA, scoreLayers(s)),
+    countiesByFips: new Map(DATA.counties.map((c) => [c.fips, c])),
+    utilitiesById: new Map(DATA.utilities.map((u) => [u.id, u])),
+    storms: [storm],
+    stormsStatus: "ok",
+  });
+  assert.equal(d.stateFor(LOW).level, 6);
+  assert.equal(d.colors.length, 6);
+  assert.equal(d.legend.kind, "sequential");
+  assert.match((d.legend as { extra?: { label: string } }).extra?.label ?? "", /unknown/i);
+  assert.deepEqual(d.table.rows.map((r) => r.id), ["48201", "48453", "48001"]);
+  assert.match(d.table.rows[2].cells[0], /Unknown/);
+  assert.equal(paintLabel(d.context, 6), "Hurricane Beryl 2024: customers out, share unknown");
 });

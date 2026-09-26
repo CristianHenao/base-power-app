@@ -3,6 +3,8 @@ import { formatLayerValue, type PaintContext } from "./format.ts";
 import {
   BIVARIATE_COLORS,
   HAZARDS,
+  SHARE_UNKNOWN_COLOR,
+  SHARE_UNKNOWN_LEVEL,
   bivariateClass,
   hazardLevel,
   isHazard,
@@ -31,7 +33,15 @@ import type { ViewState } from "./view.ts";
  */
 
 export type LegendSpec =
-  | { kind: "sequential"; title: string; colors: readonly string[]; labels: readonly string[]; note?: string }
+  | {
+      kind: "sequential";
+      title: string;
+      colors: readonly string[];
+      labels: readonly string[];
+      note?: string;
+      /** One more swatch outside the ramp, e.g. "share unknown". */
+      extra?: { color: string; label: string };
+    }
   | { kind: "bivariate"; first: string; second: string }
   | { kind: "empty"; message: string };
 
@@ -221,7 +231,11 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
             title: `${title}: peak share of customers out`,
             colors: SCORE_COLORS,
             labels: ["< 5%", "5–15%", "15–30%", "30–50%", "50%+"],
-            note: "Grey: no outage event labeled with this storm.",
+            note: "Light grey: no outage event labeled with this storm.",
+            extra: {
+              color: SHARE_UNKNOWN_COLOR,
+              label: "Customers out, share unknown: more were out than the county's modeled customer count",
+            },
           }
         : {
             kind: "empty",
@@ -232,11 +246,12 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
                   ? `${state.storm} isn't in this release. Pick another storm or Historical patterns.`
                   : "Loading storm records.",
           },
-      colors: SCORE_COLORS,
+      colors: [...SCORE_COLORS, SHARE_UNKNOWN_COLOR],
       context: { kind: "storm", name: title },
       stateFor: withSelection(state, utilitiesById, (c) => {
         const hit = byFips.get(c.fips);
-        return hit ? outageShareLevel(hit.peak_out_pct) : null;
+        if (!hit) return null;
+        return hit.peak_out_pct == null ? SHARE_UNKNOWN_LEVEL : outageShareLevel(hit.peak_out_pct);
       }),
       table: {
         caption: `${title} · counties with outages, largest share out first`,
@@ -244,11 +259,21 @@ export function describeView(state: ViewState, input: DescribeInput): ViewDescri
         columns: ["Peak share out", "Peak customers out", "Customer-hours out"],
         primary: 0,
         rows: [...(storm?.counties ?? [])]
-          .sort((a, b) => b.peak_out_pct - a.peak_out_pct)
+          // Known shares first, largest first; then unknown shares by customers out.
+          .sort(
+            (a, b) =>
+              Number(a.peak_out_pct == null) - Number(b.peak_out_pct == null) ||
+              (b.peak_out_pct ?? 0) - (a.peak_out_pct ?? 0) ||
+              b.peak_out - a.peak_out,
+          )
           .map((c) => ({
             id: c.fips,
             name: `${countiesByFips.get(c.fips)?.name ?? c.fips} County`,
-            cells: [`${whole.format(c.peak_out_pct)}%`, whole.format(c.peak_out), whole.format(c.customer_hours)],
+            cells: [
+              c.peak_out_pct == null ? "Unknown (customer count below the peak)" : `${whole.format(c.peak_out_pct)}%`,
+              whole.format(c.peak_out),
+              whole.format(c.customer_hours),
+            ],
           })),
       },
     };
