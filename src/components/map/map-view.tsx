@@ -48,6 +48,8 @@ export type OutagePerimeterOverlay = {
   visible: boolean;
 };
 
+export type MapCameraBounds = [[number, number], [number, number]];
+
 export type MapViewProps = {
   className?: string;
   center?: LngLatLike;
@@ -55,6 +57,8 @@ export type MapViewProps = {
   pitch?: number;
   bearing?: number;
   style?: string;
+  /** When set, fit the map to these bounds instead of center/zoom */
+  cameraBounds?: MapCameraBounds | null;
   /** Mapbox Standard basemap toggles (3D buildings, trees, landmarks, etc.). */
   basemap?: MapBasemapConfig;
   marker?: MapMarker | null;
@@ -120,6 +124,7 @@ export function MapView({
   pitch = MAP_DEFAULTS.pitch,
   bearing = MAP_DEFAULTS.bearing,
   style = MAP_DEFAULTS.style,
+  cameraBounds = null,
   basemap = MAP_DEFAULTS.basemap,
   marker = null,
   weatherHazards = null,
@@ -250,6 +255,20 @@ export function MapView({
     const map = mapRef.current;
     if (!map || status !== "ready") return;
 
+    if (cameraBounds) {
+      // Frame the active outage ring, biased close so card switches feel zoomed in
+      map.fitBounds(cameraBounds, {
+        padding: { top: 64, bottom: 180, left: 28, right: 28 },
+        pitch,
+        bearing,
+        duration: 850,
+        essential: true,
+        maxZoom: MAP_DEFAULTS.cardScrubMaxZoom,
+        minZoom: MAP_DEFAULTS.cardScrubMinZoom,
+      });
+      return;
+    }
+
     map.easeTo({
       center,
       zoom,
@@ -258,7 +277,7 @@ export function MapView({
       duration: 900,
       essential: true,
     });
-  }, [status, center, zoom, pitch, bearing]);
+  }, [status, center, zoom, pitch, bearing, cameraBounds]);
 
   useEffect(() => {
     const map = mapRef.current;

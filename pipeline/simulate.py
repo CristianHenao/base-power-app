@@ -18,6 +18,8 @@ from pipeline.events import coverage, customer_durations, event_curve
 from pipeline.sources.eaglei import demo_series
 from pipeline.sources.ercot_profiles import (
     annual_kwh,
+    cached_days_by_month,
+    profile_code,
     profile_days_by_month,
     span_kwh,
     typical_day,
@@ -117,18 +119,39 @@ def _hours_text(value: float) -> str:
 class ProfileYears:
     """ERCOT profile days by date for one profile, loading each year's workbook once."""
 
-    def __init__(self, profile_type: str, weather_zone: str, directory: Path = settings.RAW_ERCOT_DIR):
+    def __init__(self, profile_type: str, weather_zone: str, directory: Path = settings.RAW_ERCOT_DIR,
+                 cache_dir: Path | None = settings.ERCOT_CACHE_DIR):
         self.profile_type = profile_type
         self.weather_zone = weather_zone
         self.directory = directory
+        self.cache_dir = cache_dir
         self._days: dict[date, np.ndarray] = {}
         self._annual: dict[int, float] = {}
+        self._failed: dict[int, Exception] = {}
 
     def _load(self, year: int) -> None:
         if year in self._annual:
             return
-        source = yearly_zip(year, self.directory)
-        days = profile_days_by_month(source, self.profile_type, self.weather_zone)
+        if year in self._failed:
+            raise self._failed[year]
+        try:
+            self._read(year)
+        except (FileNotFoundError, ValueError) as error:
+            self._failed[year] = error
+            raise
+
+    def _read(self, year: int) -> None:
+        if self.cache_dir is None:
+            days = profile_days_by_month(yearly_zip(year, self.directory), self.profile_type, self.weather_zone)
+        else:
+            demo_codes = tuple(
+                profile_code(settings.DEMO_PROFILE[fips], settings.DEMO_WEATHER_ZONE[fips])
+                for fips in settings.DEMO_FIPS
+            )
+            days = cached_days_by_month(
+                year, self.profile_type, self.weather_zone, also=demo_codes,
+                directory=self.directory, cache_dir=self.cache_dir,
+            )
         self._annual[year] = annual_kwh(days)
         for month in days.values():
             for day, trace in month:
@@ -137,6 +160,10 @@ class ProfileYears:
     def annual_kwh(self, year: int) -> float:
         self._load(year)
         return self._annual[year]
+
+    def month_traces(self, year: int, month: int) -> list[np.ndarray]:
+        self._load(year)
+        return [trace for day, trace in sorted(self._days.items()) if day.year == year and day.month == month]
 
     def span(self, start: date, n_days: int) -> np.ndarray:
         needed = [start + timedelta(days=offset) for offset in range(n_days)]

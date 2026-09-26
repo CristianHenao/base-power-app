@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { MyHomeScreen } from "@/components/home/my-home-screen";
+import { useAppScene } from "@/components/layout/use-app-scene";
 import { MapViewClient } from "@/components/map/map-view-client";
 import type { MapMarker } from "@/components/map/map-view";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
@@ -17,8 +19,13 @@ import {
 import { OutageEventCards } from "@/components/risk/outage-event-cards";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { HomeDevice } from "@/lib/home/devices";
 import { MAP_DEFAULTS } from "@/lib/map/config";
 import { geocodeAddressClient } from "@/lib/map/geocode-client";
+import {
+  boundsForOutagePerimeter,
+  buildOutagePerimeter,
+} from "@/lib/map/outage-perimeter-layers";
 import {
   formatAddressLine,
   hasHomeCoordinates,
@@ -27,9 +34,7 @@ import { generateHomeOutageTimeline } from "@/lib/risk/synthetic-outages";
 import {
   generateSyntheticWeatherHazards,
   hazardsToHeatmapGeoJSON,
-  WEATHER_ANALYSIS_ZOOM,
 } from "@/lib/risk/synthetic-weather";
-import { buildOutagePerimeter } from "@/lib/map/outage-perimeter-layers";
 import type { Address } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +46,13 @@ export function RiskAnalysisDashboard() {
     useState<RiskAnalysisItemId | null>(null);
   const [outageIndex, setOutageIndex] = useState(0);
   const [showBasePower, setShowBasePower] = useState(false);
+  /** Full-width appliance breakdown — only from “View battery capacity” */
+  const [batteryCapacityOpen, setBatteryCapacityOpen] = useState(false);
+  const [homeDevices, setHomeDevices] = useState<HomeDevice[]>([]);
+  const [deviceScanOpen, setDeviceScanOpen] = useState(false);
   const address = draft.address;
+
+  useAppScene(primaryTab === "home" ? "light" : "map");
   const addressKey = useMemo(
     () =>
       JSON.stringify({
@@ -130,6 +141,7 @@ export function RiskAnalysisDashboard() {
 
   const inAnalysis = activeAnalysisId != null;
   const showWeatherAnalysis = activeAnalysisId === "weather";
+  const showMyHome = primaryTab === "home";
 
   const sliderEvents = outageTimeline?.events ?? [];
 
@@ -144,6 +156,7 @@ export function RiskAnalysisDashboard() {
   function closeAnalysis() {
     setActiveAnalysisId(null);
     setShowBasePower(false);
+    setBatteryCapacityOpen(false);
   }
 
   function handlePrimaryTabChange(id: RiskPrimaryTabId) {
@@ -151,11 +164,33 @@ export function RiskAnalysisDashboard() {
     if (id === "home") {
       setActiveAnalysisId(null);
       setShowBasePower(false);
+      setBatteryCapacityOpen(false);
+      setDeviceScanOpen(false);
     }
+  }
+
+  function handleAddHomeDevice(device: HomeDevice) {
+    setHomeDevices((prev) => [...prev, device]);
   }
 
   function handleOutageIndexChange(index: number) {
     setOutageIndex(index);
+    setBatteryCapacityOpen(false);
+  }
+
+  function handleBasePowerChange(checked: boolean) {
+    setShowBasePower(checked);
+    if (!checked) setBatteryCapacityOpen(false);
+  }
+
+  function handleViewBatteryCapacity(index: number) {
+    setOutageIndex(index);
+    setShowBasePower(true);
+    setBatteryCapacityOpen(true);
+  }
+
+  function handleExitBatteryCapacity() {
+    setBatteryCapacityOpen(false);
   }
 
   const activeOutage =
@@ -167,6 +202,8 @@ export function RiskAnalysisDashboard() {
     showWeatherAnalysis && activeOutage?.impactedHome,
   );
   const revealBattery = outageBlackout && showBasePower;
+  /** Capacity focus: pull back to neighborhood (not house-close) */
+  const useCapacityCamera = showWeatherAnalysis && batteryCapacityOpen;
 
   const marker = useMemo<MapMarker | null>(() => {
     if (!center) return null;
@@ -202,6 +239,7 @@ export function RiskAnalysisDashboard() {
       area: buildOutagePerimeter(hazard, {
         home: center,
         impactedHome: activeOutage.impactedHome,
+        seedId: activeOutage.id,
       }),
       visible: true,
     };
@@ -212,24 +250,29 @@ export function RiskAnalysisDashboard() {
     center,
   ]);
 
-  const mapZoom = revealBattery
+  /** Fit perimeter + home on card change; neighborhood camera in capacity focus */
+  const cameraBounds = useMemo(() => {
+    if (useCapacityCamera) return null;
+    if (!showWeatherAnalysis || !outagePerimeterOverlay?.area.features.length) {
+      return null;
+    }
+    return boundsForOutagePerimeter(outagePerimeterOverlay.area, center);
+  }, [useCapacityCamera, showWeatherAnalysis, outagePerimeterOverlay, center]);
+
+  const mapZoom = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealZoom
-    : outageBlackout
+    : showWeatherAnalysis
       ? MAP_DEFAULTS.outageHomeZoom
-      : showWeatherAnalysis
-        ? WEATHER_ANALYSIS_ZOOM
-        : MAP_DEFAULTS.homeZoom;
-  const mapPitch = revealBattery
+      : MAP_DEFAULTS.homeZoom;
+  const mapPitch = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealPitch
-    : outageBlackout
-      ? 55
-      : showWeatherAnalysis
-        ? 45
-        : MAP_DEFAULTS.pitch;
-  const mapBearing = revealBattery
+    : showWeatherAnalysis
+      ? 62
+      : MAP_DEFAULTS.pitch;
+  const mapBearing = useCapacityCamera
     ? MAP_DEFAULTS.batteryRevealBearing
-    : outageBlackout
-      ? -12
+    : showWeatherAnalysis
+      ? -18
       : MAP_DEFAULTS.bearing;
   const basemap = outageBlackout
     ? MAP_DEFAULTS.outageBasemap
@@ -240,43 +283,54 @@ export function RiskAnalysisDashboard() {
 
   return (
     <main className="relative h-full w-full">
-      <div className="absolute inset-0">
-        {hasAddress && hasCoords && center && marker ? (
-          <MapViewClient
-            className="h-full w-full rounded-none border-0"
-            center={center}
-            zoom={mapZoom}
-            pitch={mapPitch}
-            bearing={mapBearing}
-            basemap={basemap}
-            marker={marker}
-            weatherHazards={weatherOverlay}
-            outagePerimeter={outagePerimeterOverlay}
-            outageBlackout={outageBlackout}
-            enableThreeLayer={false}
-          />
-        ) : hasAddress && !hasCoords && !errorMessage ? (
-          <Skeleton className="h-full w-full rounded-none" />
-        ) : (
-          <div className="h-full w-full bg-muted" />
-        )}
-      </div>
+      {showMyHome ? (
+        <MyHomeScreen
+          devices={homeDevices}
+          onAddDevice={handleAddHomeDevice}
+          scanOpen={deviceScanOpen}
+          onScanOpenChange={setDeviceScanOpen}
+          className="absolute inset-0 pt-[calc(3.5rem+var(--sat))]"
+        />
+      ) : (
+        <div className="absolute inset-0">
+          {hasAddress && hasCoords && center && marker ? (
+            <MapViewClient
+              className="h-full w-full rounded-none border-0"
+              center={center}
+              zoom={mapZoom}
+              pitch={mapPitch}
+              bearing={mapBearing}
+              cameraBounds={cameraBounds}
+              basemap={basemap}
+              marker={marker}
+              weatherHazards={weatherOverlay}
+              outagePerimeter={outagePerimeterOverlay}
+              outageBlackout={outageBlackout}
+              enableThreeLayer={false}
+            />
+          ) : hasAddress && !hasCoords && !errorMessage ? (
+            <Skeleton className="h-full w-full rounded-none" />
+          ) : (
+            <div className="h-full w-full bg-muted" />
+          )}
+        </div>
+      )}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between pt-[calc(3.5rem+var(--sat)+0.75rem)]">
         <div className="flex w-full flex-col items-start gap-3 px-4 sm:px-6">
-          {inAnalysis ? (
+          {!showMyHome && inAnalysis ? (
             <div className="flex items-center gap-2">
               <AnalysisCloseButton onClose={closeAnalysis} />
               {activeOutage?.impactedHome ? (
                 <BasePowerToggle
                   checked={showBasePower}
-                  onCheckedChange={setShowBasePower}
+                  onCheckedChange={handleBasePowerChange}
                 />
               ) : null}
             </div>
           ) : null}
 
-          {!hasAddress || errorMessage ? (
+          {!showMyHome && (!hasAddress || errorMessage) ? (
             <FrostPanel className="pointer-events-auto w-full max-w-sm">
               <div className="p-4">
                 <p className="text-sm font-semibold">
@@ -298,12 +352,15 @@ export function RiskAnalysisDashboard() {
           ) : null}
         </div>
 
-        {showWeatherAnalysis && sliderEvents.length ? (
+        {!showMyHome && showWeatherAnalysis && sliderEvents.length ? (
           <OutageEventCards
             events={sliderEvents}
             activeIndex={Math.min(outageIndex, sliderEvents.length - 1)}
             onChange={handleOutageIndexChange}
             showBasePower={showBasePower}
+            capacityFocused={batteryCapacityOpen}
+            onViewBatteryCapacity={handleViewBatteryCapacity}
+            onExitBatteryCapacity={handleExitBatteryCapacity}
           />
         ) : !inAnalysis ? (
           <div className="flex w-full flex-col items-center px-4 pb-[max(0.75rem,var(--sab))] sm:px-6">

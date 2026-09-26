@@ -122,6 +122,8 @@ td code{white-space:nowrap}
 .tag.mvp{background:var(--green-soft);color:var(--green);border:1px solid var(--green)}
 .tag.p1{background:var(--signal);color:var(--signal-ink)}
 .tag.p2{border:1px solid var(--line);color:var(--muted)}
+.tag.done{background:var(--green);color:var(--paper)}
+td.is-done{background:var(--green-soft)}
 .gatecell{font-weight:600;color:var(--ink-strong)}
 
 details{border:1px solid var(--line);border-radius:6px;background:var(--surface);margin:12px 0}
@@ -524,6 +526,69 @@ flowchart LR
     <li><strong>Everything degrades.</strong> Each external call gets a timeout, one retry with jitter, a circuit breaker and a last-known-good cache. The report carries <code>sources[]</code> with status and as-of time, so the UI says "alerts unavailable" instead of failing.</li>
     <li><strong>No raw addresses at rest.</strong> Geocode, keep county and tract, store a salted hash.</li>
   </ul>
+  <h3>Request path: POST /v1/report</h3>
+  <p class="small muted">The report JSON returns before any LLM call. Every external hop goes through cache first and lands in <code>sources[]</code> whatever happens.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant W as web
+  participant A as api
+  participant R as Redis
+  participant G as Census geocoder
+  participant F as features.duckdb
+  participant S as backup simulator
+  participant N as NWS alerts
+  participant P as Postgres
+  W->>A: POST /v1/report with address and home details
+  A->>R: get geocode by normalized address
+  alt cache miss
+    A->>G: one-line address lookup, 400 ms timeout
+    G-->>A: lat, lon, county FIPS, tract
+    A->>R: set geocode
+  end
+  Note over A: salted hash only, raw address dropped
+  A->>F: county, weather zone, load zone, utility, Base offer, outlook, events, profile
+  F-->>A: feature rows, read-only, under 20 ms
+  par simulate
+    A->>S: profile x kWh, cores 1 and 2, normal and storm mode
+    S-->>A: hours by month, per-event coverage, sizing
+  and live alerts
+    A->>R: get alerts for point
+    alt stale or missing
+      A->>N: active alerts, 300 ms timeout, one retry
+      N-->>A: alerts or 5xx
+    end
+  and grid snapshot
+    A->>R: get ercot snapshot written by worker
+  end
+  A->>P: report_viewed funnel event, fire and forget
+  A-->>W: report JSON with sources[] status and as-of, under 800 ms
+  W->>A: GET /v1/report/id/narrative
+  A-->>W: SSE stream, see M-01 narrator
+</pre>
+  </div>
+  <h3>Every adapter degrades the same way</h3>
+  <p class="small muted">Census, NWS, ERCOT live and the LLM share one wrapper. The report never waits on an open breaker.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> Closed
+  Closed --> Closed: call ok, refresh last-known-good
+  Closed --> Retry: timeout or 5xx
+  Retry --> Closed: retry with jitter ok
+  Retry --> Open: failures over threshold
+  Open --> HalfOpen: cool-down elapsed
+  HalfOpen --> Closed: probe ok
+  HalfOpen --> Open: probe fails
+  note right of Open
+    serve last-known-good from Redis
+    sources[] status degraded or unavailable
+    LLM falls back to the template
+  end note
+</pre>
+  </div>
   <h3>Latency budget</h3>
   <div class="table-wrap"><table class="mid">
     <thead><tr><th>Step</th><th>Budget, p95 warm</th><th>How</th></tr></thead>
@@ -655,6 +720,62 @@ flowchart LR
       <tr><td>Household appliance loads (compiled reference, below)</td><td>The "must stay on" toggles: each appliance becomes kWh per day, then hours of backup left</td><td>Hand-built table with a source per value; ships as <code>src/lib/backup/appliance-loads.json</code></td><td>Nameplate watts are not average use: fridges, AC and heat cycle. Motors surge 2 to 3 times at start. Label every number an estimate</td><td>Alejandro</td><td><span class="tag p1">P1</span></td></tr>
     </tbody>
   </table></div>
+  <h3>Ingestion DAG: <code>make data</code></h3>
+  <p class="small muted">Each node is a pure step that writes Parquet, so any stage reruns alone. Raw files stay in <code>data/raw</code>; only the last node writes <code>data/features.duckdb</code>. Dashed edges are P1 or P2.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+flowchart LR
+  subgraph RAW["data/raw, gitignored"]
+    R1["EAGLE-I CSVs 2014-2024"]
+    R2["ERCOT load profiles, yearly"]
+    R3["ERCOT RTM SPP via gridstatus"]
+    R4["ZIP to utility CSV, NREL"]
+    R5["base_areas.yaml, hand-built"]
+    R6["NRI, EIA-861, ACS"]
+  end
+  subgraph CLEAN["normalize: UTC, Texas only, typed"]
+    C1["outages_15m.parquet<br/>county x interval, 2018+ for rates"]
+    C2["profiles_15m.parquet<br/>RESHIWR and RESLOWR by weather zone"]
+    C3["spp_15m.parquet<br/>load zone, DST duplicates resolved"]
+  end
+  subgraph XW["crosswalks"]
+    X1["county to weather zone and load zone"]
+    X2["ZIP to utility to Base offer"]
+  end
+  subgraph MODEL["pipeline models"]
+    M1["events.py<br/>threshold, merge gaps under 1 h"]
+    M2["durations FIFO and LIFO bands"]
+    M3["outlook.py<br/>gamma-Poisson per weather zone"]
+    M4["backtest 2018-22 fit, 2023-24 score"]
+    M5["grid_value.py<br/>daily LP and scarcity hours"]
+    M6["pays twice index"]
+  end
+  FS[("features.duckdb")]
+  R1 --> C1
+  R2 --> C2
+  R3 -.-> C3
+  R4 --> X2
+  R5 --> X2
+  C1 --> X1
+  C1 --> M1 --> M2 --> M3 --> M4
+  X1 --> M3
+  C3 -.-> M5
+  X1 -.-> M5
+  R6 -.-> M6
+  M3 -.-> M6
+  M5 -.-> M6
+  X2 -.-> M6
+  C2 --> FS
+  X1 --> FS
+  X2 --> FS
+  M1 --> FS
+  M2 --> FS
+  M3 --> FS
+  M4 --> FS
+  M5 -.-> FS
+  M6 -.-> FS
+</pre>
+  </div>
   <h3>Household appliance loads, for the "must stay on" component</h3>
   <p>Users switch appliances on and off and see how many hours a Base Core lasts. The math runs on <b>watts and kWh per day</b>, not volts. Volts only tell you which loads are big: most plugs are 120 V, while water heaters, dryers, ranges, central AC, heat pumps, pool pumps and Level 2 EV chargers sit on 240 V circuits. Every value is a typical estimate for a Texas home. The toggle list stays in the browser (P-01).</p>
   <div class="table-wrap"><table class="mid">
@@ -715,6 +836,50 @@ power_ok    = sum of running W + largest single start surge &lt;= power limit</c
 
 <section id="models">
   <h2><span class="sheet">M-01</span>Models</h2>
+  <h3>Inference DAG: what runs per report</h3>
+  <p class="small muted">Fitting happens offline; per request the API only looks up posteriors and runs numpy. The LLM sits at the very end and reads facts, never inputs.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+flowchart TB
+  subgraph IN["inputs"]
+    I1["county FIPS, weather zone, load zone"]
+    I2["home kWh, electric heat, storm mode"]
+    I3["must-stay-on kW<br/>browser only, optional"]
+  end
+  subgraph LOOK["DuckDB lookups, precomputed"]
+    L1["outlook posterior<br/>mean and 90% interval"]
+    L2["county events<br/>FIFO and LIFO duration bands"]
+    L3["load profile 15-min<br/>RESHIWR or RESLOWR"]
+  end
+  subgraph SIM["simulator, numpy"]
+    S1["scale profile to annual kWh"]
+    S2["apply storm-mode reduction"]
+    S3["drain 39.2 kWh x cores at 20 kW cap<br/>per event week and per month"]
+    S4["hours until empty"]
+    S5["coverage: homes and hours"]
+    S6["sizing: smallest cores covering 90% of 12h+ hours"]
+  end
+  subgraph OUT["report JSON"]
+    O1["outlook level 1-5, once every N years"]
+    O2["events[] with covered"]
+    O3["backup.hours_by_month"]
+    O4["sizing"]
+  end
+  NAR["narrator, facts with IDs"]
+  I1 --> L1 & L2 & L3
+  I2 --> S1
+  L3 --> S1 --> S2 --> S3 --> S4
+  I2 --> S2
+  S4 --> S5
+  L2 --> S5 --> S6
+  L1 --> O1
+  S5 --> O2
+  S4 --> O3
+  S6 --> O4
+  I3 -.-> BR["browser-side hours left"]
+  O1 & O2 & O3 & O4 --> NAR
+</pre>
+  </div>
   <h3>Outage events and per-home durations</h3>
   <p>An event is a run of 15-minute readings with customers out at or above max(50, 0.1% of modeled customers), merging gaps under an hour and dropping events under 30 minutes. Keep thresholds in config.</p>
   <p>EAGLE-I only says how many customers are out, not who. Replay each event as a queue: rises are homes going dark, falls are homes coming back. Restoring in first-out-first-back order and in last-out-first-back order gives two different duration distributions with identical customer-hours, so SAIDI-style totals stay exact and the true tail sits between the bounds. Report both as a band.</p>
@@ -722,7 +887,8 @@ power_ok    = sum of running W + largest single start surge &lt;= power limit</c
   <p>Metric: expected 12-hour-plus outages per year for a typical home in the county, the sum over events of the share of customers dark 12 hours or longer, divided by years of usable coverage from 2018. Shrink noisy counties with a gamma-Poisson empirical-Bayes prior fit within each ERCOT weather zone, and report the posterior mean with a 90% interval. Map to five levels by Texas-wide quantiles and phrase it as "about once every N years."</p>
   <p>Backtest: fit on 2018 to 2022, score 2023 to 2024 per county with Poisson deviance and rank correlation against two baselines, the statewide mean and the raw county rate. Ship the chart whatever it says.</p>
   <p><strong>Shipped</strong> <code>245f72c</code>: the scoring functions.</p>
-  <p><strong>Shipped</strong> <code>3d4a56c</code>: events for all 254 Texas counties, the outlook table, and <code>data/processed/backtest.json</code> for the chart. On 2023 to 2024, empirical Bayes has Poisson deviance 529 against 708 for the statewide mean. The raw county rate is infinite because 5 counties had no 12-hour-plus outages in training and some in testing. Rank correlation is weak, about 0.30 for both empirical Bayes and the raw rate. The prior is fit statewide until the county weather-zone crosswalk exists at <code>data/raw/reference/county_weather_zone.csv</code>. Collin is Moderate (about once every 11 years), Travis Elevated (8), Harris High (3.7).</p>
+  <p><strong>Shipped</strong> <code>3d4a56c</code>: events for all 254 Texas counties, the outlook table, and <code>data/processed/backtest.json</code> for the chart. On 2023 to 2024, empirical Bayes has Poisson deviance 529 against 708 for the statewide mean. The raw county rate is infinite because 5 counties had no 12-hour-plus outages in training and some in testing. Rank correlation was weak with a statewide prior, about 0.30.</p>
+  <p><strong>Shipped</strong> <code>213b752</code>: the prior is now fit within ERCOT weather zones from Alejandro's crosswalk. On 2023 to 2024, empirical Bayes has Poisson deviance 551 against 708 for the statewide mean, and rank correlation 0.38 against 0.30 for the raw county rate. Collin is Low (about once every 9 years), Travis Elevated (7.6), Harris High (3.1).</p>
   <h3>Backup simulator</h3>
   <ul>
     <li><strong>Load:</strong> the ERCOT backcasted profile for the home's weather zone and heat type, scaled to the home's annual kWh so seasonality survives, for the seven days starting at each event.</li>
@@ -735,10 +901,53 @@ power_ok    = sum of running W + largest single start surge &lt;= power limit</c
   <p><strong>Shipped</strong> <code>947fb55</code>: storm replay. Each event runs on its own seven days of ERCOT load and reports hours until empty and FIFO/LIFO coverage. Collin's Feb 2021 week empties one Core in 8.6 hours; Harris in Jul 2024 empties it in 20.1 hours.</p>
   <h3>Right size</h3>
   <p>Recommend the smallest Core count that covers at least 90% of historical 12-hour-plus outage hours for this county and home. Explain it in one sentence and say Base confirms sizing at install.</p>
+  <p><strong>Shipped</strong> <code>aba5c77</code>: sizing and <code>data/features.duckdb</code> with tables outlook, events, backup_monthly, sizing and assumptions. Every event is replayed on its own week of load. On the long-tail (LIFO) bound, two Cores cover 52% of Collin's 12-hour-plus outage hours since 2018, 63% of Harris's and 89% of Travis's, so all three size to two Cores. On the FIFO bound, one Core covers 91% in Travis. Event ids follow <code>{fips}-{Central date}</code>; the Travis freeze is <code>48453-2021-02-14-2</code> because a smaller event started earlier that day.</p>
   <h3>Pays twice</h3>
   <p>Homeowner value is expected outage hours per home per year times owner-occupied single-family homes. Grid value is, per load zone, the perfect-foresight daily arbitrage for one 20 kW, 39.2 kWh unit (a small daily linear program that runs in minutes) plus the count of intervals above $1,000/MWh; label it an upper bound. Add what Base sells in the county today. The index is the product of normalized components, with each component in the tooltip. Put the caveat on screen: load-zone granularity, and real siting needs nodal studies.</p>
+  <p><strong>Shipped</strong> <code>8e69a00</code>: grid value per load zone and year, 2019 to 2025, in <code>data/processed/grid_value.parquet</code> and the <code>grid_value</code> table of <code>data/features.duckdb</code>. Perfect-foresight arbitrage for one Core runs about $1,300 to $7,200 a year, highest in 2023 and in LZ_WEST. Winter Storm Uri shows as about 1,300 intervals above $1,000/MWh in every zone in 2021. Prices were pulled with gridstatus because Alejandro's A2 price file was not on main yet. County-to-load-zone mapping is still needed for the map.</p>
+  <p><strong>Shipped</strong> <code>8e69a00</code>: grid value for the 8 ERCOT load zones, 2019 to 2025, in <code>data/processed/grid_value.parquet</code> and the <code>grid_value</code> table of features.duckdb. Real-time prices come from gridstatus (NP6-785-ER), keyed on UTC. One 20 kW, 39.2 kWh unit at 90% round trip, starting empty each day, earns an upper bound of about $1,300 to $7,200 a year. West leads almost every year, and 2023 is the high point. Every zone saw about 1,300 intervals above $1,000/MWh in 2021. The county-to-load-zone mapping for the map is still open in Alejandro's A3.</p>
   <h3>Narrator</h3>
   <p>Input is the report JSON with an ID on every fact. Output is a headline, a summary of 120 words or fewer, and the fact IDs used. Validators: every number in the text must match a fact after rounding, a banned-phrase list, Flesch-Kincaid grade 7 or lower (the grandma test as a unit test), and a length cap. On failure, retry once with the reason, then fall back to a deterministic template. Evals: 24 fixtures (8 counties by 3 homes), pass rates in the README, and CI runs them on recorded outputs so tests aren't flaky.</p>
+  <p><strong>Shipped</strong> <code>fd414b5</code>: validators, one retry with the failure reasons, the template fallback, and the eval harness in <code>evals/</code>. The 24 fixtures cover 8 counties, one per ERCOT weather zone, by 3 homes. A number also has to belong to a fact the reply cites, not just any fact. The template passes 24 of 24. Still open: choose a model provider and key, record its outputs into <code>evals/recorded/</code>, and put the pass-rate table in the README.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant W as web
+  participant A as api narrator
+  participant R as Redis
+  participant L as LLM API
+  participant V as validators
+  W->>A: GET /v1/report/id/narrative
+  A->>R: cached narrative for report hash
+  alt cached
+    R-->>A: validated text
+    A-->>W: SSE, whole text
+  else not cached
+    A->>A: build facts list, one ID per number
+    A->>L: attempt 1, facts only, JSON headline, summary, fact_ids
+    L-->>A: draft, streamed into a buffer
+    A->>V: numbers match facts, banned phrases, FK grade 7 or lower, 120 words max
+    alt passes
+      V-->>A: ok
+    else fails
+      V-->>A: reasons
+      A->>L: attempt 2 with the reasons
+      L-->>A: draft 2
+      A->>V: same checks
+      alt fails again or LLM down
+        A->>A: deterministic template from facts
+        Note over A: sources[] llm degraded, fallback template
+      end
+    end
+    A->>R: cache final text
+    A-->>W: SSE tokens, then done
+  end
+</pre>
+  </div>
+  <p class="small muted">The user only sees validated text: tokens stream to the browser after the validator passes, so a rejected draft never flashes on screen. First token target stays about 1.5 s because summaries are short.</p>
+  <h3>Model card</h3>
+  <p><strong>Shipped</strong> <code>dc9f16d</code>: <code>MODEL_CARD.md</code> at the repo root. It covers the data and its coverage gaps (a missing EAGLE-I row reads as zero but can be a scraping gap), the FIFO/LIFO band, the gamma-Poisson prior per weather zone, the 2023 to 2024 backtest, each simulator assumption with its status (start full, storm factor 0.7, 20 kW spec against 11 kW in the help center, reserve and efficiency unknown), the sizing table with both bounds, the fixture sizing shortcut, and why grid value is an upper bound.</p>
   <details>
     <summary>Starter code: per-home durations and coverage (tested on a synthetic storm)</summary>
     <div>
@@ -821,6 +1030,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="small"><strong>Test:</strong> backup hours for a typical home by month and weather zone, plus the February 2021 and July 2024 storm weeks.</p>
       <p class="small"><strong>Win:</strong> one chart that tells Base what to say to members in August and in a freeze.</p>
       <p class="small"><strong>If it's weak:</strong> it can't be flat; the size of the gap is the finding.</p>
+      <p class="small"><strong>Shipped</strong> <code>d3ff3a0</code>: <code>python -m pipeline.insights</code> writes <code>data/processed/insights.json</code> with backup hours by month for all 8 weather zones and both heat types (2024 profiles), plus the Uri and Beryl weeks. With gas heat, one Core lasts 15 to 20 hours in August and 38 to 56 hours in the best month, a 2.5 to 3 times gap in every zone. With electric heat, January is often the shortest month. In the Uri week, one Core lasts 6 to 12 hours for an electric-heat home and 21 to 71 hours for a gas-heat home. In the Beryl week it lasts 17 to 26 hours.</p>
     </div>
     <div class="card">
       <h3>Official reliability leaves out the storms</h3>
@@ -833,6 +1043,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="small"><strong>Test:</strong> share of each county's customer outage hours since 2018 that came from its five worst events.</p>
       <p class="small"><strong>Win:</strong> a handful of nights is most of the darkness, so backup is sold on hours, not averages.</p>
       <p class="small"><strong>If it's weak:</strong> if outages are spread out, pivot the message to frequency.</p>
+      <p class="small"><strong>Shipped</strong> <code>d3ff3a0</code>: the five largest events hold a median 56% of a county's event customer-hours since 2018, and more than half in 168 of 254 counties. Harris is 88% (5 of 1,764 events), Travis 84% and Collin 61%. The per-county table is <code>data/processed/tail_share.parquet</code>.</p>
     </div>
     <div class="card">
       <h3>Where a Core pays twice</h3>
@@ -861,7 +1072,7 @@ def shrink_rates(events, years, floor_cv=0.25):
       <p class="role">Platform and reliability</p>
       <dl>
         <dt>Owns</dt><dd>Repo, compose, FastAPI service, adapters (Census, NWS, ERCOT), Redis cache, Postgres funnel events, CI, deploy, load test.</dd>
-        <dt>First two hours</dt><dd>Repo skeleton, compose up with health checks, <code>/v1/report</code> serving the fixture, CI green.</dd>
+        <dt>First two hours</dt><dd><span class="tag done">Done</span> Repo skeleton, compose up with health checks. Still open: <code>/v1/report</code> serving the fixture, CI green.</dd>
         <dt>Done means</dt><dd>Kill NWS or the LLM mid-demo and the report still renders with honest status chips; <code>make demo</code> works from a clean clone.</dd>
         <dt>What Base sees</dt><dd>The same instincts Base describes for its own fleet: stale data is flagged, not trusted.</dd>
       </dl>
@@ -879,12 +1090,12 @@ def shrink_rates(events, years, floor_cv=0.25):
       <ul class="tasklist" id="nolan-tasks">
         <li><input type="checkbox" checked disabled aria-label="done"><span>1. Events and FIFO/LIFO duration bands for Collin, Harris and Travis. <code>5588e51</code></span></li>
         <li><input type="checkbox" checked disabled aria-label="done"><span>2. Simulator on ERCOT load: monthly backup hours <code>63afbd4</code>, storm replay and coverage <code>947fb55</code>. Hand check with Alejandro still open.</span></li>
-        <li><input type="checkbox" checked disabled aria-label="done"><span>3. Statewide outlook and backtest: scoring <code>245f72c</code>, outlook and backtest.json <code>3d4a56c</code>. Prior is statewide until the weather-zone crosswalk lands.</span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>4. Sizing rule and features.duckdb for <code>/v1/report</code>.</span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>5. Narrator with validators, fallback and 24 evals.</span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>6. Grid value by load zone (P1).</span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>7. Insight charts with Alejandro.</span></li>
-        <li><input type="checkbox" disabled aria-label="open"><span>8. MODEL_CARD.md.</span></li>
+        <li><input type="checkbox" checked disabled aria-label="done"><span>3. Statewide outlook and backtest: scoring <code>245f72c</code>, outlook and backtest.json <code>3d4a56c</code>, weather-zone prior <code>213b752</code>.</span></li>
+        <li><input type="checkbox" checked disabled aria-label="done"><span>4. Sizing rule and features.duckdb <code>aba5c77</code>. Serving it from <code>/v1/report</code> is Victor's.</span></li>
+        <li><input type="checkbox" disabled aria-label="open"><span>5. Narrator with validators, fallback and 24 evals. Guardrails and harness <code>fd414b5</code>; model outputs and the README table wait on a provider and key.</span></li>
+        <li><input type="checkbox" checked disabled aria-label="done"><span>6. Grid value by load zone (P1). <code>8e69a00</code></span></li>
+        <li><input type="checkbox" disabled aria-label="open"><span>7. Insight charts with Alejandro. Tail share and month-by-zone data <code>d3ff3a0</code>; EIA-861 chart help still open.</span></li>
+        <li><input type="checkbox" checked disabled aria-label="done"><span>8. MODEL_CARD.md. <code>dc9f16d</code></span></li>
       </ul>
     </div>
     <div class="card">
@@ -904,14 +1115,54 @@ def shrink_rates(events, years, floor_cv=0.25):
 <section id="timeline">
   <h2><span class="sheet">T-02</span>Timeline</h2>
   <p>Friday 6:00 PM to Sunday 11:00 AM, Central time. Gates are hard: if a gate slips, cut scope rather than sleep.</p>
+  <h3>Critical path</h3>
+  <p class="small muted">Task dependencies by owner. The Texas outage extract gates the most work, so it starts first and the three-county subset unblocks everyone while it runs.</p>
+  <div class="mermaid-box">
+<pre class="mermaid">
+flowchart LR
+  K(["Fri 6 PM kickoff"])
+  CT["contract and fixtures<br/>all"]
+  DL["Texas EAGLE-I pull<br/>Alejandro"]
+  XW["crosswalks<br/>Alejandro"]
+  SUB["3-county subset<br/>Alejandro"]
+  EV["events and duration bands<br/>Nolan"]
+  SIM["simulator, monthly hours<br/>Nolan, shipped 63afbd4"]
+  OL["statewide outlook and backtest<br/>Nolan, scoring 245f72c"]
+  API["/v1/report on fixture<br/>Victor"]
+  ADP["Census and NWS adapters, cache<br/>Victor"]
+  UI["report page on fixtures<br/>Christian"]
+  FV0["features v0"]
+  G1{{"1:30 AM gate<br/>Sally's real outages"}}
+  G2{{"1 PM gate<br/>3 personas fully real"}}
+  NAR["narrator and evals<br/>Nolan"]
+  MAP["pays twice map<br/>Christian"]
+  WRK["ERCOT worker, k6, live URL<br/>Victor"]
+  G3{{"7 PM gate<br/>timed run-through"}}
+  G4{{"11 PM freeze<br/>safety video"}}
+  SHIP(["Sun 10:15 AM submit"])
+  K --> CT & DL
+  CT --> API & UI & SIM
+  DL --> SUB --> EV
+  DL --> XW --> FV0
+  EV --> FV0
+  API --> ADP --> G1
+  UI --> G1
+  FV0 --> G1
+  EV --> OL --> G2
+  SIM --> G2
+  G1 --> G2
+  G2 --> NAR & MAP & WRK
+  NAR & MAP & WRK --> G3 --> G4 --> SHIP
+</pre>
+  </div>
   <div class="table-wrap"><table class="wide">
     <thead><tr><th>When</th><th>Christian</th><th>Victor</th><th>Nolan</th><th>Alejandro</th><th>Gate</th></tr></thead>
     <tbody>
-      <tr><td><strong>Lock</strong><br>Fri 6 to 8 PM</td><td>Wireframes; Next.js scaffold with a mocks folder</td><td>Repo, compose (web, api, worker, redis, postgres), health checks, CI stub</td><td>Contract and fixtures with the team (30 min); start Texas pull from EAGLE-I</td><td>Kick off downloads; ERCOT API account; three questions to Base engineers; anchor addresses</td><td class="gatecell">8 PM: contract committed, repo builds, downloads running</td></tr>
+      <tr><td><strong>Lock</strong><br>Fri 6 to 8 PM</td><td>Wireframes; Next.js scaffold with a mocks folder</td><td class="is-done"><span class="tag done">Done</span> Repo, compose (web, api, worker, redis, postgres), health checks, CI stub</td><td>Contract and fixtures with the team (30 min); start Texas pull from EAGLE-I</td><td>Kick off downloads; ERCOT API account; three questions to Base engineers; anchor addresses</td><td class="gatecell">8 PM: contract committed, repo builds, downloads running</td></tr>
       <tr><td><strong>Skeleton</strong><br>Fri 8 PM to 2 AM</td><td>Landing, persona chips, report page on fixtures; outlook badge</td><td><code>/v1/report</code> on Census and NWS with caching and <code>sources[]</code>; generated TS client</td><td>Events and duration bounds for 3 counties shipped in <code>5588e51</code> (Feb 2021 and Harris Jul 2024 are in the top events). Monthly backup hours shipped in <code>63afbd4</code>.</td><td>Texas outage parquet; crosswalks (county to weather zone and load zone, ZIP to utility, utility to Base offer); features v0</td><td class="gatecell">1:30 AM: type Sally's address, see her county's real past outages</td></tr>
       <tr><td><strong>Sleep</strong><br>Sat 2 to 7:30 AM</td><td colspan="4">Alejandro starts the full Texas rebuild and price downloads before bed. Everyone sleeps.</td><td class="gatecell">Overnight jobs finish</td></tr>
-      <tr><td><strong>Real data</strong><br>Sat 7:30 AM to 1 PM</td><td>Replay chart, backup by month, sizing, link to Base; mobile layout</td><td>Features mounted read-only; degraded paths; funnel events; pick deploy target</td><td>Statewide outlook with empirical Bayes and backtest (<code>3d4a56c</code>); sizing rule; simulator tests in <code>63afbd4</code>, storm replay in <code>947fb55</code></td><td>NRI, EIA-861 and ACS into features; label marquee storms; hand-check every persona number</td><td class="gatecell">1 PM: three persona reports fully real, no mocks on the MVP path</td></tr>
-      <tr><td><strong>Depth</strong><br>Sat 1 to 7 PM</td><td>Pays twice map and ranked table; empty and error states</td><td>ERCOT snapshot worker; circuit breakers; k6 load test; live URL</td><td>Narrator, validators, eval harness; grid value by load zone; model card</td><td>Insight charts with Nolan; demo script v1; README skeleton; second Base check-in</td><td class="gatecell">7 PM: timed full demo run-through</td></tr>
+      <tr><td><strong>Real data</strong><br>Sat 7:30 AM to 1 PM</td><td>Replay chart, backup by month, sizing, link to Base; mobile layout</td><td>Features mounted read-only; degraded paths; funnel events; pick deploy target</td><td>Statewide outlook with empirical Bayes and backtest (<code>3d4a56c</code>, zones <code>213b752</code>); sizing rule and features.duckdb (<code>aba5c77</code>); simulator tests in <code>63afbd4</code>, storm replay in <code>947fb55</code></td><td>NRI, EIA-861 and ACS into features; label marquee storms; hand-check every persona number</td><td class="gatecell">1 PM: three persona reports fully real, no mocks on the MVP path</td></tr>
+      <tr><td><strong>Depth</strong><br>Sat 1 to 7 PM</td><td>Pays twice map and ranked table; empty and error states</td><td>ERCOT snapshot worker; circuit breakers; k6 load test; live URL</td><td>Narrator, validators, eval harness (<code>fd414b5</code>, model outputs open); grid value by load zone (<code>8e69a00</code>); model card (<code>dc9f16d</code>); insight data (<code>d3ff3a0</code>)</td><td>Insight charts with Nolan; demo script v1; README skeleton; second Base check-in</td><td class="gatecell">7 PM: timed full demo run-through</td></tr>
       <tr><td><strong>Freeze</strong><br>Sat 7 to 11 PM</td><td>Polish; clean screen recordings</td><td>Failure-injection clip; latency table; clean-clone <code>make demo</code></td><td>Edge cases; export eval and backtest charts</td><td>Record the full safety video by 10:30 PM; upload unlisted</td><td class="gatecell">11 PM: feature freeze, tag v0.9, safety video exists</td></tr>
       <tr><td><strong>Sleep</strong><br>Sat 11 PM to Sun 5:30 AM</td><td colspan="4">Everyone sleeps. Nothing new gets built after the freeze.</td><td class="gatecell">Rested voices</td></tr>
       <tr><td><strong>Ship</strong><br>Sun 5:30 to 11 AM</td><td colspan="4">6:00 rehearsal. 6:30 to 8:30 record. 8:30 to 9:45 edit and captions. 9:45 final README pass. 10:15 submit. Then rehearse the 3-minute live version for awards.</td><td class="gatecell">10:15 AM: submitted</td></tr>

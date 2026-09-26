@@ -1,0 +1,19 @@
+{
+  "headline": "Moderate outlook for long outages in Wichita County",
+  "summary": "Homes in Wichita County lose power for 12 hours or more about once every 9 years. That comes from 8 years of records since 2018. The largest outage here began on February 15, 2021. At its peak, 16% of homes in the county were dark. For a home with electric heat, one Core lasts about 13 hours in January and about 32 hours in November. We suggest two Cores. That would have covered 90% of past long outage hours. Base confirms sizing at install.",
+  "fact_ids": [
+    "county.name",
+    "home.label",
+    "outlook.label",
+    "threshold.hours",
+    "outlook.once_every_years",
+    "outlook.years_of_data",
+    "outlook.since",
+    "event.1.start",
+    "event.1.peak_out_pct",
+    "backup.short_month",
+    "backup.long_month",
+    "sizing.cores",
+    "sizing.share"
+  ]
+}

@@ -13,12 +13,15 @@ dependencies = [
     "openpyxl>=3.1",
     "pandas>=2.2",
     "pyarrow>=16",
+    "pyphen>=0.14",
     "pyyaml>=6",
     "scipy>=1.13",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+# Only the price download needs this; it pins pandas below 3.
+data = ["gridstatus>=0.30"]
 
 [tool.setuptools.packages.find]
 include = ["pipeline*"]

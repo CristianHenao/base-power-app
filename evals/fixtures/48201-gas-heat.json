@@ -1,0 +1,86 @@
+{
+  "county": {
+    "fips": "48201",
+    "name": "Harris",
+    "weather_zone": "COAST"
+  },
+  "home": {
+    "label": "gas heat",
+    "profile_type": "RESLOWR",
+    "annual_kwh_scale": 1.0
+  },
+  "outlook": {
+    "label": "High",
+    "long_outages_per_year": 0.3229,
+    "once_every_years": 3.1,
+    "years_of_data": 8.0,
+    "since": 2018
+  },
+  "events": [
+    {
+      "start": "2024-07-08T09:15:00-05:00",
+      "peak_out_pct": 90.86,
+      "duration_h": {
+        "p50": [
+          1.75,
+          1.75
+        ],
+        "p90": [
+          42.25,
+          29.15
+        ]
+      }
+    },
+    {
+      "start": "2024-05-18T01:45:00-05:00",
+      "peak_out_pct": 15.93,
+      "duration_h": {
+        "p50": [
+          7.75,
+          7.75
+        ],
+        "p90": [
+          63.26,
+          63.26
+        ]
+      }
+    }
+  ],
+  "backup": {
+    "hours_by_month": {
+      "cores_1": [
+        41.7,
+        40.7,
+        37.6,
+        26.2,
+        19.6,
+        16.6,
+        16.8,
+        15.4,
+        18.0,
+        20.7,
+        32.2,
+        40.9
+      ],
+      "cores_2": [
+        82.0,
+        79.7,
+        69.3,
+        52.8,
+        39.9,
+        30.6,
+        32.9,
+        24.9,
+        36.1,
+        42.4,
+        61.8,
+        79.1
+      ]
+    },
+    "profile_year": 2024
+  },
+  "sizing": {
+    "cores": 2,
+    "share": 0.6059
+  }
+}
