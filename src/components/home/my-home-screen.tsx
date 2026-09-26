@@ -10,6 +10,7 @@ import {
   MoreVertical,
   PlugZap,
   ScanLine,
+  ZapOff,
   Snowflake,
   Star,
   Trash2,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { DeviceDetailSheet } from "@/components/home/device-detail-sheet";
 import { DeviceScanSheet } from "@/components/home/device-scan-sheet";
+import { OutageSimulationSheet } from "@/components/home/outage-simulation-sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,6 +78,7 @@ export function MyHomeScreen({
   className,
 }: MyHomeScreenProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [outageOpen, setOutageOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<HomeDevice | null>(null);
   const [deleting, setDeleting] = useState(false);
   const empty = devices.length === 0;
@@ -107,10 +110,24 @@ export function MyHomeScreen({
     <>
       <div
         className={cn(
-          "flex h-full min-h-0 flex-col overflow-y-auto bg-background",
+          "relative flex h-full min-h-0 flex-col bg-background",
           className,
         )}
       >
+        <div className="pointer-events-none absolute inset-x-0 top-[calc(3.5rem+var(--sat))] z-20 flex justify-end px-4 pt-3 sm:px-6">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="pointer-events-auto bg-white shadow-sm"
+            onClick={() => setOutageOpen(true)}
+          >
+            <ZapOff className="size-3.5" aria-hidden />
+            Simulate outage
+          </Button>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <div className="relative w-full shrink-0 overflow-hidden bg-white">
           <Image
             src="/home/my-home-hero.png"
@@ -335,6 +352,7 @@ export function MyHomeScreen({
             </div>
           )}
         </div>
+        </div>
       </div>
 
       <DeviceScanSheet
@@ -351,6 +369,12 @@ export function MyHomeScreen({
           if (!next) setSelectedId(null);
         }}
         onDeviceUpdate={onUpdateDevice}
+      />
+
+      <OutageSimulationSheet
+        devices={devices}
+        open={outageOpen}
+        onOpenChange={setOutageOpen}
       />
 
       <AlertDialog
