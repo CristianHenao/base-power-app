@@ -187,6 +187,84 @@ export function estimateWattsForDevice(
   return 100;
 }
 
+/** Pull a watt number from label text such as "1,580 W" or "1.58 kW". */
+export function wattsFromText(value: string): number | null {
+  const kw = value.match(/(\d[\d,]*(?:\.\d+)?)\s*kW\b/i);
+  if (kw) {
+    const n = Number(kw[1].replace(/,/g, ""));
+    if (Number.isFinite(n) && n > 0) return Math.round(n * 1000);
+  }
+  const watts = value.match(/(\d[\d,]*(?:\.\d+)?)\s*W\b/i);
+  if (watts) {
+    const n = Number(watts[1].replace(/,/g, ""));
+    if (Number.isFinite(n) && n > 0) return Math.round(n);
+  }
+  return null;
+}
+
+function asWatts(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return Math.round(value);
+  }
+  if (typeof value !== "string") return null;
+  const fromLabel = wattsFromText(value);
+  if (fromLabel != null) return fromLabel;
+  const plain = Number(value.replace(/,/g, "").trim());
+  if (Number.isFinite(plain) && plain > 0) return Math.round(plain);
+  return null;
+}
+
+/**
+ * Rated watts written on a nameplate.
+ * Loads use input / draw. Generators use running output. Starting and surge watts are skipped.
+ */
+export function wattsFromSpecFields(
+  fields: DeviceSpecField[],
+  mode: "input" | "output",
+): number | null {
+  let best: { watts: number; score: number } | null = null;
+  for (const field of fields) {
+    const watts = wattsFromText(field.value);
+    if (watts == null) continue;
+    const text = `${field.key} ${field.label}`.toLowerCase();
+    if (/start|surge|peak|inrush/.test(text)) continue;
+    let score = 0;
+    if (mode === "input") {
+      if (/output|cooking/.test(text)) continue;
+      if (/input/.test(text)) score = 3;
+      else if (/rated|consumption|draw|power/.test(text)) score = 2;
+      else if (/watt/.test(text)) score = 1;
+    } else if (/output|running|continuous/.test(text)) {
+      score = 3;
+    } else if (/rated|power|watt/.test(text)) {
+      score = 2;
+    } else if (/input/.test(text)) {
+      score = 1;
+    }
+    if (score === 0) continue;
+    if (!best || score > best.score) best = { watts, score };
+  }
+  return best?.watts ?? null;
+}
+
+/**
+ * Watts to use for backup math.
+ * A nameplate scan wins over the category estimate.
+ */
+export function drawWatts(device: HomeDevice): { watts: number; exact: boolean } {
+  if (device.nameplateScannedAt) {
+    const fromPlate = wattsFromSpecFields(
+      device.specs,
+      device.kind === "generator" ? "output" : "input",
+    );
+    if (fromPlate != null) return { watts: fromPlate, exact: true };
+  }
+  if (device.wattsExact && device.watts > 0) {
+    return { watts: device.watts, exact: true };
+  }
+  return { watts: device.watts, exact: false };
+}
+
 function parseCategory(raw: unknown): HomeDeviceCategory {
   if (typeof raw !== "string") return "other";
   return (HOME_DEVICE_CATEGORIES as string[]).includes(raw)
@@ -277,7 +355,7 @@ export function applyNameplateToDevice(
   device: HomeDevice,
   plate: DeviceNameplateResult,
 ): HomeDevice {
-  const ratedFromPlate =
+  const ratedFromNumbers =
     device.kind === "generator"
       ? typeof plate.outputWatts === "number" && plate.outputWatts > 0
         ? Math.round(plate.outputWatts)
@@ -287,6 +365,12 @@ export function applyNameplateToDevice(
       : typeof plate.inputWatts === "number" && plate.inputWatts > 0
         ? Math.round(plate.inputWatts)
         : null;
+  const ratedFromPlate =
+    ratedFromNumbers ??
+    wattsFromSpecFields(
+      plate.fields,
+      device.kind === "generator" ? "output" : "input",
+    );
 
   const nextSpecs = mergeSpecFields(device.specs, plate.fields);
 
@@ -356,12 +440,13 @@ function mergeSpecFields(
 
 /** Rows for the detail sheet grid — core identity + nameplate specs. */
 export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
+  const draw = drawWatts(device);
   const powerLabel =
     device.kind === "generator"
-      ? device.wattsExact
+      ? draw.exact
         ? "Rated output"
         : "Rated output (estimate)"
-      : device.wattsExact
+      : draw.exact
         ? "Input power"
         : "Power (estimate)";
 
@@ -384,7 +469,7 @@ export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
     {
       key: "watts",
       label: powerLabel,
-      value: device.watts > 0 ? `${device.watts} W` : "—",
+      value: draw.watts > 0 ? `${draw.watts} W` : "—",
     },
   ];
 
@@ -417,9 +502,16 @@ export function deviceDetailRows(device: HomeDevice): DeviceSpecField[] {
   }
 
   const coreKeys = new Set(core.map((row) => row.key));
-  const extras = device.specs.filter(
-    (row) => row.value && row.value !== "—" && !coreKeys.has(row.key),
-  );
+  const extras = device.specs.filter((row) => {
+    if (!row.value || row.value === "—" || coreKeys.has(row.key)) return false;
+    if (draw.exact && row.key === "inputWatts" && device.kind !== "generator") {
+      return false;
+    }
+    if (draw.exact && row.key === "outputWatts" && device.kind === "generator") {
+      return false;
+    }
+    return true;
+  });
 
   return [...core, ...extras];
 }
@@ -559,8 +651,8 @@ export function parseDeviceNameplateResult(
   const inputVoltage = asNullableString(obj.inputVoltage);
   const inputFrequency = asNullableString(obj.inputFrequency);
   const inputPhase = asNullableString(obj.inputPhase);
-  const inputWatts = asNullableNumber(obj.inputWatts);
-  const outputWatts = asNullableNumber(obj.outputWatts);
+  const inputWatts = asWatts(obj.inputWatts);
+  const outputWatts = asWatts(obj.outputWatts);
   const microwaveFrequency = asNullableString(obj.microwaveFrequency);
   const manufactureDate = asNullableString(obj.manufactureDate);
   const origin = asNullableString(obj.origin);

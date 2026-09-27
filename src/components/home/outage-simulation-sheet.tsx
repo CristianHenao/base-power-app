@@ -8,9 +8,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { isPriorityDevice, type HomeDevice } from "@/lib/home/devices";
+import { drawWatts, isPriorityDevice, type HomeDevice } from "@/lib/home/devices";
 import {
-  OUTAGE_DURATION_HOURS,
+  OUTAGE_DURATIONS,
   bestOutageGenerator,
   combinedOutage,
   coversOutage,
@@ -44,7 +44,7 @@ type PowerGeometry = {
   links: PowerLink[];
 };
 
-function usePowerLinks(rowCount: number, open: boolean) {
+function usePowerLinks(layoutKey: string, open: boolean) {
   const rootRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
   const [geometry, setGeometry] = useState<PowerGeometry | null>(null);
@@ -104,13 +104,19 @@ function usePowerLinks(rowCount: number, open: boolean) {
       return () => media.removeEventListener("change", syncMotion);
     }
 
+    signatureRef.current = "";
     measure();
     const frame = requestAnimationFrame(measure);
     const timer = window.setTimeout(measure, 160);
     const root = rootRef.current;
     const source = sourceRef.current;
     const observer = new ResizeObserver(() => measure());
-    if (root) observer.observe(root);
+    if (root) {
+      observer.observe(root);
+      for (const item of root.querySelectorAll<HTMLElement>("[data-power-item]")) {
+        observer.observe(item);
+      }
+    }
     if (source) observer.observe(source);
 
     return () => {
@@ -119,7 +125,7 @@ function usePowerLinks(rowCount: number, open: boolean) {
       media.removeEventListener("change", syncMotion);
       observer.disconnect();
     };
-  }, [measure, open, rowCount]);
+  }, [measure, open, layoutKey]);
 
   return { rootRef, sourceRef, geometry, reducedMotion };
 }
@@ -131,33 +137,146 @@ function formatCombinedDraw(loadKw: number): string {
   return `${kw} kW`;
 }
 
-function RuntimeLine({
+function MiniSwitch({
+  checked,
   label,
-  hours,
-  durationHours,
+  onCheckedChange,
 }: {
+  checked: boolean;
   label: string;
-  hours: number | null;
-  durationHours: number;
+  onCheckedChange: (next: boolean) => void;
 }) {
-  const covers = coversOutage(hours, durationHours);
-  const unknown = hours == null;
   return (
-    <div className="flex items-baseline justify-between gap-3 text-[12px]">
-      <span className="text-muted-foreground">{label}</span>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onCheckedChange(!checked)}
+      className={cn(
+        "relative h-5 w-9 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        checked ? "bg-[#7CB342]" : "bg-black/15",
+      )}
+    >
       <span
+        aria-hidden
         className={cn(
-          "text-right font-medium",
-          unknown
-            ? "text-muted-foreground"
-            : covers
-              ? "text-foreground"
-              : "text-amber-900",
+          "absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform",
+          checked ? "left-4" : "left-0.5",
         )}
-      >
-        {formatRuntimeHours(hours)}
-        {unknown ? null : covers ? ` · covers ${durationHours} h` : ` · short of ${durationHours} h`}
-      </span>
+      />
+    </button>
+  );
+}
+
+function coreExtensionCopy(
+  hoursWithItOff: number | null,
+  hoursWithItOn: number | null,
+): string | null {
+  if (hoursWithItOn != null && !Number.isFinite(hoursWithItOn)) return null;
+  if (hoursWithItOff != null && !Number.isFinite(hoursWithItOff)) {
+    return "Core stays on.";
+  }
+  if (
+    hoursWithItOff == null ||
+    hoursWithItOn == null ||
+    !Number.isFinite(hoursWithItOff) ||
+    !Number.isFinite(hoursWithItOn)
+  ) {
+    return null;
+  }
+  const delta = Math.round(hoursWithItOff - hoursWithItOn);
+  if (delta < 1) return null;
+  return `Core lasts ${delta}\u00a0h longer.`;
+}
+
+function RuntimeCards({
+  durationHours,
+  coreHours,
+  generatorHours,
+  surface,
+  generatorOn = true,
+  onGeneratorChange,
+}: {
+  durationHours: number;
+  coreHours: number | null;
+  generatorHours?: number | null;
+  surface: "white" | "muted";
+  generatorOn?: boolean;
+  onGeneratorChange?: (next: boolean) => void;
+}) {
+  const cards = [
+    { key: "core", label: "Core", hours: coreHours, generator: false },
+    ...(generatorHours !== undefined || onGeneratorChange
+      ? [
+          {
+            key: "generator",
+            label: "Core + generator",
+            hours: generatorHours ?? null,
+            generator: true,
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <div
+      className={cn(
+        "grid gap-2 pt-1",
+        cards.length > 1 ? "grid-cols-2" : "grid-cols-1",
+      )}
+    >
+      {cards.map((card) => {
+        const generatorOff = card.generator && !generatorOn;
+        const unknown = card.hours == null;
+        const staysOn = coversOutage(card.hours, durationHours);
+        const lengthLabel =
+          OUTAGE_DURATIONS.find((item) => item.hours === durationHours)?.label ??
+          `${durationHours} h`;
+        const runtimeLabel = formatRuntimeHours(card.hours).replace(" ", "\u00a0");
+        const headline = generatorOff
+          ? "Off"
+          : unknown
+            ? "Unknown"
+            : staysOn
+              ? `On all ${lengthLabel.replace(" ", "\u00a0")}`
+              : `Off after ${runtimeLabel}`;
+        return (
+          <div
+            key={card.key}
+            className={cn(
+              "rounded-xl px-2.5 py-2",
+              surface === "white" ? "bg-white" : "bg-black/[0.04]",
+              generatorOff && "opacity-70",
+            )}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-[10px] font-medium text-muted-foreground">
+                {card.label}
+              </p>
+              {card.generator && onGeneratorChange ? (
+                <MiniSwitch
+                  checked={generatorOn}
+                  label="Generator charging the Core"
+                  onCheckedChange={onGeneratorChange}
+                />
+              ) : null}
+            </div>
+            <p
+              className={cn(
+                "mt-0.5 text-sm font-medium leading-snug",
+                generatorOff || unknown
+                  ? "text-muted-foreground"
+                  : staysOn
+                    ? "text-foreground"
+                    : "text-amber-900",
+              )}
+            >
+              {headline}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -168,10 +287,17 @@ export function OutageSimulationSheet({
   onOpenChange,
 }: OutageSimulationSheetProps) {
   const [durationHours, setDurationHours] = useState<OutageDurationHours>(12);
+  const [offIds, setOffIds] = useState<Set<string>>(() => new Set());
+  const [generatorOn, setGeneratorOn] = useState(true);
 
   const loads = useMemo(() => outageLoadDevices(devices), [devices]);
   const generator = useMemo(() => bestOutageGenerator(devices), [devices]);
   const chargeKw = generator ? generatorChargeKw(generator) : 0;
+  const activeChargeKw = generatorOn ? chargeKw : 0;
+  const activeLoads = useMemo(
+    () => loads.filter((device) => !offIds.has(device.id)),
+    [loads, offIds],
+  );
 
   const rows = useMemo(() => {
     return [...loads]
@@ -180,17 +306,41 @@ export function OutageSimulationSheet({
         if (priority !== 0) return priority;
         return b.watts - a.watts;
       })
-      .map((device) => deviceOutageRow(device, chargeKw));
-  }, [loads, chargeKw]);
+      .map((device) => deviceOutageRow(device, activeChargeKw));
+  }, [loads, activeChargeKw]);
+  const powerLayoutKey = `${rows.length}|${generatorOn ? 1 : 0}|${[...offIds].sort().join(",")}`;
   const { rootRef, sourceRef, geometry, reducedMotion } = usePowerLinks(
-    rows.length,
+    powerLayoutKey,
     open,
   );
 
   const combined = useMemo(
-    () => combinedOutage(loads, chargeKw),
-    [loads, chargeKw],
+    () => combinedOutage(activeLoads, activeChargeKw),
+    [activeLoads, activeChargeKw],
   );
+  const idle =
+    combined.loadsCounted === 0 &&
+    loads.some((device) => drawWatts(device).watts > 0);
+  const coreHours = idle ? Number.POSITIVE_INFINITY : combined.hoursOnCore;
+  const extensionById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const device of loads) {
+      if (!offIds.has(device.id)) continue;
+      const withItOn = combinedOutage([...activeLoads, device], 0).hoursOnCore;
+      const copy = coreExtensionCopy(coreHours, withItOn);
+      if (copy) map.set(device.id, copy);
+    }
+    return map;
+  }, [loads, offIds, activeLoads, coreHours]);
+
+  const toggleDevice = (id: string, on: boolean) => {
+    setOffIds((current) => {
+      const next = new Set(current);
+      if (on) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -208,7 +358,7 @@ export function OutageSimulationSheet({
               Outage duration
             </p>
             <div className="flex flex-wrap gap-2">
-              {OUTAGE_DURATION_HOURS.map((hours) => {
+              {OUTAGE_DURATIONS.map(({ hours, label }) => {
                 const selected = hours === durationHours;
                 return (
                   <button
@@ -223,7 +373,7 @@ export function OutageSimulationSheet({
                     )}
                     aria-pressed={selected}
                   >
-                    {hours} h
+                    {label}
                   </button>
                 );
               })}
@@ -249,27 +399,29 @@ export function OutageSimulationSheet({
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <p className="text-sm font-medium text-foreground">Total draw</p>
                     <p className="text-[12px] leading-snug text-muted-foreground">
-                      {combined.loadsCounted === 0
-                        ? "No devices have a known draw yet."
-                        : combined.overLimit
-                          ? `Pulling about ${formatCombinedDraw(combined.loadKw)} at once, more than one Core can carry (20 kW). Estimate.`
-                          : `Pulling about ${formatCombinedDraw(combined.loadKw)} at once. Estimate.`}
+                      {idle
+                        ? "Nothing is drawing power."
+                        : combined.loadsCounted === 0
+                          ? "No devices have a known draw yet."
+                          : combined.overLimit
+                            ? `Pulling about ${formatCombinedDraw(combined.loadKw)} at once, more than one Core can carry (20 kW). Estimate.`
+                            : `Pulling about ${formatCombinedDraw(combined.loadKw)} at once. Estimate.`}
                     </p>
-                    {combined.loadsCounted > 0 && !combined.overLimit ? (
-                      <div className="space-y-1 pt-1">
-                        <RuntimeLine
-                          label="Core"
-                          hours={combined.hoursOnCore}
-                          durationHours={durationHours}
-                        />
-                        {chargeKw > 0 ? (
-                          <RuntimeLine
-                            label="Core + generator"
-                            hours={combined.hoursWithGenerator}
-                            durationHours={durationHours}
-                          />
-                        ) : null}
-                      </div>
+                    {(idle || combined.loadsCounted > 0) && !combined.overLimit ? (
+                      <RuntimeCards
+                        durationHours={durationHours}
+                        coreHours={coreHours}
+                        generatorHours={
+                          chargeKw > 0
+                            ? generatorOn
+                              ? combined.hoursWithGenerator
+                              : null
+                            : undefined
+                        }
+                        generatorOn={generatorOn}
+                        onGeneratorChange={chargeKw > 0 ? setGeneratorOn : undefined}
+                        surface="white"
+                      />
                     ) : null}
                   </div>
                 </div>
@@ -294,33 +446,20 @@ export function OutageSimulationSheet({
                       key={link.id}
                       d={link.branch}
                       fill="none"
-                      stroke="rgba(0,0,0,0.14)"
+                      stroke={
+                        offIds.has(link.id)
+                          ? "rgba(0,0,0,0.08)"
+                          : "rgba(0,0,0,0.14)"
+                      }
                       strokeWidth="1.5"
                       strokeLinecap="round"
                     />
                   ))}
                   {reducedMotion ? null : (
                     <>
-                      <path
-                        d={geometry.trunk}
-                        fill="none"
-                        stroke="#7CB342"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="5 11"
-                      >
-                        <animate
-                          attributeName="stroke-dashoffset"
-                          from="0"
-                          to="-32"
-                          dur="0.9s"
-                          repeatCount="indefinite"
-                        />
-                      </path>
-                      {geometry.links.map((link, index) => (
+                      {geometry.links.some((link) => !offIds.has(link.id)) ? (
                         <path
-                          key={`${link.id}-flow`}
-                          d={link.branch}
+                          d={geometry.trunk}
                           fill="none"
                           stroke="#7CB342"
                           strokeWidth="2"
@@ -332,79 +471,127 @@ export function OutageSimulationSheet({
                             from="0"
                             to="-32"
                             dur="0.9s"
-                            begin={`${index * 0.15}s`}
                             repeatCount="indefinite"
                           />
                         </path>
-                      ))}
+                      ) : null}
+                      {geometry.links.map((link, index) =>
+                        offIds.has(link.id) ? null : (
+                          <path
+                            key={`${link.id}-flow`}
+                            d={link.branch}
+                            fill="none"
+                            stroke="#7CB342"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeDasharray="5 11"
+                          >
+                            <animate
+                              attributeName="stroke-dashoffset"
+                              from="0"
+                              to="-32"
+                              dur="0.9s"
+                              begin={`${index * 0.15}s`}
+                              repeatCount="indefinite"
+                            />
+                          </path>
+                        ),
+                      )}
                     </>
                   )}
                   {reducedMotion
                     ? null
-                    : geometry.links.map((link, index) => (
-                        <circle key={link.id} r="3.25" fill="#7CB342">
-                          <animateMotion
-                            dur="1.7s"
-                            begin={`${index * 0.35}s`}
-                            repeatCount="indefinite"
-                            path={link.feed}
-                            calcMode="linear"
-                          />
-                        </circle>
-                      ))}
+                    : geometry.links.map((link, index) =>
+                        offIds.has(link.id) ? null : (
+                          <circle key={link.id} r="3.25" fill="#7CB342">
+                            <animateMotion
+                              dur="1.7s"
+                              begin={`${index * 0.35}s`}
+                              repeatCount="indefinite"
+                              path={link.feed}
+                              calcMode="linear"
+                            />
+                          </circle>
+                        ),
+                      )}
                   {geometry.links.map((link) => (
                     <circle
                       key={`${link.id}-end`}
                       cx={link.x - 2}
                       cy={link.y}
                       r="3"
-                      fill="#7CB342"
+                      fill={offIds.has(link.id) ? "rgba(0,0,0,0.2)" : "#7CB342"}
                     />
                   ))}
                 </svg>
               ) : null}
 
               <ul className="relative z-10 mt-6 space-y-3 pl-8">
-                {rows.map((row) => (
+                {rows.map((row) => {
+                  const on = !offIds.has(row.id);
+                  return (
                   <li
                     key={row.id}
                     data-power-item={row.id}
                     className="rounded-2xl border border-black/8 bg-white px-3.5 py-3"
                   >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 truncate text-sm font-medium text-foreground">
-                        {row.name}
-                      </p>
-                      <p className="shrink-0 text-[11px] text-muted-foreground">
-                        {row.watts > 0
-                          ? `${row.watts} W${row.wattsExact ? "" : " est."}`
-                          : "Draw unknown"}
-                      </p>
-                    </div>
-                    <div className="mt-2 space-y-1">
-                      {row.overLimit ? (
-                        <p className="text-[12px] text-amber-900">
-                          More than one Core can carry at once.
+                    <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "truncate text-sm font-medium",
+                            on ? "text-foreground" : "text-muted-foreground",
+                          )}
+                        >
+                          {row.name}
                         </p>
-                      ) : (
-                        <>
-                          <RuntimeLine
-                            label="Core"
-                            hours={row.hoursOnCore}
+                        <p className="text-[11px] text-muted-foreground">
+                          {row.watts > 0
+                            ? `${row.watts} W${row.wattsExact ? "" : " est."}`
+                            : "Draw unknown"}
+                        </p>
+                      </div>
+                      <MiniSwitch
+                        checked={on}
+                        label={`${row.name} drawing power`}
+                        onCheckedChange={(next) => toggleDevice(row.id, next)}
+                      />
+                    </div>
+                    <div className="mt-2">
+                      {on ? (
+                        row.overLimit ? (
+                          <p className="text-[12px] text-amber-900">
+                            More than one Core can carry at once.
+                          </p>
+                        ) : (
+                          <RuntimeCards
                             durationHours={durationHours}
+                            coreHours={row.hoursOnCore}
+                            generatorHours={
+                              activeChargeKw > 0
+                                ? row.hoursWithGenerator
+                                : undefined
+                            }
+                            surface="muted"
                           />
-                          {chargeKw > 0 ? (
-                            <RuntimeLine
-                              label="Core + generator"
-                              hours={row.hoursWithGenerator}
-                              durationHours={durationHours}
-                            />
-                          ) : null}
-                        </>
+                        )
+                      ) : (
+                        <p className="text-[12px] leading-snug text-muted-foreground">
+                          Off.
+                          {extensionById.get(row.id) ? (
+                            <span className="text-foreground">
+                              {" "}
+                              {extensionById.get(row.id)}
+                            </span>
+                          ) : (
+                            " Left out of the total draw."
+                          )}
+                        </p>
                       )}
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
             </>
