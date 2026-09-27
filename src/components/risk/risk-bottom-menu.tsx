@@ -29,11 +29,13 @@ export const RISK_ANALYSIS_ITEMS = [
     id: "grid",
     label: "Grid analysis",
     icon: Zap,
+    comingSoon: true,
   },
   {
     id: "usage",
     label: "Usage levels",
     icon: Activity,
+    comingSoon: true,
   },
 ] as const;
 
@@ -84,7 +86,8 @@ export function RiskBottomMenu({
             <ul className="divide-y divide-black/8">
               {RISK_ANALYSIS_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const active = item.id === activeAnalysisId;
+                const comingSoon = "comingSoon" in item && item.comingSoon;
+                const active = !comingSoon && item.id === activeAnalysisId;
                 const showWeatherBadges =
                   item.id === "weather" && weatherRiskBadges.length > 0;
                 return (
@@ -92,12 +95,20 @@ export function RiskBottomMenu({
                     <button
                       type="button"
                       aria-current={active ? "true" : undefined}
-                      onClick={() => onAnalysisChange(item.id)}
+                      aria-disabled={comingSoon || undefined}
+                      disabled={comingSoon}
+                      onClick={() => {
+                        if (comingSoon) return;
+                        onAnalysisChange(item.id);
+                      }}
                       className={cn(
                         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+                        comingSoon && "cursor-default disabled:opacity-100",
                         active
                           ? "bg-black/5 text-foreground"
-                          : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
+                          : comingSoon
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground hover:bg-black/[0.03] hover:text-foreground",
                       )}
                     >
                       <span
@@ -114,6 +125,11 @@ export function RiskBottomMenu({
                         <span className="block text-sm font-medium text-foreground">
                           {item.label}
                         </span>
+                        {comingSoon ? (
+                          <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+                            Coming soon
+                          </span>
+                        ) : null}
                         {showWeatherBadges ? (
                           <span className="mt-1.5 flex flex-wrap gap-1">
                             {weatherRiskBadges.map((badge) => (
