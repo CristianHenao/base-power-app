@@ -32,7 +32,6 @@ import {
 import { describeView, overlays, scoreLayers } from "@/lib/utility-map/describe-view";
 import { HAZARDS, isHazard, type HazardId, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { mergeFetched, toFetch } from "@/lib/utility-map/fetch-cache";
-import { dataModeLabel } from "@/lib/utility-map/format";
 import { loadUtilityMap, type LoadedMap } from "@/lib/utility-map/load";
 import { buildScoreModel } from "@/lib/utility-map/scoring";
 import { clickTarget, floodCountiesInView, tooltipPosition } from "@/lib/utility-map/selection";
@@ -608,19 +607,10 @@ export function UtilityMapExperience() {
 
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3 pt-[calc(4.5rem+env(safe-area-inset-top))] lg:flex-row lg:items-start lg:justify-between lg:p-4 lg:pt-[calc(5rem+env(safe-area-inset-top))]">
-        <div className="pointer-events-auto flex max-h-[34dvh] w-full shrink-0 flex-col gap-3 overflow-y-auto lg:max-h-full lg:w-80">
+        <div className="pointer-events-auto flex max-h-[34dvh] w-full shrink-0 flex-col gap-3 overflow-y-auto lg:h-full lg:max-h-full lg:w-[400px] lg:overflow-hidden">
           <p className="order-3 rounded-xl bg-white px-3 py-2 text-[12px] leading-[18px] text-muted-foreground lg:hidden">
             The utility map is built for desktop screens. On a narrow screen, scroll this panel and the details below.
           </p>
-          <p className="bp-stamp order-2 inline-flex self-start rounded-full border border-[var(--bp-grey-100)] bg-white px-3 py-1.5 lg:order-none">
-            {data ? dataModeLabel(data.data_mode) : "Loading data"}
-            {data?.release_id ? ` · ${data.as_of}` : ""}
-          </p>
-          {data && described ? (
-            <div className="order-2 inline-flex self-start rounded-full bg-white px-3 py-1.5 shadow-[var(--bp-shadow-media)] lg:order-none">
-              <MethodsSheet data={data} described={described} />
-            </div>
-          ) : null}
           {keyProps ? (
             <>
               <div className="order-1 lg:hidden">
@@ -633,7 +623,8 @@ export function UtilityMapExperience() {
           ) : null}
           {data && ctx ? (
             <ControlsPanel
-              className="order-first shrink-0 lg:order-none"
+              className="order-first shrink-0 lg:order-none lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+              footer={data && described ? <MethodsSheet data={data} described={described} /> : null}
               view={view}
               data={data}
               availableHazards={availableHazards}
@@ -657,7 +648,7 @@ export function UtilityMapExperience() {
           )}
         </div>
 
-        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full flex-col gap-3 lg:mt-0 lg:max-h-full lg:w-[400px]">
+        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full flex-col gap-3 lg:mt-0 lg:h-full lg:max-h-full lg:w-[400px]">
           {loadError ? (
             <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">{loadError}</p>
           ) : data && model && described ? (

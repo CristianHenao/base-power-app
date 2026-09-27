@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type KeyboardEvent } from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { HazardPicker } from "@/components/utility-map/hazard-chip";
 import { StormList } from "@/components/utility-map/storm-spotlight";
@@ -32,12 +32,14 @@ type ControlsPanelProps = ControlsActions & {
   showWarnings: boolean;
   warningsStatus: string;
   className?: string;
+  /** Pinned to the bottom of the panel, e.g. Methods and sources. */
+  footer?: ReactNode;
 };
 
 export function ControlsPanel(props: ControlsPanelProps) {
   const { view, className } = props;
   return (
-    <section aria-label="Map controls" className={cn("bp-panel space-y-5 p-5", className)}>
+    <section aria-label="Map controls" className={cn("bp-panel flex flex-col space-y-5 p-5", className)}>
       <div className="space-y-3">
         <h1 className="text-[20px] leading-[27px]">What do you want to understand?</h1>
         <QuestionPicker question={view.question} onChange={props.onQuestion} />
@@ -65,6 +67,7 @@ export function ControlsPanel(props: ControlsPanelProps) {
           </span>
         </span>
       </label>
+      {props.footer ? <div className="mt-auto border-t pt-4">{props.footer}</div> : null}
     </section>
   );
 }
