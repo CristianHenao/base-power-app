@@ -289,6 +289,18 @@ export function OutageEventCards({
                         </div>
                       </>
                     )
+                  ) : Number.isFinite(event.durationHours) &&
+                    event.durationHours > 0 ? (
+                    <div>
+                      <p className="text-sm font-semibold">{event.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Homes in your county were out for about{" "}
+                        <strong className="font-semibold text-foreground">
+                          {formatDurationHours(event.durationHours)}
+                        </strong>
+                        .
+                      </p>
+                    </div>
                   ) : (
                     <div>
                       <p className="text-sm font-semibold">{event.title}</p>
