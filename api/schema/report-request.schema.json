@@ -1,6 +1,6 @@
 {
   "additionalProperties": false,
-  "description": "An address, or a county FIPS when the caller already knows it. The address is never stored.",
+  "description": "An address, a Texas ZIP, or a county FIPS. The address is never stored.",
   "properties": {
     "address": {
       "anyOf": [

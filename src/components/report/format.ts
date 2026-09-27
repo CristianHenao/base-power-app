@@ -41,3 +41,14 @@ export function centralTime(iso: string): string {
     timeZoneName: "short",
   });
 }
+
+export function centralRange(start: string, end: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Chicago",
+  }).formatRange(new Date(start), new Date(end));
+}

@@ -67,6 +67,8 @@ export interface Event {
   label: string;
   storm: string | null;
   start: string;
+  /** Exclusive: the first 15-minute step after the county fell back under the outage threshold. */
+  end: string;
   peak_out: number;
   /** Null where the county's customer count is floored at its peak outage. */
   peak_out_pct: number | null;
