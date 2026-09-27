@@ -59,8 +59,6 @@ type DetailPanelProps = {
   onOpenCounty: (fips: string) => void;
   onOpenFullTable: () => void;
   onClosePicker: () => void;
-  /** Pinned under the scrolling content, e.g. the chat. */
-  footer?: ReactNode;
   className?: string;
 };
 
@@ -87,7 +85,6 @@ export function DetailPanel(props: DetailPanelProps) {
           <ResultList {...props} />
         )}
       </div>
-      {props.footer}
     </section>
   );
 }

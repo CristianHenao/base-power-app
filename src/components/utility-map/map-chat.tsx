@@ -1,17 +1,20 @@
 "use client";
 
-import { ArrowUp, ChevronDown, ChevronUp, MessageCircle, RotateCcw } from "lucide-react";
+import { ArrowUp, MessageCircle, RotateCcw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MAX_QUESTION, MAX_TURNS, type ChatTurn } from "@/lib/utility-map/chat-answer";
 import type { ChatPart, PlaceKind } from "@/lib/utility-map/chat-guard";
-import { cn } from "@/lib/utils";
+
+/** Plain-text answers: "- " list items become bullets, and markdown bold markers are dropped. */
+const tidy = (text: string) => text.replace(/(^|\n)\s*[-*] /g, "$1• ").replace(/\*\*/g, "");
 
 export type ChatEntry =
   | { role: "user"; text: string }
   | { role: "assistant"; text: string; parts: ChatPart[]; note: string | null };
 
 /**
- * "Ask about this map", at the bottom of the right panel. The conversation lives in the parent,
+ * "Ask about this map": a floating button over the map that opens its own chat window, beside
+ * the right panel so it never covers the score card. The conversation lives in the parent,
  * so it survives picking another place. Answers come from /api/utility-map/chat, which checks
  * every number against the release; places in an answer open their score card.
  */
@@ -93,41 +96,63 @@ export function MapChat({
     }
   }
 
+  const empty = entries.length === 0;
   return (
-    <div className="border-t bg-white">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => onOpenChange(!open)}
-        className="flex w-full items-center gap-2 px-5 py-3 text-left hover:bg-[var(--bp-grey-5)]"
-      >
-        <MessageCircle className="size-4 shrink-0" aria-hidden />
-        <span className="flex-1">
-          <span className="block text-[14px] leading-[21px] font-semibold">Ask about this map</span>
-          {!open ? (
-            <span className="block text-[12px] leading-[18px] text-muted-foreground">
-              Questions about the scores, hazards, storms, grid or data
-            </span>
-          ) : null}
-        </span>
-        {open ? <ChevronDown className="size-4" aria-hidden /> : <ChevronUp className="size-4" aria-hidden />}
-      </button>
-
+    <div className="pointer-events-none absolute right-4 bottom-4 z-30 flex flex-col items-end gap-3 lg:right-[432px]">
       {open ? (
-        <div className="flex max-h-[min(420px,50dvh)] flex-col gap-3 px-5 pb-4">
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto" aria-live="polite">
-            {entries.length === 0 ? (
-              <div className="space-y-2">
-                <p className="text-[12px] leading-[18px] text-muted-foreground">
-                  Answers use only this map&apos;s data. A number that can&apos;t be found in the data for the place it describes is removed before you see it.
+        <section
+          aria-label="Ask about this map"
+          className="pointer-events-auto flex h-[min(620px,calc(100dvh-6.5rem))] w-[min(420px,calc(100vw-2rem))] origin-bottom-right animate-in fade-in zoom-in-95 flex-col overflow-hidden rounded-[24px] bg-white shadow-[var(--bp-shadow-floating)] duration-200"
+        >
+          <header className="flex items-start gap-3 bg-[var(--bp-green-90)] px-5 py-4 text-white">
+            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--bp-green-20)] text-[var(--bp-green-100)]">
+              <Sparkles className="size-4" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[17px] leading-[24px] font-semibold">Ask about this map</h2>
+              <p className="text-[12px] leading-[17px] text-white/75">
+                Answers come only from this map&apos;s data. Numbers that can&apos;t be found for the place they describe are removed.
+              </p>
+            </div>
+            {!empty ? (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  onEntries(() => []);
+                  setError(null);
+                }}
+                className="rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                aria-label="Start over"
+                title="Start over"
+              >
+                <RotateCcw className="size-4" aria-hidden />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Close chat"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </header>
+
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[var(--bp-grey-5)] px-4 py-4" aria-live="polite">
+            {empty ? (
+              <div className="space-y-3">
+                <p className="text-[14px] leading-[21px]">
+                  Ask about the Grid Risk Index, weather hazards, past storms, the size of a grid, or what a Base fleet could add.
+                  Try one of these:
                 </p>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   {suggestions.map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => ask(s)}
-                      className="rounded-xl border px-3 py-2 text-left text-[13px] leading-[19px] hover:bg-[var(--bp-grey-5)]"
+                      className="rounded-2xl border border-[var(--bp-grey-20)] bg-white px-4 py-2.5 text-left text-[14px] leading-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-colors hover:border-[var(--bp-green-60)] hover:bg-[var(--bp-green-5)]"
                     >
                       {s}
                     </button>
@@ -137,61 +162,64 @@ export function MapChat({
             ) : (
               entries.map((e, i) =>
                 e.role === "user" ? (
-                  <p key={i} className="ml-8 rounded-2xl bg-[var(--bp-grey-5)] px-3 py-2 text-[14px] leading-[21px]">
-                    {e.text}
-                  </p>
+                  <div key={i} className="flex justify-end">
+                    <p className="max-w-[85%] rounded-[18px] rounded-br-md bg-[var(--bp-green-90)] px-4 py-2.5 text-[14px] leading-[21px] text-white">
+                      {e.text}
+                    </p>
+                  </div>
                 ) : (
-                  <div key={i} className="space-y-1">
-                    {e.text ? (
+                  <div key={i} className="flex gap-2">
+                    <span className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--bp-green-20)] text-[var(--bp-green-100)]">
+                      <Sparkles className="size-3.5" aria-hidden />
+                    </span>
+                    <div className="max-w-[88%] space-y-1.5 rounded-[18px] rounded-tl-md bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
                       <p className="text-[14px] leading-[21px] whitespace-pre-line">
                         {e.parts.map((p, j) =>
                           p.type === "text" ? (
-                            <span key={j}>{p.text}</span>
+                            <span key={j}>{tidy(p.text)}</span>
                           ) : (
                             <button
                               key={j}
                               type="button"
                               onClick={() => onPlace(p.kind, p.id)}
-                              className="font-semibold underline decoration-[var(--bp-green-20)] decoration-2 underline-offset-2 hover:decoration-current"
+                              className="font-semibold text-[var(--bp-green-90)] underline decoration-[var(--bp-green-20)] decoration-2 underline-offset-2 hover:decoration-current"
                             >
                               {p.label}
                             </button>
                           ),
                         )}
                       </p>
-                    ) : null}
-                    {e.note ? <p className="text-[12px] leading-[18px] text-muted-foreground">{e.note}</p> : null}
+                      {e.note ? <p className="text-[12px] leading-[18px] text-muted-foreground">{e.note}</p> : null}
+                    </div>
                   </div>
                 ),
               )
             )}
-            {pending ? <p className="text-[13px] text-muted-foreground">Checking the map&apos;s data…</p> : null}
-            {error ? <p className="text-[13px] leading-[19px] text-destructive">{error}</p> : null}
+            {pending ? (
+              <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                <span className="flex gap-1" aria-hidden>
+                  <span className="size-1.5 animate-bounce rounded-full bg-[var(--bp-green-60)] [animation-delay:-0.3s]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-[var(--bp-green-60)] [animation-delay:-0.15s]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-[var(--bp-green-60)]" />
+                </span>
+                Checking the map&apos;s data…
+              </div>
+            ) : null}
+            {error ? (
+              <p className="rounded-2xl border border-[var(--bp-red-80)]/30 bg-white px-4 py-2.5 text-[13px] leading-[19px] text-destructive">
+                {error}
+              </p>
+            ) : null}
             <div ref={endRef} />
           </div>
 
           <form
-            className="flex items-end gap-2"
+            className="flex items-end gap-2 border-t bg-white px-3 py-3"
             onSubmit={(event) => {
               event.preventDefault();
               void ask(draft);
             }}
           >
-            {entries.length > 0 ? (
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => {
-                  onEntries(() => []);
-                  setError(null);
-                }}
-                className="rounded-full p-2 text-muted-foreground hover:bg-[var(--bp-grey-5)] disabled:opacity-40"
-                aria-label="Start over"
-                title="Start over"
-              >
-                <RotateCcw className="size-4" aria-hidden />
-              </button>
-            ) : null}
             <label className="flex-1">
               <span className="sr-only">Your question</span>
               <textarea
@@ -204,23 +232,38 @@ export function MapChat({
                   }
                 }}
                 rows={1}
-                placeholder="Ask a question"
-                className="max-h-24 min-h-[40px] w-full resize-none rounded-2xl border px-3 py-2 text-[14px] leading-[21px] outline-none focus:border-[var(--bp-grey-100)]"
+                autoFocus
+                placeholder="Ask about a utility, county, storm…"
+                className="max-h-28 min-h-[44px] w-full resize-none rounded-[22px] border border-[var(--bp-grey-20)] bg-[var(--bp-grey-5)] px-4 py-2.5 text-[14px] leading-[21px] outline-none focus:border-[var(--bp-green-60)] focus:bg-white"
               />
             </label>
             <button
               type="submit"
               disabled={pending || draft.trim() === ""}
               aria-label="Send"
-              className={cn(
-                "rounded-full bg-[var(--bp-grey-100)] p-2.5 text-white",
-                (pending || draft.trim() === "") && "opacity-40",
-              )}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--bp-green-90)] text-white transition-opacity disabled:opacity-35"
             >
-              <ArrowUp className="size-4" aria-hidden />
+              <ArrowUp className="size-5" aria-hidden />
             </button>
           </form>
-        </div>
+        </section>
+      ) : null}
+
+      {!open ? (
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => onOpenChange(true)}
+          className="pointer-events-auto flex items-center gap-2.5 rounded-full bg-[var(--bp-green-90)] py-3 pr-5 pl-3 text-[15px] font-semibold text-white shadow-[var(--bp-shadow-floating)] transition-transform hover:scale-[1.03]"
+        >
+          <span className="flex size-8 items-center justify-center rounded-full bg-[var(--bp-green-20)] text-[var(--bp-green-100)]">
+            <MessageCircle className="size-4" aria-hidden />
+          </span>
+          Ask about this map
+          {entries.length > 0 ? (
+            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-medium">{Math.ceil(entries.length / 2)}</span>
+          ) : null}
+        </button>
       ) : null}
     </div>
   );

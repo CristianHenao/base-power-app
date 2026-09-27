@@ -681,17 +681,6 @@ export function UtilityMapExperience() {
               onSelectCounty={selectFips}
               onOpenCounty={openCounty}
               onOpenFullTable={() => (view.question === "risk" ? setRiskTableOpen(true) : setViewTableOpen(true))}
-              footer={
-                <MapChat
-                  entries={chatEntries}
-                  onEntries={setChatEntries}
-                  open={chatOpen}
-                  onOpenChange={setChatOpen}
-                  viewQuery={viewToUrl(view).toString()}
-                  suggestions={chatSuggestions(data, view)}
-                  onPlace={(kind, id) => (kind === "county" ? openCounty(id) : selectUtility(id))}
-                />
-              }
             />
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
@@ -709,6 +698,17 @@ export function UtilityMapExperience() {
             if (kind === "county") openCounty(row.id);
             else selectUtility(row.id);
           }}
+        />
+      ) : null}
+      {data && described ? (
+        <MapChat
+          entries={chatEntries}
+          onEntries={setChatEntries}
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          viewQuery={viewToUrl(view).toString()}
+          suggestions={chatSuggestions(data, view)}
+          onPlace={(kind, id) => (kind === "county" ? openCounty(id) : selectUtility(id))}
         />
       ) : null}
       {described ? (
