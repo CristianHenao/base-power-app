@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { drawWatts, isPriorityDevice, type HomeDevice } from "@/lib/home/devices";
+import { breakerForDevice } from "@/lib/home/breaker-for-device";
 import {
   OUTAGE_DURATIONS,
   bestOutageGenerator,
@@ -308,6 +309,14 @@ export function OutageSimulationSheet({
       })
       .map((device) => deviceOutageRow(device, activeChargeKw));
   }, [loads, activeChargeKw]);
+  const breakerById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const device of loads) {
+      const breaker = breakerForDevice(device, devices);
+      if (breaker) map.set(device.id, breaker.position);
+    }
+    return map;
+  }, [loads, devices]);
   const powerLayoutKey = `${rows.length}|${generatorOn ? 1 : 0}|${[...offIds].sort().join(",")}`;
   const { rootRef, sourceRef, geometry, reducedMotion } = usePowerLinks(
     powerLayoutKey,
@@ -549,6 +558,9 @@ export function OutageSimulationSheet({
                           {row.watts > 0
                             ? `${row.watts} W${row.wattsExact ? "" : " est."}`
                             : "Draw unknown"}
+                          {breakerById.get(row.id)
+                            ? ` · On breaker ${breakerById.get(row.id)}`
+                            : ""}
                         </p>
                       </div>
                       <MiniSwitch
