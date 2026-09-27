@@ -49,6 +49,7 @@ import {
   type ViewContext,
   type ViewState,
 } from "@/lib/utility-map/view";
+import { GLOBE_START, introDuration } from "@/lib/utility-map/camera";
 
 /** Query keys owned by the view; anything else in the URL (e.g. ?data=mock) is left alone. */
 const VIEW_KEYS = ["q", "mode", "scenario", "factors", "hazards", "sub", "storm", "demand", "plants", "share", "utility", "county"];
@@ -57,7 +58,6 @@ const TEXAS_BOUNDS: [[number, number], [number, number]] = [
   [-106.65, 25.84],
   [-93.51, 36.5],
 ];
-const MAP_CENTER: [number, number] = [-99.3, 31.3];
 const FLAT_BASEMAP = {
   lightPreset: "day",
   show3dObjects: false,
@@ -336,10 +336,13 @@ export function UtilityMapExperience() {
     const openingFeatures = opening
       ? loaded.counties.features.filter((f) => opening.counties.includes(String(f.properties?.fips)))
       : [];
+    // Opening shot: fly from the globe into Texas (or the linked utility).
+    const duration = introDuration(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const flight = { padding: mapPadding(), duration, essential: true, curve: 1.2 };
     if (openingFeatures.length) {
-      map.fitBounds(boundsOf(openingFeatures), { padding: mapPadding(), duration: 0, maxZoom: 8.5 });
+      map.fitBounds(boundsOf(openingFeatures), { ...flight, maxZoom: 8.5 });
     } else {
-      map.fitBounds(TEXAS_BOUNDS, { padding: mapPadding(), duration: 0 });
+      map.fitBounds(TEXAS_BOUNDS, flight);
     }
 
     let hoveredCounty: number | null = null;
@@ -577,8 +580,8 @@ export function UtilityMapExperience() {
       <div className="absolute inset-0">
         <MapViewClient
           className="h-full w-full rounded-none border-0"
-          center={MAP_CENTER}
-          zoom={5}
+          center={GLOBE_START.center}
+          zoom={GLOBE_START.zoom}
           pitch={0}
           bearing={0}
           basemap={FLAT_BASEMAP}
