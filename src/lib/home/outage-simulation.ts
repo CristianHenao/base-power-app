@@ -1,11 +1,18 @@
-import type { HomeDevice } from "@/lib/home/devices";
+import { drawWatts, type HomeDevice } from "@/lib/home/devices";
 import { CORE_GENERATOR_CHARGE_KW } from "@/lib/home/generator-backup";
 import { KWH_PER_CORE, KW_PER_CORE } from "@/lib/report/core-runtime";
 
-/** Outage lengths the sheet offers, in hours. */
-export const OUTAGE_DURATION_HOURS = [4, 8, 12, 24, 48] as const;
+/** Outage lengths the sheet offers. After 12 h, choices are whole days. */
+export const OUTAGE_DURATIONS = [
+  { hours: 4, label: "4 h" },
+  { hours: 12, label: "12 h" },
+  { hours: 24, label: "1 d" },
+  { hours: 72, label: "3 d" },
+  { hours: 120, label: "5 d" },
+  { hours: 168, label: "7 d" },
+] as const;
 
-export type OutageDurationHours = (typeof OUTAGE_DURATION_HOURS)[number];
+export type OutageDurationHours = (typeof OUTAGE_DURATIONS)[number]["hours"];
 
 const NOT_A_LOAD = new Set(["panel", "battery", "generator"]);
 
@@ -41,13 +48,17 @@ export function outageLoadDevices(devices: HomeDevice[]): HomeDevice[] {
 export function bestOutageGenerator(devices: HomeDevice[]): HomeDevice | null {
   const generators = devices.filter((device) => device.kind === "generator");
   if (generators.length === 0) return null;
-  return [...generators].sort((a, b) => b.watts - a.watts)[0] ?? null;
+  return [...generators].sort(
+    (a, b) => drawWatts(b).watts - drawWatts(a).watts,
+  )[0] ?? null;
 }
 
 /** kW this generator can push into the Core port (capped at 4 kW). */
 export function generatorChargeKw(generator: HomeDevice | null): number {
-  if (!generator || generator.watts <= 0) return 0;
-  return Math.min(generator.watts / 1000, CORE_GENERATOR_CHARGE_KW);
+  if (!generator) return 0;
+  const watts = drawWatts(generator).watts;
+  if (watts <= 0) return 0;
+  return Math.min(watts / 1000, CORE_GENERATOR_CHARGE_KW);
 }
 
 function hoursAtNetLoad(loadKw: number, chargeKw: number): number | null {
@@ -61,7 +72,8 @@ export function deviceOutageRow(
   device: HomeDevice,
   chargeKw: number,
 ): DeviceOutageRow {
-  const loadKw = device.watts > 0 ? device.watts / 1000 : 0;
+  const draw = drawWatts(device);
+  const loadKw = draw.watts > 0 ? draw.watts / 1000 : 0;
   const overLimit = loadKw > KW_PER_CORE;
   const hoursOnCore = hoursAtNetLoad(loadKw, 0);
   const hoursWithGenerator =
@@ -70,8 +82,8 @@ export function deviceOutageRow(
   return {
     id: device.id,
     name: device.name,
-    watts: device.watts,
-    wattsExact: device.wattsExact,
+    watts: draw.watts,
+    wattsExact: draw.exact,
     hoursOnCore,
     hoursWithGenerator,
     overLimit,
@@ -83,8 +95,10 @@ export function combinedOutage(
   loads: HomeDevice[],
   chargeKw: number,
 ): CombinedOutage {
-  const counted = loads.filter((device) => device.watts > 0);
-  const loadKw = counted.reduce((sum, device) => sum + device.watts, 0) / 1000;
+  const counted = loads
+    .map((device) => drawWatts(device))
+    .filter((draw) => draw.watts > 0);
+  const loadKw = counted.reduce((sum, draw) => sum + draw.watts, 0) / 1000;
   const overLimit = loadKw > KW_PER_CORE;
   return {
     loadKw,

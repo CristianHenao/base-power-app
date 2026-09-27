@@ -1,4 +1,4 @@
-import type { HomeDevice } from "@/lib/home/devices";
+import { drawWatts, type HomeDevice } from "@/lib/home/devices";
 
 /** Base Core energy (docs/battery-tech-specs.md). */
 export const CORE_KWH = 39.2;
@@ -75,7 +75,7 @@ export function generatorExtensionForDevice(
   device: HomeDevice,
 ): GeneratorCoreExtension | null {
   if (device.kind !== "generator") return null;
-  return estimateGeneratorCoreExtension(device.watts);
+  return estimateGeneratorCoreExtension(drawWatts(device).watts);
 }
 
 /** Short list-row line, e.g. "Extends Core ~+63 h (~420%) est." */

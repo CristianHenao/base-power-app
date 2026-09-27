@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   canTogglePriority,
+  drawWatts,
   groupDevicesByCategory,
   HOME_DEVICE_CATEGORY_META,
   isPriorityDevice,
@@ -205,6 +206,7 @@ export function MyHomeScreen({
                         device.isMedical || device.needsRefrigeration;
                       const priority = isPriorityDevice(device);
                       const canToggle = canTogglePriority(device);
+                      const draw = drawWatts(device);
                       return (
                         <li
                           key={device.id}
@@ -260,9 +262,9 @@ export function MyHomeScreen({
                                 {device.kind === "panel" &&
                                 device.breakers.length > 0
                                   ? ` · ${device.breakers.length} circuits`
-                                  : device.watts > 0
-                                    ? ` · ${device.watts} W${device.wattsExact ? "" : " est."}`
-                                    : null}
+                                  : draw.watts > 0
+                                  ? ` · ${draw.watts} W${draw.exact ? "" : " est."}`
+                                  : null}
                               </p>
                               {critical || (priority && !critical) ? (
                                 <div className="mt-1 flex flex-wrap gap-1">
