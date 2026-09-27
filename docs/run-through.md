@@ -8,8 +8,8 @@ shift if the pipeline is rebuilt.
 1. `git pull` on main.
 2. Terminal 1: `make api`. It loads `XAI_API_KEY` from `.env` (without it, the summary uses the
    template and the chip says so) and turns on the fault switch. Check `curl localhost:8000/health`.
-3. Terminal 2: `npx next dev`. You need `.env.local` with the Supabase keys, and you must be signed in.
-4. Browser: sign in, then open `localhost:3000/report`. Run each persona once off camera. A first
+3. Terminal 2: `npx next dev`. You need `.env.local` with the Supabase keys for the map. `/report` and `/embed?zip=77084` open without a sign-in.
+4. Browser: open `localhost:3000/report`. Run each persona once off camera. A first
    report takes about 1 s and its summary 3-5 s (Grok). After that everything is cached: a repeat
    report loads in about 0.1 s and its summary in about 0.4 s.
 5. Alternative with no local Python: `docker compose up --build --wait` serves the web app on :3000
@@ -26,6 +26,8 @@ Streets are made up (no real address is stored anywhere); the ZIP places the cou
 | South Austin | `800 Live Oak Bluff, Austin, TX 78745` | Gas | Travis, Austin Energy (backup program, no energy plan). Elevated, about once every 10 years. Top storm: Uri, 43% out, 90% back within 67-96 h. The 2023 ice storm is next. 2 Cores. Backup gap: 5.5 h, 1.1 h, 0.4 h |
 
 ## The household answer (the part to linger on)
+The headline is essentials: a fridge and a CPAP, everything else off. On Thomas's report that is about 16 minutes dark a year on one Core. Collin and Travis read under 5 minutes. The whole-home tiles and the storm hours (9 h in Uri, 20 h in Beryl) are the caveat: they assume the home keeps its normal load.
+
 On Thomas's report, "Answer for my appliances" starts with the essentials, central AC and heating
 that matches the home, with the fridge starred. Star the CPAP machine. "Everything checked" should
 read about 6 hours a year on one Core, and "Starred only" (fridge and CPAP) about 16 minutes. Say:

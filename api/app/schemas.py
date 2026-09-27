@@ -10,7 +10,7 @@ SourceStatus = Literal["ok", "degraded", "unavailable", "not_connected"]
 
 
 class ReportRequest(BaseModel):
-    """An address, or a county FIPS when the caller already knows it. The address is never stored."""
+    """An address, a Texas ZIP, or a county FIPS. The address is never stored."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -21,8 +21,8 @@ class ReportRequest(BaseModel):
 
     @model_validator(mode="after")
     def needs_a_place(self) -> ReportRequest:
-        if not self.address and not self.county_fips:
-            raise ValueError("send an address or a Texas county_fips")
+        if not self.address and not self.county_fips and not self.zip:
+            raise ValueError("send an address, a Texas ZIP, or a Texas county_fips")
         return self
 
 

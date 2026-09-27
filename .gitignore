@@ -55,6 +55,9 @@ __pycache__/
 # raw inputs; derived parquet under data/processed is tracked
 data/raw/
 
+# event page copy; do not commit
+Hackathon details.md
+
 # Runtime device outline thumbnails from My Home scans
 public/home/scans/*
 !public/home/scans/.gitkeep

@@ -88,13 +88,13 @@ export function LeadDetail({ lead }: { lead: Lead }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Goals & risk</CardTitle>
-            <CardDescription>From risk analysis planning</CardDescription>
+            <CardTitle className="text-base">Goals & outlook</CardTitle>
+            <CardDescription>From outage planning</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <DetailRow label="Primary goal" value={primaryGoal} />
             <DetailRow
-              label="Risk score"
+              label="Outlook score"
               value={lead.riskScore?.toString() ?? "Pending"}
             />
             <DetailRow

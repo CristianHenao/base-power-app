@@ -109,7 +109,7 @@ export function ProfileSettings() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <Link
-          href="/risk"
+          href="/outlook"
           className={cn(buttonVariants({ variant: "outline" }))}
         >
           Back to map

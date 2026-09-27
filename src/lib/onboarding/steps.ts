@@ -2,7 +2,7 @@ export const ONBOARDING_STEPS = [
   {
     id: "address",
     title: "Home address",
-    description: "Where should we run your risk analysis?",
+    description: "Where should we look up outages?",
     href: "/onboarding/address",
   },
   {

@@ -11,12 +11,12 @@ Built for the Base Power x AITX hackathon by Christian, Victor, Nolan and Alejan
 
 ## In 60 seconds
 
-- **Real outage history.** Every 15-minute county outage reading in Texas, 2018-2025 (ORNL EAGLE-I), turned into events with a duration band per home.
+- **Real outage history.** Every 15-minute county outage reading in Texas, 2018-2025 (ORNL EAGLE-I), turned into events with a duration band per home. EAGLE-I covers the whole country; this pipeline keeps Texas, and the same county steps apply to another state once that state's customer counts and load profiles are connected.
 - **Real storms, replayed.** Uri, Beryl, the 2023 ice storm and the 2024 derechos, run against a 39.2 kWh Core on ERCOT's measured household load for those exact days.
 - **An honest outlook.** 12-hour-plus outages per typical home, fit per county with empirical Bayes and backtested against simpler forecasts.
 - **A household answer.** Expected hours a year this home is dark with 0, 1 or 2 Cores, from how often outages hit the county and how long each kind of storm lasts, for the appliances you pick (medical devices first). It is computed on your device; the list is never sent.
 - **A guarded narrator.** The LLM writes the summary but never calculates; a validator rejects any number it can't trace to a fact.
-- **Where a Core pays twice.** Utility and county stress map built from EIA-861, FEMA NRI, ACS and ERCOT prices.
+- **Where backup lasts.** Utility and county stress map built from EIA-861, FEMA NRI, ACS and ERCOT prices. Hours with prices above $1,000/MWh have fallen sharply since 2021, so the lasting member value is reliability during outages.
 
 ## Results
 
@@ -65,7 +65,7 @@ docker compose up --build --wait
 ```bash
 uv venv -p 3.11 .venv && uv pip install -p .venv -e ".[dev,api,data]"
 make api                            # FastAPI on :8000 (reads XAI_API_KEY from .env; fault switch on)
-npm install && npm run dev          # web on :3000; sign in, then open /report
+npm install && npm run dev          # web on :3000; /report and /embed?zip=77084 need no account
 make test                           # Python tests (the web app: npx tsc --noEmit and npx eslint src)
 ```
 
@@ -77,8 +77,9 @@ back to their saved reports. `make data` rebuilds everything from public sources
 
 Progressive web app with two experiences:
 
-1. **Homeowner risk analysis** — account → stepped onboarding → location-based planning
-2. **Provider CRM** — manage leads that come from risk analysis planning
+1. **Homeowner outage outlook** — account → stepped onboarding → county map at `/outlook`
+2. **Will my lights stay on?** — `/report` and `/embed?zip=` , no account required
+3. **Provider CRM** — leads from outage planning
 
 Built with **Next.js**, **shadcn/ui**, **Mapbox GL**, and **Three.js**.
 
@@ -119,7 +120,7 @@ npm run dev
 
    3. After saving, raise the email rate limit under **Authentication → Rate Limits** if needed (custom SMTP defaults around 30/hour)
 
-Auth protects `/onboarding`, `/risk`, and `/crm`. Sign-in lives at `/` and uses emailed one-time codes.
+Auth protects `/onboarding`, `/outlook` (and the old `/risk` link), and `/crm`. `/report`, `/embed`, and `/api/report` are open without a sign-in. Sign-in lives at `/` and uses emailed one-time codes.
 
 Open [http://localhost:3000](http://localhost:3000).
 
@@ -146,7 +147,8 @@ Local Postgres uses Supabase’s defaults: user `postgres`, password `postgres`,
 | Sign in | `/` (also `/sign-in` → redirects here) |
 | Sign up | `/sign-up` |
 | Onboarding | `/onboarding` → address → household → goals |
-| Risk analysis | `/risk` |
+| Outage outlook | `/outlook` (`/risk` redirects here) |
+| Backup report | `/report`, `/embed?zip=77084` |
 | Provider CRM | `/crm`, `/crm/leads`, `/crm/leads/[id]` |
 
 The app opens on the login screen. Onboarding captures address, household details, and backup battery goals. Auth and persistence are stubbed so the stepped UX can be walked end-to-end.
@@ -166,7 +168,7 @@ The app opens on the login screen. Onboarding captures address, household detail
 src/
   app/
     (auth)/            # sign-in (/) + sign-up
-    (consumer)/        # onboarding + risk analysis
+    (consumer)/        # onboarding + outage outlook
     crm/               # provider CRM
   components/
     auth/

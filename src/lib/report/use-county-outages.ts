@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * The county's real outage history for the /risk timeline: the largest outages from the Porchlight
+ * The county's real outage history for the outlook map timeline: the largest outages from the Porchlight
  * report for the onboarding address, in the card shape the dashboard already uses. Until the report
  * arrives (or if it cannot), the caller's fallback events are shown.
  */

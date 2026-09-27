@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   isOnboardingComplete,
   isOnboardingPath,
+  isPlanningPath,
   ONBOARDING_START_PATH,
   POST_ONBOARDING_PATH,
   resolvePostAuthPath,
@@ -13,23 +14,7 @@ import {
   hasSupabaseConfig,
 } from "@/lib/supabase/env";
 import type { Database } from "@/lib/supabase/database.types";
-
-const PUBLIC_PREFIXES = [
-  "/",
-  "/sign-up",
-  "/sign-in",
-  "/auth",
-  "/~offline",
-  "/manifest.webmanifest",
-  "/api/map",
-];
-
-function isPublicPath(pathname: string): boolean {
-  if (pathname === "/") return true;
-  return PUBLIC_PREFIXES.some(
-    (prefix) => prefix !== "/" && pathname.startsWith(prefix),
-  );
-}
+import { isPublicPath } from "@/lib/supabase/public-paths";
 
 function isAuthEntryPath(pathname: string): boolean {
   return pathname === "/" || pathname === "/sign-in" || pathname === "/sign-up";
@@ -93,7 +78,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (!complete && (pathname === "/risk" || pathname.startsWith("/risk/"))) {
+    if (!complete && isPlanningPath(pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = ONBOARDING_START_PATH;
       return NextResponse.redirect(url);

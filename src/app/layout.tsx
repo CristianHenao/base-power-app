@@ -17,7 +17,7 @@ const APP_NAME = "Base Power";
 const APP_DEFAULT_TITLE = "Base Power";
 const APP_TITLE_TEMPLATE = "%s · Base Power";
 const APP_DESCRIPTION =
-  "Home backup risk analysis for homeowners, and CRM tools for energy providers.";
+  "Home backup outlook for homeowners, and CRM tools for energy providers.";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,

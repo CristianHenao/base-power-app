@@ -16,7 +16,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Leads from risk analysis</CardTitle>
+        <CardTitle className="text-base">Leads from outage planning</CardTitle>
         <CardDescription>
           Homeowners who completed planning become CRM leads for your team.
         </CardDescription>
@@ -28,7 +28,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
               <th className="px-4 py-2.5 font-medium">Lead</th>
               <th className="px-4 py-2.5 font-medium">Location</th>
               <th className="px-4 py-2.5 font-medium">Goal</th>
-              <th className="px-4 py-2.5 font-medium">Risk</th>
+              <th className="px-4 py-2.5 font-medium">Outlook</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
               <th className="px-4 py-2.5 font-medium" />
             </tr>

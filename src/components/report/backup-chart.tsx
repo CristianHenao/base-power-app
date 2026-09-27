@@ -95,7 +95,7 @@ export function BackupChart({ backup }: { backup: Backup }) {
       </svg>
       <p className="text-sm text-muted-foreground">
         Shortest month on one Core: <span className="font-medium text-foreground">{monthLabel(shortest)}, {hours(data.cores_1[shortest])}</span>.
-        Typical home, {backup.assumptions.kwh_per_core} kWh per Core, normal use, {backup.assumptions.profile_year} load profile. Estimates.
+        Whole-home use, {backup.assumptions.kwh_per_core} kWh per Core, {backup.assumptions.profile_year} load profile. Essentials last longer. Estimates.
       </p>
       <details className="text-sm">
         <summary className="cursor-pointer text-muted-foreground">Table view</summary>

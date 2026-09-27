@@ -102,7 +102,14 @@ class ReportService:
     def _place(self, request: ReportRequest) -> tuple[str, census.Place | None, dict]:
         """County FIPS, the geocoded place when there is one, and the census source status."""
         if not request.address:
-            return str(request.county_fips), None, {"id": "census", "status": "not_connected"}
+            if not request.zip:
+                return str(request.county_fips), None, {"id": "census", "status": "not_connected"}
+            fips = request.county_fips or self._zip_counties.get(request.zip)
+            if not fips:
+                raise PlaceNotFound("we could not find that ZIP in Texas")
+            center = self._centroids.get(fips)
+            place = census.Place(fips, None, center[0], center[1], request.zip, "TX") if center else None
+            return fips, place, {"id": "census", "status": "degraded", "fallback": "zip"}
         try:
             if "census" in self._faults:
                 raise AdapterError("census fault injected")
