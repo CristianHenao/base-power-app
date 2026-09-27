@@ -68,13 +68,13 @@ the video script point at things that don't exist.
 
 ## What to do before the 11 PM freeze, most points per hour first
 
-Checked against the code in `135aac8`.
+Checked against the code in `af5c70c`.
 
 - [ ] **1. Base engineer answers.** Still open. Nobody has recorded answers on Core power or reserve, so the simulator stays on 20 kW and a 20% reserve.
-- [x] **2. Reframe sizing and the replay around essential loads.** The report headline is a fridge and a CPAP (Harris: about 16 minutes dark a year on one Core). Whole-home storm hours and the monthly chart are labeled as the caveat. The narrator template says the same. `135aac8`
-- [x] **3. Open the report.** `/report`, `/embed?zip=`, and `/api/report` no longer require a sign-in. A ZIP alone places the county. The map and onboarding still do. `135aac8`
-- [x] **4. Drop "risk" on the homeowner screens, and reword scarcity.** The map lives at `/outlook` (`/risk` redirects). CRM labels say outlook. The demo insight is "price spikes are drying up, so reliability is the lasting value." The sales map's Grid Risk Index name is unchanged. `135aac8`
-- [x] **5a. Script and gitignore.** The script no longer claims a widget on a mock of Base's site, or that Alejandro ran the story with Base's engineers. `Hackathon details.md` is gitignored. `135aac8`
+- [x] **2. Reframe sizing and the replay around essential loads.** The report headline is a fridge and a CPAP (Harris: about 16 minutes dark a year on one Core). Whole-home storm hours and the monthly chart are labeled as the caveat. The narrator template says the same. `af5c70c`
+- [x] **3. Open the report.** `/report`, `/embed?zip=`, and `/api/report` no longer require a sign-in. A ZIP alone places the county. The map and onboarding still do. `af5c70c`
+- [x] **4. Drop "risk" on the homeowner screens, and reword scarcity.** The map lives at `/outlook` (`/risk` redirects). CRM labels say outlook. The demo insight is "price spikes are drying up, so reliability is the lasting value." The sales map's Grid Risk Index name is unchanged. `af5c70c`
+- [x] **5a. Script and gitignore.** The script no longer claims a widget on a mock of Base's site, or that Alejandro ran the story with Base's engineers. `Hackathon details.md` is gitignored. `af5c70c`
 - [ ] **5b. README GIF.** Still a `TODO`. It needs a screen recording.
 
 Items 2 and 3 were the biggest swing. Item 1 still needs a person, not a code change.
