@@ -657,13 +657,13 @@ export function UtilityMapExperience() {
           )}
         </div>
 
-        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full lg:mt-0 lg:max-h-full lg:w-[400px]">
+        <div className="pointer-events-auto mt-auto flex max-h-[34dvh] min-h-0 w-full flex-col gap-3 lg:mt-0 lg:max-h-full lg:w-[400px]">
           {loadError ? (
             <p className="bp-panel w-full p-5 text-[14px] leading-[21px] text-destructive">{loadError}</p>
           ) : data && model && described ? (
             <DetailPanel
               key={view.utility ?? "all"}
-              className="w-full"
+              className="min-h-0 w-full flex-1"
               data={viewData ?? data}
               model={model}
               view={view}
@@ -685,6 +685,18 @@ export function UtilityMapExperience() {
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
           )}
+          {data && described && !loadError ? (
+            // Under the right panel, same width; opening it shortens the panel instead of covering it.
+            <MapChat
+              entries={chatEntries}
+              onEntries={setChatEntries}
+              open={chatOpen}
+              onOpenChange={setChatOpen}
+              viewQuery={viewToUrl(view).toString()}
+              suggestions={chatSuggestions(data, view)}
+              onPlace={(kind, id) => (kind === "county" ? openCounty(id) : selectUtility(id))}
+            />
+          ) : null}
         </div>
       </div>
       {data ? (
@@ -698,17 +710,6 @@ export function UtilityMapExperience() {
             if (kind === "county") openCounty(row.id);
             else selectUtility(row.id);
           }}
-        />
-      ) : null}
-      {data && described ? (
-        <MapChat
-          entries={chatEntries}
-          onEntries={setChatEntries}
-          open={chatOpen}
-          onOpenChange={setChatOpen}
-          viewQuery={viewToUrl(view).toString()}
-          suggestions={chatSuggestions(data, view)}
-          onPlace={(kind, id) => (kind === "county" ? openCounty(id) : selectUtility(id))}
         />
       ) : null}
       {described ? (

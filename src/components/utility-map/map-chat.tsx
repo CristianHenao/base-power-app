@@ -13,8 +13,8 @@ export type ChatEntry =
   | { role: "assistant"; text: string; parts: ChatPart[]; note: string | null };
 
 /**
- * "Ask about this map": a floating button over the map that opens its own chat window, beside
- * the right panel so it never covers the score card. The conversation lives in the parent,
+ * "Ask about this map": a bar under the right panel that opens its own chat window there;
+ * the panel gets shorter instead of being covered. The conversation lives in the parent,
  * so it survives picking another place. Answers come from /api/utility-map/chat, which checks
  * every number against the release; places in an answer open their score card.
  */
@@ -98,11 +98,11 @@ export function MapChat({
 
   const empty = entries.length === 0;
   return (
-    <div className="pointer-events-none absolute right-4 bottom-4 z-30 flex flex-col items-end gap-3 lg:right-[432px]">
+    <div className="flex w-full shrink-0 flex-col">
       {open ? (
         <section
           aria-label="Ask about this map"
-          className="pointer-events-auto flex h-[min(620px,calc(100dvh-6.5rem))] w-[min(420px,calc(100vw-2rem))] origin-bottom-right animate-in fade-in zoom-in-95 flex-col overflow-hidden rounded-[24px] bg-white shadow-[var(--bp-shadow-floating)] duration-200"
+          className="flex h-[min(440px,52dvh)] w-full origin-bottom animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-[20px] bg-white shadow-[var(--bp-shadow-floating)] duration-200"
         >
           <header className="flex items-start gap-3 bg-[var(--bp-green-90)] px-5 py-4 text-white">
             <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--bp-green-20)] text-[var(--bp-green-100)]">
@@ -254,12 +254,17 @@ export function MapChat({
           type="button"
           aria-expanded={false}
           onClick={() => onOpenChange(true)}
-          className="pointer-events-auto flex items-center gap-2.5 rounded-full bg-[var(--bp-green-90)] py-3 pr-5 pl-3 text-[15px] font-semibold text-white shadow-[var(--bp-shadow-floating)] transition-transform hover:scale-[1.03]"
+          className="flex w-full items-center gap-2.5 rounded-[20px] bg-[var(--bp-green-90)] py-3 pr-5 pl-3 text-left text-[15px] font-semibold text-white shadow-[var(--bp-shadow-media)] transition-colors hover:bg-[var(--bp-green-100)]"
         >
           <span className="flex size-8 items-center justify-center rounded-full bg-[var(--bp-green-20)] text-[var(--bp-green-100)]">
             <MessageCircle className="size-4" aria-hidden />
           </span>
-          Ask about this map
+          <span className="flex-1">
+            Ask about this map
+            <span className="block text-[12px] leading-[17px] font-normal text-white/75">
+              Scores, hazards, storms, the grid or the data
+            </span>
+          </span>
           {entries.length > 0 ? (
             <span className="rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-medium">{Math.ceil(entries.length / 2)}</span>
           ) : null}
