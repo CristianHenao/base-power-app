@@ -9,7 +9,17 @@ import type {
 } from "@/lib/types/domain";
 
 export const ONBOARDING_START_PATH = "/onboarding/address";
-export const POST_ONBOARDING_PATH = "/risk";
+export const POST_ONBOARDING_PATH = "/outlook";
+
+/** The homeowner map. `/risk` remains so older links land on the same screen. */
+export function isPlanningPath(pathname: string): boolean {
+  return (
+    pathname === POST_ONBOARDING_PATH ||
+    pathname.startsWith(`${POST_ONBOARDING_PATH}/`) ||
+    pathname === "/risk" ||
+    pathname.startsWith("/risk/")
+  );
+}
 
 export function isOnboardingComplete(
   profile: Pick<Profile, "onboarding_completed_at"> | null | undefined,
@@ -23,7 +33,7 @@ export function isOnboardingPath(pathname: string): boolean {
 
 /**
  * Where to send a signed-in user after auth or when hitting entry routes.
- * Incomplete → onboarding; complete → preferred (default /risk).
+ * Incomplete → onboarding; complete → preferred (default /outlook).
  */
 export function resolvePostAuthPath(
   profile: Pick<Profile, "onboarding_completed_at"> | null | undefined,

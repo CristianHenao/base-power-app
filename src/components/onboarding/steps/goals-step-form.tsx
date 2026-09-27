@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useOnboarding } from "@/components/providers/onboarding-provider";
 import { BACKUP_GOAL_OPTIONS } from "@/lib/onboarding/constants";
+import { POST_ONBOARDING_PATH } from "@/lib/onboarding/profile-sync";
 import { createClient } from "@/lib/supabase/client";
 import {
   completeOnboarding,
@@ -76,7 +77,7 @@ export function GoalsStepForm() {
         }
         await completeOnboarding(supabase, user.id, next);
       } catch (err) {
-        // The /risk guard needs onboarding_completed_at, so stay here until it is saved.
+        // The map guard needs onboarding_completed_at, so stay here until it is saved.
         setError(
           err instanceof Error ? err.message : "We couldn't save your answers. Try again.",
         );
@@ -84,10 +85,10 @@ export function GoalsStepForm() {
         return;
       }
 
-      // A /risk prefetch from before onboarding finished can hold the proxy's
+      // A map prefetch from before onboarding finished can hold the proxy's
       // redirect back to step 1; refresh clears the router cache first.
       router.refresh();
-      router.push("/risk");
+      router.push(POST_ONBOARDING_PATH);
     })();
   }
 
@@ -179,7 +180,7 @@ export function GoalsStepForm() {
           Back
         </Button>
         <Button type="submit" disabled={!form.primaryGoal || submitting}>
-          {submitting ? "Saving…" : "Finish & see risk analysis"}
+          {submitting ? "Saving…" : "Finish & see outage outlook"}
         </Button>
       </div>
     </form>

@@ -59,7 +59,32 @@ function startsOn(id: string, defaultOn: boolean, electricHeat: boolean): boolea
   return defaultOn;
 }
 
-/** Expected dark hours a year for a typical home here, then for the appliances the homeowner picks. */
+/** A fridge and a CPAP, with everything else off. Standby load is included, as in the runtime math. */
+const ESSENTIALS: LoadItem[] = [
+  { applianceId: "refrigerator", priority: true },
+  { applianceId: "cpap", priority: true },
+];
+
+/** Headline number: how long those essentials are dark in a year on one Core. */
+export function EssentialsLead({ gap }: { gap: HouseholdGap }) {
+  const answer = useMemo(() => householdAnswer(gap, ESSENTIALS), [gap]);
+  const one = answer.cores[1];
+  const two = answer.cores[2];
+  return (
+    <p className="mt-3 text-lg leading-relaxed">
+      {one.overLimit ? (
+        "A fridge and a CPAP are over one Core’s power limit in some months."
+      ) : (
+        <>
+          A fridge and a CPAP would be dark{" "}
+          <span className="font-semibold">{hoursText(one.full.darkHours)}</span> a year on one Core
+          {two.overLimit ? "" : <>, and {hoursText(two.full.darkHours)} a year on two</>}.
+          Everything else in the house is off. Estimate.
+        </>
+      )}
+    </p>
+  );
+}
 export function HouseholdGapCard({ gap, county, electricHeat }: { gap: HouseholdGap; county: string; electricHeat: boolean }) {
   const [choices, setChoices] = useState<Record<string, Choice>>(() =>
     Object.fromEntries(APPLIANCES.filter((a) => a.id !== "standby")
@@ -78,8 +103,10 @@ export function HouseholdGapCard({ gap, county, electricHeat }: { gap: Household
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your backup gap</CardTitle>
-        <CardDescription>Expected hours a year without power, from {county} County&rsquo;s outage history and how long each kind of storm keeps homes dark</CardDescription>
+        <CardTitle>Whole home, as a caveat</CardTitle>
+        <CardDescription>
+          Expected hours a year without power if the home keeps its normal load, from {county} County&rsquo;s outage history. Backup here runs shorter than for the essentials above.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 text-sm">
         <div className="grid grid-cols-3 gap-3 text-center">

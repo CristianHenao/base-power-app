@@ -1,5 +1,7 @@
-import { RiskAnalysisDashboard } from "@/components/risk/risk-analysis-dashboard";
+import { redirect } from "next/navigation";
+import { POST_ONBOARDING_PATH } from "@/lib/onboarding/profile-sync";
 
-export default function RiskAnalysisPage() {
-  return <RiskAnalysisDashboard />;
+/** Older links used /risk. The screen lives at /outlook. */
+export default function RiskRedirectPage() {
+  redirect(POST_ONBOARDING_PATH);
 }

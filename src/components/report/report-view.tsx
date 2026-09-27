@@ -6,7 +6,7 @@ import { trackEvent } from "@/lib/report/client";
 import type { Event, Report, Source } from "@/lib/report/types";
 import { cn } from "@/lib/utils";
 import { BackupChart } from "./backup-chart";
-import { HouseholdGapCard } from "./household-gap-card";
+import { EssentialsLead, HouseholdGapCard } from "./household-gap-card";
 import { band, centralDate, centralTime, hours, percent } from "./format";
 
 const OFFER_TEXT: Record<Report["base_offer"]["product"], string> = {
@@ -60,8 +60,8 @@ function StormRow({ event, report }: { event: Event; report: Report }) {
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
           <div><dt className="text-muted-foreground">Half of homes back within</dt><dd>{band(event.duration_h.p50)}</dd></div>
           <div><dt className="text-muted-foreground">90% of homes back within</dt><dd>{band(event.duration_h.p90)}</dd></div>
-          <div><dt className="text-muted-foreground">One Core that week</dt><dd>{hours(event.backup_h?.cores_1)}</dd></div>
-          <div><dt className="text-muted-foreground">Two Cores that week</dt><dd>{hours(event.backup_h?.cores_2)}</dd></div>
+          <div><dt className="text-muted-foreground">One Core, whole home</dt><dd>{hours(event.backup_h?.cores_1)}</dd></div>
+          <div><dt className="text-muted-foreground">Two Cores, whole home</dt><dd>{hours(event.backup_h?.cores_2)}</dd></div>
           {covered && (
             <div className="col-span-2 sm:col-span-4">
               <dt className="text-muted-foreground">Homes fully covered</dt>
@@ -78,16 +78,27 @@ function StormRow({ event, report }: { event: Event; report: Report }) {
 }
 
 export function ReportView({ report, narrative }: { report: Report; narrative: { headline: string; text: string; done: boolean; status: string | null } }) {
-  const { location, outlook, sizing, live } = report;
+  const { location, outlook, sizing, live, household_gap: gap } = report;
   return (
     <div className="space-y-6">
       <section aria-live="polite">
         <p className="text-sm text-muted-foreground">
           Homes in {location.county} County · {report.home.label} · {location.utility.name ?? "utility unknown"}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold">
-          {narrative.headline || `${outlook.label} outlook for long outages in ${location.county} County`}
-        </h1>
+        {gap ? (
+          <>
+            <h1 className="mt-1 text-2xl font-semibold">Essentials stay on</h1>
+            <EssentialsLead gap={gap} />
+            <p className="mt-3 text-sm text-muted-foreground">
+              The hours further down are the caveat. They assume the home keeps its normal whole-home load, including air conditioning. Estimates.
+            </p>
+            {narrative.headline ? <h2 className="mt-4 text-lg font-medium">{narrative.headline}</h2> : null}
+          </>
+        ) : (
+          <h1 className="mt-1 text-2xl font-semibold">
+            {narrative.headline || `${outlook.label} outlook for long outages in ${location.county} County`}
+          </h1>
+        )}
         <p className={cn("mt-3 leading-relaxed", !narrative.text && "text-muted-foreground")}>
           {narrative.text || "Writing a plain-language summary from these numbers..."}
         </p>
@@ -113,7 +124,9 @@ export function ReportView({ report, narrative }: { report: Report; narrative: {
       <Card>
         <CardHeader>
           <CardTitle>The storms that hit here</CardTitle>
-          <CardDescription>Largest outages since {outlook.since}, replayed against a Base Core on that week’s household load</CardDescription>
+          <CardDescription>
+            Largest outages since {outlook.since}, replayed on that week’s whole-home load. A fridge and a medical device last much longer; that answer is at the top.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ul>{report.events.map((e) => <StormRow key={e.id} event={e} report={report} />)}</ul>
@@ -136,7 +149,7 @@ export function ReportView({ report, narrative }: { report: Report; narrative: {
       <Card>
         <CardHeader>
           <CardTitle>{sizing.cores ? `${sizing.cores === 1 ? "One Core" : `${sizing.cores} Cores`} fit this home` : "How many Cores?"}</CardTitle>
-          <CardDescription>{sizing.reason}</CardDescription>
+          <CardDescription>{sizing.reason} That share is whole-home use. Essentials draw much less, so they stay on through more of those hours.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p>{OFFER_TEXT[report.base_offer.product]}</p>

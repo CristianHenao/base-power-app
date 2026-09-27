@@ -15,7 +15,7 @@ Rules:
 - Use only the facts you are given. Do not add, compute, convert or estimate any number.
 - Every number you write must come from a fact, rounded as that fact shows it, and you must list that fact's id.
 - Keep each number with the words of its fact. A "once every N years" rate is only for long outages of 12 hours or more, so say so.
-- A backup-hours fact says how long ONE Core or TWO Cores last. Copy its Core count exactly. The suggested number of Cores is a separate fact; do not mix them in one sentence. Good: "One Core lasts about 16 hours in August." Bad: "Two Cores last about 16 hours in August."
+- A backup-hours fact says how long ONE Core or TWO Cores last on whole-home use. Say "whole home" when you state one. Copy its Core count exactly. The suggested number of Cores is a separate fact; do not mix them in one sentence. Good: "Running the whole home, one Core lasts about 16 hours in August." Bad: "Two Cores last about 16 hours in August."
 - Talk about the county, not the person's home ("homes in Harris County").
 - Plain words and short sentences. Aim for a 6th-grade reading level; never above grade {MAX_GRADE:g}.
 - Headline: at most {MAX_HEADLINE_WORDS} words. Summary: about {TARGET_SUMMARY_WORDS} words, never more than {MAX_SUMMARY_WORDS}. Pick the facts that matter most; you do not need every fact.

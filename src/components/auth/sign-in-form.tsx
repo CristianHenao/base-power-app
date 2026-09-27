@@ -7,14 +7,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { resolvePostAuthPath } from "@/lib/onboarding/profile-sync";
+import { POST_ONBOARDING_PATH, resolvePostAuthPath } from "@/lib/onboarding/profile-sync";
 import { ensureProfile } from "@/lib/supabase/profile";
 import { cn } from "@/lib/utils";
 
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/risk";
+  const nextPath = searchParams.get("next") || POST_ONBOARDING_PATH;
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function SignInForm() {
         return;
       }
 
-      let destination = nextPath.startsWith("/") ? nextPath : "/risk";
+      let destination = nextPath.startsWith("/") ? nextPath : POST_ONBOARDING_PATH;
       if (data.user) {
         try {
           const profile = await ensureProfile(supabase, data.user);

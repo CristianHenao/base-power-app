@@ -55,6 +55,16 @@ def test_county_request_without_address_skips_census_and_nws(client):
     assert report["sizing"]["cores"] in (1, 2)  # statewide replay covers every county
 
 
+def test_a_texas_zip_places_the_county(client):
+    report = client.post("/v1/report", json={"zip": "77084", "heat": "gas"}).json()
+    assert report["location"]["county"] == "Harris"
+    sources = {s["id"]: s for s in report["sources"]}
+    assert sources["census"]["status"] == "degraded"
+    assert sources["census"]["fallback"] == "zip"
+    missing = client.post("/v1/report", json={"zip": "00000"})
+    assert missing.status_code == 422 and "ZIP" in missing.json()["detail"]
+
+
 def test_request_needs_a_place_and_texas():
     client = TestClient(create_app(_service(geocode=lambda a: Place("06001", None, 37.8, -122.2, None, "CA"))))
     assert client.post("/v1/report", json={"heat": "gas"}).status_code == 422

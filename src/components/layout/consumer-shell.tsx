@@ -6,17 +6,19 @@ import { UserAvatarLink } from "@/components/auth/user-avatar-link";
 import { ReportNavLink } from "@/components/report/report-nav-link";
 import { SiteHeader } from "@/components/layout/site-header";
 import { useAppScene } from "@/components/layout/use-app-scene";
+import { isPlanningPath, POST_ONBOARDING_PATH } from "@/lib/onboarding/profile-sync";
 import { cn } from "@/lib/utils";
 
 export function ConsumerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isMapExperience = pathname.startsWith("/risk");
+  const isMapExperience = isPlanningPath(pathname);
+  const homeHref = pathname.startsWith("/report") ? "/report" : POST_ONBOARDING_PATH;
   useAppScene(isMapExperience ? "map" : "light");
 
   if (isMapExperience) {
     return (
       <div className="app-shell-map">
-        <SiteHeader homeHref="/risk" overlay>
+        <SiteHeader homeHref={homeHref} overlay>
           <div className="flex items-center gap-3">
             <ReportNavLink />
             <UserAvatarLink />
@@ -29,7 +31,7 @@ export function ConsumerShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <SiteHeader homeHref="/risk">
+      <SiteHeader homeHref={homeHref}>
         <div className="flex items-center gap-3">
           <ReportNavLink active={pathname.startsWith("/report")} />
           <UserAvatarLink />

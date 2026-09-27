@@ -7,7 +7,7 @@ export default function CrmLeadsPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
         <p className="text-sm text-muted-foreground">
-          Homeowners who completed onboarding and risk analysis planning.
+          Homeowners who completed onboarding and outage planning.
         </p>
       </div>
       <LeadsTable leads={MOCK_LEADS} />

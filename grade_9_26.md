@@ -68,19 +68,16 @@ the video script point at things that don't exist.
 
 ## What to do before the 11 PM freeze, most points per hour first
 
-1. Get one Base engineer to answer the Core power and reserve questions tonight, then adjust the
-   constants. About 15 min, and it protects every number.
-2. Reframe sizing and the replay around essential loads (#2). This is copy and one chart line, about
-   1 hour.
-3. Make `/report` and `/api/report` reachable without signing in, and add a bare `/embed?zip=` page.
-   That makes "usable tomorrow" true. It's about 1 hour, but it touches Christian's auth, so he should
-   OK it.
-4. Rename the "risk" labels in Christian's screens and reword the scarcity insight (#3 and #4). About
-   20 min.
-5. Fix the demo script, add `Hackathon details.md` to `.gitignore`, and record the README GIF. About
-   20 min.
+Checked against the code in `af5c70c`.
 
-Items 2 and 3 are the biggest swing: together they'd move about 6-8 points, in "Why" and "Usability".
+- [ ] **1. Base engineer answers.** Still open. Nobody has recorded answers on Core power or reserve, so the simulator stays on 20 kW and a 20% reserve.
+- [x] **2. Reframe sizing and the replay around essential loads.** The report headline is a fridge and a CPAP (Harris: about 16 minutes dark a year on one Core). Whole-home storm hours and the monthly chart are labeled as the caveat. The narrator template says the same. `af5c70c`
+- [x] **3. Open the report.** `/report`, `/embed?zip=`, and `/api/report` no longer require a sign-in. A ZIP alone places the county. The map and onboarding still do. `af5c70c`
+- [x] **4. Drop "risk" on the homeowner screens, and reword scarcity.** The map lives at `/outlook` (`/risk` redirects). CRM labels say outlook. The demo insight is "price spikes are drying up, so reliability is the lasting value." The sales map's Grid Risk Index name is unchanged. `af5c70c`
+- [x] **5a. Script and gitignore.** The script no longer claims a widget on a mock of Base's site, or that Alejandro ran the story with Base's engineers. `Hackathon details.md` is gitignored. `af5c70c`
+- [ ] **5b. README GIF.** Still a `TODO`. It needs a screen recording.
+
+Items 2 and 3 were the biggest swing. Item 1 still needs a person, not a code change.
 
 Open question for the team: did Alejandro get any answers from Base's engineers that never made it
 into the playbook?

@@ -90,11 +90,14 @@ def build_facts(report: dict) -> list[Fact]:
     short = min(range(12), key=lambda m: one[m])
     long = max(range(12), key=lambda m: one[m])
     facts += [
-        Fact("backup.short_month", f"about {_whole(one[short])} hours on one Core in {MONTHS[short]}",
+        Fact("backup.short_month",
+             f"about {_whole(one[short])} hours on one Core in {MONTHS[short]} for whole-home use",
              allowed(one[short]), context=(MONTHS[short].lower(),), cores=1, unit=HOURS),
-        Fact("backup.long_month", f"about {_whole(one[long])} hours on one Core in {MONTHS[long]}",
+        Fact("backup.long_month",
+             f"about {_whole(one[long])} hours on one Core in {MONTHS[long]} for whole-home use",
              allowed(one[long]), context=(MONTHS[long].lower(),), cores=1, unit=HOURS),
-        Fact("backup.short_month_two_cores", f"about {_whole(hours['cores_2'][short])} hours on two Cores in {MONTHS[short]}",
+        Fact("backup.short_month_two_cores",
+             f"about {_whole(hours['cores_2'][short])} hours on two Cores in {MONTHS[short]} for whole-home use",
              allowed(hours["cores_2"][short]), context=(MONTHS[short].lower(),), cores=2, unit=HOURS),
     ]
 

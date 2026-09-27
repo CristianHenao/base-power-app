@@ -22,7 +22,7 @@ export default function CrmOverviewPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">CRM overview</h1>
         <p className="text-sm text-muted-foreground">
-          Manage leads generated from homeowner risk analysis planning.
+          Manage leads generated from homeowner outage planning.
         </p>
       </div>
 
@@ -54,7 +54,7 @@ export default function CrmOverviewPage() {
         <CardHeader>
           <CardTitle className="text-base">Lead inbox</CardTitle>
           <CardDescription>
-            Jump into the full list to qualify homeowners from risk analysis.
+            Jump into the full list to qualify homeowners from outage planning.
           </CardDescription>
         </CardHeader>
         <CardContent>

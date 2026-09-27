@@ -38,9 +38,10 @@ def template_narrative(report: dict) -> dict:
         f"The largest outage here began on {MONTHS[start.month - 1]} {start.day}, {start.year}.",
         *([f"At its peak, {_whole(event['peak_out_pct'])}% of homes in the county were dark."]
           if event.get("peak_out_pct") is not None else []),
-        f"For a home with {report['home']['label']}, one Core lasts about {_whole(one[short])} hours "
-        f"in {MONTHS[short]} and about {_whole(one[long])} hours in {MONTHS[long]}.",
+        f"For a home with {report['home']['label']} running the whole home, one Core lasts about "
+        f"{_whole(one[short])} hours in {MONTHS[short]} and about {_whole(one[long])} hours in {MONTHS[long]}.",
         *suggestion,
+        "Those hours are whole-home use. Essentials last longer.",
         "Base confirms sizing at install.",
     ])
     return {
