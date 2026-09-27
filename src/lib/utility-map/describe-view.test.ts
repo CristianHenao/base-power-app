@@ -270,3 +270,36 @@ test("a county whose share out is unknown gets its own color, legend entry and p
   assert.match(d.table.rows[2].cells[0], /Unknown/);
   assert.equal(paintLabel(d.context, 6), "Hurricane Beryl 2024: customers out, share unknown");
 });
+
+test("every statewide card says what it is, what it shows and how to read it", () => {
+  const cases: [ViewState, RegExp][] = [
+    [start(), /Which Texas utilities are most at risk\?/],
+    [hazards("flood"), /Where is flood exposure highest\?/],
+    [hazards("flood", "hurricane"), /Where do flood and hurricanes overlap\?/],
+    [hazards("flood", "hurricane", "winter"), /Which places face the most hazards\?/],
+    [showStorm(hazards("winter"), "Hurricane Beryl"), /Where did Hurricane Beryl 2024 knock out power\?/],
+    [setQuestion(start(), "grid", CTX), /How big is each utility's grid\?/],
+    [setShare(setQuestion(start(), "fleet", CTX), 0.01), /What could a 1% Base fleet add\?/],
+  ];
+  for (const [state, title] of cases) {
+    const { intro } = describe(state);
+    assert.match(intro.title, title);
+    assert.ok(intro.eyebrow.length > 0 && intro.lead.length > 40 && intro.read.length > 20, intro.title);
+    assert.doesNotMatch(`${intro.title} ${intro.lead} ${intro.read}`, /customer-weighted|High in how many/);
+  }
+});
+
+test("the several-hazards card names every hazard and says it is past exposure, not odds", () => {
+  const { intro } = describe(hazards("flood", "hurricane", "winter"));
+  assert.match(intro.lead, /3 hazards/);
+  for (const name of ["flood", "hurricanes", "winter freeze"]) assert.match(intro.lead.toLowerCase(), new RegExp(name));
+  assert.match(intro.lead, /not the odds/);
+});
+
+test("the fleet card spells out the assumptions behind the numbers", () => {
+  const { intro } = describe(setShare(setQuestion(start(), "fleet", CTX), 0.01));
+  assert.match(intro.lead, /1% of each utility's owner-occupied single-family homes/);
+  assert.match(intro.lead, /39\.2 kWh/);
+  assert.match(intro.lead, /20% kept for backup/);
+  assert.match(intro.read, /2 hours/);
+});

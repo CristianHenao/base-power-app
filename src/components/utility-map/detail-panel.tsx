@@ -16,6 +16,7 @@ import {
   hazardHighlights,
   overlays,
   type ViewDescription,
+  type ViewIntro,
 } from "@/lib/utility-map/describe-view";
 import { HAZARD_IDS, type SpotlightStorm } from "@/lib/utility-map/hazard-style";
 import { fleetScenario } from "@/lib/utility-map/fleet";
@@ -88,25 +89,31 @@ export function DetailPanel(props: DetailPanelProps) {
   );
 }
 
-function Heading({ title, children }: { title: string; children?: ReactNode }) {
+/** A statewide card's opening, from describeView: which view, the question, what it shows, how to read it. */
+function Intro({ intro }: { intro: ViewIntro }) {
   return (
-    <div className="space-y-1">
-      <h2 className="text-[20px] leading-[27px]">{title}</h2>
-      {children ? <p className="text-[14px] leading-[21px] text-muted-foreground">{children}</p> : null}
+    <div className="space-y-2">
+      <p className="text-[12px] leading-[18px] font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        {intro.eyebrow}
+      </p>
+      <h2 className="text-[22px] leading-[29px]">{intro.title}</h2>
+      <p className="text-[14px] leading-[21px]">{intro.lead}</p>
+      <p className="rounded-xl bg-[var(--bp-grey-5)] px-3 py-2 text-[13px] leading-[19px] text-muted-foreground">
+        <span className="font-semibold text-foreground">How to read it: </span>
+        {intro.read}
+      </p>
     </div>
   );
 }
 
 /** Grid Risk Index, statewide: every utility ranked in a compact table, with the full breakdown one click away. */
-function RiskList({ data, countiesByFips, onSelectUtility, onOpenRiskTable }: DetailPanelProps) {
+function RiskList({ data, described, countiesByFips, onSelectUtility, onOpenRiskTable }: DetailPanelProps) {
   const [open, setOpen] = useState(false);
   const rows = sortRiskRows(riskRows(data, "utility", countiesByFips), "rank", "asc");
   const shown = open ? rows : rows.slice(0, 15);
   return (
     <div className="space-y-4">
-      <Heading title="Grid Risk Index">
-        All {rows.length} Texas utilities, ranked. 1–100 against each other; higher is more at risk.
-      </Heading>
+      <Intro intro={described.intro} />
       <button
         type="button"
         onClick={onOpenRiskTable}
@@ -204,7 +211,7 @@ function ResultList({ described, countiesByFips, onSelectUtility, onOpenCounty }
   const others = table.columns.map((col, i) => ({ col, i })).filter(({ i }) => i !== table.primary);
   return (
     <div className="space-y-4">
-      <Heading title={described.caption.title}>{table.caption}.</Heading>
+      <Intro intro={described.intro} />
       {table.rows.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-4 py-3 text-[14px] leading-[21px] text-muted-foreground">
           {described.legend.kind === "empty" ? described.legend.message : "Nothing to list."}

@@ -51,8 +51,17 @@ export type TableSpec = {
   rows: { id: string; name: string; cells: string[] }[];
 };
 
+/** "a, b and c" */
+function listOf(items: string[]): string {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+/** The statewide card's opening: which view, a plain question, what the list shows, how to read it. */
+export type ViewIntro = { eyebrow: string; title: string; lead: string; read: string };
+
 export type ViewDescription = {
   caption: { title: string; qualifier: string };
+  intro: ViewIntro;
   legend: LegendSpec;
   colors: readonly string[];
   context: PaintContext;
@@ -219,6 +228,16 @@ function describeCore(
     primary: 0,
     rows: utilityRows(input, layers, averageRank, byScore),
   });
+  const utilityCount = data.utilities.length;
+  const pick = "Select one to open its score card.";
+  // Explained with the top row's own number, so the example matches what's on screen.
+  const exposureRead = (table: TableSpec) => {
+    const top = table.rows[0];
+    const value = top?.cells[table.primary];
+    return value && value !== "—"
+      ? `The percentage is the average Texas rank: ${top.name} at ${value} means its counties have been more exposed than about ${value} of Texas counties. ${pick}`
+      : pick;
+  };
 
   if (stormNow(state)) {
     const storm = input.storms.find((s) => s.name === state.storm);
@@ -226,6 +245,12 @@ function describeCore(
     const byFips = new Map((storm?.counties ?? []).map((c) => [c.fips, c]));
     return {
       caption: { title, qualifier: "Peak customers without power (%) · EAGLE-I outage records" },
+      intro: {
+        eyebrow: "Explore hazards · Past storm",
+        title: `Where did ${title} knock out power?`,
+        lead: `Every county with outages during ${title}, from EAGLE-I outage records, largest share of customers out first.`,
+        read: "Peak share out is the most customers without power at one time, as a share of the county's customers. Select a county to open its score card.",
+      },
       legend: storm
         ? {
             kind: "sequential",
@@ -286,6 +311,12 @@ function describeCore(
     if (picks.length === 0) {
       return {
         caption: { title: "Explore hazards", qualifier: "Pick a hazard to color the map" },
+        intro: {
+          eyebrow: "Explore hazards · Historical patterns",
+          title: "Which hazards do you want to compare?",
+          lead: "Pick one or more hazards on the left to see where Texas has been most exposed to them in the past.",
+          read: "One hazard shows its fifths, two show how they overlap, three or more count how many each county ranks high on.",
+        },
         legend: { kind: "empty", message: "Pick a hazard to color the map." },
         colors: PLAIN_COLORS,
         context: { kind: "plain", label: "Pick a hazard to color the map" },
@@ -296,8 +327,15 @@ function describeCore(
     const historical = "Historical relative exposure";
     if (picks.length === 1) {
       const style = HAZARDS[picks[0]];
+      const table = scoreTable(style.label, picks);
       return {
         caption: { title: style.label, qualifier: `${historical} · Texas rank in fifths` },
+        intro: {
+          eyebrow: "Explore hazards · Historical patterns",
+          title: `Where is ${style.label.toLowerCase()} exposure highest?`,
+          lead: `All ${utilityCount} utilities ranked by how exposed their counties have been to ${style.label.toLowerCase()} in past weather records, compared with the rest of Texas. Darker counties on the map rank higher.`,
+          read: exposureRead(table),
+        },
         legend: {
           kind: "sequential",
           title: `${style.label}: Texas rank, in fifths`,
@@ -308,23 +346,37 @@ function describeCore(
         colors: style.ramp,
         context: { kind: "hazard", label: style.label },
         stateFor: withSelection(state, utilitiesById, (c) => hazardLevel(c.ranks[picks[0]])),
-        table: scoreTable(style.label, picks),
+        table,
       };
     }
     if (picks.length === 2) {
+      const table = scoreTable(`${names[0]} and ${names[1]}`, picks);
       return {
         caption: { title: `${names[0]} × ${names[1]}`, qualifier: `${historical} · each in Texas thirds` },
+        intro: {
+          eyebrow: "Explore hazards · Historical patterns",
+          title: `Where do ${names[0].toLowerCase()} and ${names[1].toLowerCase()} overlap?`,
+          lead: `The map shows each county's mix of the two, from past weather records: the darkest corner of the key is high on both. The list ranks all ${utilityCount} utilities by their average exposure across both.`,
+          read: exposureRead(table),
+        },
         legend: { kind: "bivariate", first: names[0], second: names[1] },
         colors: BIVARIATE_COLORS,
         context: { kind: "bivariate", first: names[0], second: names[1] },
         stateFor: withSelection(state, utilitiesById, (c) => bivariateClass(c.ranks[picks[0]], c.ranks[picks[1]])),
-        table: scoreTable(`${names[0]} and ${names[1]}`, picks),
+        table,
       };
     }
+    const table = scoreTable(names.join(", "), picks);
     return {
       caption: {
         title: `High in how many of ${picks.length} selected hazards`,
         qualifier: `${historical} (Texas top fifth), not the odds of events at the same time`,
+      },
+      intro: {
+        eyebrow: "Explore hazards · Historical patterns",
+        title: "Which places face the most hazards?",
+        lead: `For each county, the map counts how many of your ${picks.length} hazards (${listOf(names.map((n) => n.toLowerCase()))}) it ranks high on: the most-exposed fifth of Texas in past weather records. Darker means more hazards. This is past exposure, not the odds of them happening together.`,
+        read: `The list ranks all ${utilityCount} utilities by their overall exposure across these hazards. ${exposureRead(table)}`,
       },
       legend: {
         kind: "sequential",
@@ -335,7 +387,7 @@ function describeCore(
       colors: SCORE_COLORS,
       context: { kind: "overlap", of: picks.length },
       stateFor: withSelection(state, utilitiesById, (c) => Math.min(overlapCount(c, picks), 4) + 1),
-      table: scoreTable(names.join(", "), picks),
+      table,
     };
   }
 
@@ -367,6 +419,12 @@ function describeCore(
         caption: state.plants
           ? { title: "Power plants", qualifier: "Net summer capacity, MW · EIA-860 2024" }
           : { title: "Understand the grid", qualifier: "Turn on demand shading or power plants" },
+        intro: {
+          eyebrow: "Understand the grid",
+          title: "How big is each utility's grid?",
+          lead: `All ${utilityCount} utilities by estimated 2024 summer peak demand, the most power their customers drew at one time, next to the power plant capacity in their counties.`,
+          read: `Bigger peaks mean more load to serve on the hottest days. Peaks for utilities that don't publish one are estimated. ${pick}`,
+        },
         legend: state.plants
           ? { kind: "empty", message: "Counties are not shaded. " + plantsNote }
           : { kind: "empty", message: "Turn on demand shading or power plants." },
@@ -380,6 +438,12 @@ function describeCore(
       caption: {
         title: "Summer peak demand (estimated)",
         qualifier: "Each utility's 2024 peak split across its counties by customers · Texas fifths",
+      },
+      intro: {
+        eyebrow: "Understand the grid",
+        title: "How big is each utility's grid?",
+        lead: `All ${utilityCount} utilities by estimated 2024 summer peak demand, the most power their customers drew at one time, next to the power plant capacity in their counties.`,
+        read: `Bigger peaks mean more load to serve on the hottest days. Peaks for utilities that don't publish one are estimated. ${pick}`,
       },
       legend: { kind: "sequential", title: "Estimated summer peak demand, Texas fifths", colors: GRID_COLORS, labels: FIFTHS, note: plantsNote },
       colors: GRID_COLORS,
@@ -400,6 +464,12 @@ function describeCore(
       caption: {
         title: `${share} Base fleet`,
         qualifier: `Share of each utility's summer peak it could supply for ${data.battery.dispatch_window_h} hours · estimate`,
+      },
+      intro: {
+        eyebrow: "Model Base impact",
+        title: `What could a ${share} Base fleet add?`,
+        lead: `Suppose ${share} of each utility's owner-occupied single-family homes had one Base Core (${data.battery.kwh_per_core} kWh, ${data.battery.kw_per_core} kW, ${Math.round(data.battery.reserve_fraction * 100)}% kept for backup). All numbers are estimates.`,
+        read: `The big number is the share of the utility's summer peak the fleet could cover for ${data.battery.dispatch_window_h} hours. Cores is how many homes that is; MW is the power they could supply together. ${pick}`,
       },
       legend: {
         kind: "sequential",
@@ -451,6 +521,12 @@ function describeCore(
     caption: {
       title: "Grid Risk Index",
       qualifier: "1–100 against Texas: half hazard exposure, half grid stress. Higher is more at risk.",
+    },
+    intro: {
+      eyebrow: "Grid Risk Index",
+      title: "Which Texas utilities are most at risk?",
+      lead: `All ${utilityCount} utilities ranked on a 1–100 score against the rest of Texas: half weather hazards (flood, tornadoes, hail and wind, hurricanes, winter freeze, extreme heat), half grid stress (long outages, price spikes, summer peak demand).`,
+      read: `Higher is more at risk, and #1 is the most at risk. The map colors each county by its own score. ${pick}`,
     },
     legend: {
       kind: "sequential",
