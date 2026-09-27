@@ -180,11 +180,12 @@ export function MapChat({
             {entries.length > 0 ? (
               <button
                 type="button"
+                disabled={pending}
                 onClick={() => {
                   onEntries(() => []);
                   setError(null);
                 }}
-                className="rounded-full p-2 text-muted-foreground hover:bg-[var(--bp-grey-5)]"
+                className="rounded-full p-2 text-muted-foreground hover:bg-[var(--bp-grey-5)] disabled:opacity-40"
                 aria-label="Start over"
                 title="Start over"
               >

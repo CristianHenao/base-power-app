@@ -60,3 +60,27 @@ test("the rate limit allows 10 a minute per client, then resets", () => {
   now = 60_001;
   assert.equal(limit("a"), true);
 });
+
+test("only the current question's numbers count, not numbers from earlier (client-sent) history", async () => {
+  const out = await answerQuestion({
+    facts: FACTS,
+    places: [],
+    turns: [{ role: "user", content: "Is it 12?" }, { role: "assistant", content: "It's 98." }, { role: "user", content: "And now?" }],
+    call: async () => "It's 12.",
+  });
+  assert.equal(out.text, "");
+});
+
+test("long earlier answers are accepted as history", () => {
+  const long = "x".repeat(6000);
+  assert.equal(validateChatRequest({ view: "", turns: [...ask("a"), { role: "assistant", content: long }, ...ask("b")] }).ok, true);
+});
+
+test("the rate limiter forgets clients it hasn't seen within the window", () => {
+  let now = 0;
+  const limit = createRateLimiter(1, 1000, () => now);
+  for (let i = 0; i < 5000; i++) limit(`c${i}`);
+  now = 2000;
+  limit("new");
+  assert.ok(limit.size() <= 1);
+});

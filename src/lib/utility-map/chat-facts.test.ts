@@ -88,3 +88,8 @@ test("every line about the selected place names it, so the number check can tie 
   const list = facts.filter((l) => l.startsWith("On the list:"));
   assert.ok(list.length >= 1 && list.every((l) => l.split(":").length >= 3), "one line per listed place");
 });
+
+test("percentiles are written the same way everywhere (no long decimals to round)", () => {
+  const facts = viewFacts(DATA, [BERYL], selectUtility(defaultViewState(), "cnp"));
+  assert.doesNotMatch(facts, /\d\.\d{2,}/);
+});

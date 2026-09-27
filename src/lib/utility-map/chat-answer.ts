@@ -7,7 +7,7 @@ export type ModelCall = (turns: ChatTurn[]) => Promise<string>;
 
 export const MAX_TURNS = 8;
 export const MAX_QUESTION = 500;
-const MAX_TURN = 4000;
+const MAX_TURN = 12_000;
 
 /**
  * Ask the model, then check every number against the facts and the user's own words (never the
@@ -21,7 +21,8 @@ export async function answerQuestion(input: {
   call: ModelCall;
 }): Promise<{ text: string; note: string | null }> {
   const { facts, places, turns, call } = input;
-  const checker = makeChecker({ facts, places, userText: turns.filter((t) => t.role === "user").map((t) => t.content).join("\n") });
+  // Only the current question can vouch for a number; earlier turns come from the browser.
+  const checker = makeChecker({ facts, places, userText: turns[turns.length - 1].content });
   const first = (await call(turns)).trim();
   const bad = checker.badIn(first);
   if (bad.length === 0) return { text: first, note: null };
@@ -65,8 +66,14 @@ export function validateChatRequest(body: unknown): { ok: true; value: ChatReque
 /** At most `limit` requests per key in any `windowMs`; in memory, per server instance. */
 export function createRateLimiter(limit: number, windowMs: number, now: () => number = Date.now) {
   const hits = new Map<string, number[]>();
-  return (key: string): boolean => {
+  let lastSweep = 0;
+  const check = (key: string): boolean => {
     const t = now();
+    // Forget clients with nothing in the window, at most once per window.
+    if (t - lastSweep >= windowMs) {
+      for (const [k, times] of hits) if (times.every((at) => t - at >= windowMs)) hits.delete(k);
+      lastSweep = t;
+    }
     const recent = (hits.get(key) ?? []).filter((at) => t - at < windowMs);
     if (recent.length >= limit) {
       hits.set(key, recent);
@@ -76,4 +83,5 @@ export function createRateLimiter(limit: number, windowMs: number, now: () => nu
     hits.set(key, recent);
     return true;
   };
+  return Object.assign(check, { size: () => hits.size });
 }

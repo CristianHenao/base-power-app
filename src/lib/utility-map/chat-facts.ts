@@ -46,7 +46,7 @@ const UNITS: Record<string, string> = {
 };
 
 function factorText(r: RiskRow): string {
-  return FACTORS.map(([id, label]) => `${label} ${r.factors[id] ?? "no data"}`).join(", ");
+  return FACTORS.map(([id, label]) => `${label} ${r.factors[id] == null ? "no data" : cell(r.factors[id])}`).join(", ");
 }
 
 function layerValue(data: UtilityMapData, county: CountyRecord, id: LayerId): string {

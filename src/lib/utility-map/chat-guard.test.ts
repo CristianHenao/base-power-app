@@ -56,3 +56,12 @@ test("place links show the place's real name and unknown ids stay plain text", (
     { type: "text", text: " and Nope Co." },
   ]);
 });
+
+test("signs and leading decimals are kept, ranges and dates aren't read as negatives", () => {
+  assert.deepEqual(numbersIn("-5 and .5 and (−) 1-20 on 2024-07-07"), ["-5", "0.5", "1", "20", "2024", "7", "7"]);
+  assert.deepEqual(numbersIn("1,2 and 10,20,30 and 1,660,703"), ["1", "2", "10", "20", "30", "1660703"]);
+});
+
+test("broken link syntax from the model shows just the name", () => {
+  assert.deepEqual(parseAnswer("See [[county:48201|Harris County] now.", PLACES), [{ type: "text", text: "See Harris County now." }]);
+});

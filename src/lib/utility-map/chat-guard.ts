@@ -8,7 +8,9 @@ export type PlaceKind = "county" | "utility";
 export type Place = { kind: PlaceKind; id: string; name: string };
 export type ChatPart = { type: "text"; text: string } | { type: "place"; kind: PlaceKind; id: string; label: string };
 
-const NUMBER = /\d[\d,]*(?:\.\d+)?/g;
+// Thousands groups ("1,660,703"), decimals (".5", "2.7") and whole numbers; a minus counts as a
+// sign only at the start of a word, so "1-20" and "2024-07-07" aren't read as negatives.
+const NUMBER = /(?<![\w.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?![\d,]*\d)|(?<![\w.])-?\d*\.\d+|(?<![\w.])-?\d+|\d+/g;
 const PLACE_LINK = /\[\[(county|utility):([^|\]]+)\|([^\]]+)\]\]/g;
 // "1.2 million", "3k", "$2M": a scale word turns a known number into a new one.
 const SCALED = /\d[\d,]*(?:\.\d+)?\s*(?:million|billion|trillion|thousand|[kKMB]\b)/g;
@@ -18,6 +20,12 @@ const MULTIPLIER = /\b(twice|thrice|double|triple|quadruple|half as)\b/gi;
 /** Every number in the text, normalized so "1,660,703" = "1660703" and "2.70" = "2.7". */
 export function numbersIn(text: string): string[] {
   return (text.match(NUMBER) ?? []).map((n) => String(Number(n.replace(/,/g, ""))));
+}
+
+// A link the model didn't close properly: show its name, not the brackets and id.
+const BROKEN_LINK = /\[\[(?:county|utility):[^|\]]*\|([^\]]*)\]?(?!\])/g;
+function fixBrokenLinks(text: string): string {
+  return text.replace(BROKEN_LINK, "$1");
 }
 
 /** Replace place links with their labels (their ids are codes, not claims). */
@@ -97,5 +105,5 @@ export function parseAnswer(reply: string, places: Place[]): ChatPart[] {
     at = m.index! + m[0].length;
   }
   pushText(reply.slice(at));
-  return parts;
+  return parts.map((p) => (p.type === "text" ? { ...p, text: fixBrokenLinks(p.text) } : p));
 }
