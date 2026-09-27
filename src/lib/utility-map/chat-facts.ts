@@ -136,8 +136,11 @@ function utilityFacts(data: UtilityMapData, storms: SpotlightStorm[], u: Utility
       `${share} Base fleet for ${u.name}: ${fmt(f.cores)} Cores, ${fmt(f.storageMwh)} MWh stored, ${fmt(f.dispatchMw2h)} MW for ${data.battery.dispatch_window_h} hours, ${f.peakShare == null ? "share of summer peak not known" : `${num.format(f.peakShare * 100)}% of summer peak`} (estimates).`,
     );
   }
-  return lines;
+  return tagged(u.name, lines);
 }
+
+/** Starts every line with the place's name unless it already has it, so each number is tied to its place. */
+const tagged = (name: string, lines: string[]) => lines.map((l) => (l.includes(name) ? l : `${name}: ${l}`));
 
 function countyFacts(data: UtilityMapData, storms: SpotlightStorm[], c: CountyRecord): string[] {
   const byFips = new Map(data.counties.map((x) => [x.fips, x]));
@@ -149,7 +152,7 @@ function countyFacts(data: UtilityMapData, storms: SpotlightStorm[], c: CountyRe
     .sort((a, b) => b.hit!.peak_out - a.hit!.peak_out)
     .slice(0, 5)
     .map(({ s, hit }) => `${s.name} ${fmt(hit!.peak_out)} out (${hit!.peak_out_pct == null ? "share unknown" : `${fmt(hit!.peak_out_pct)}%`})`);
-  return [
+  return tagged(`${c.name} County`, [
     `Selected county: ${c.name} County (${c.fips})`,
     riskText(row, data.counties.length),
     `Factor percentiles: ${factorText(row)}`,
@@ -157,10 +160,12 @@ function countyFacts(data: UtilityMapData, storms: SpotlightStorm[], c: CountyRe
     `${fmt(c.customers)} customers; utilities: ${c.utilities.map((id) => utilities.get(id) ?? id).join(", ")}`,
     ...(c.sfha_land_pct != null ? [`${fmt(c.sfha_land_pct)}% of land in FEMA's 1% annual-chance floodplain`] : []),
     ...(hits.length ? [`Labeled storms here: ${hits.join("; ")}`] : []),
-  ];
+  ]);
 }
 
-export function viewFacts(data: UtilityMapData, storms: SpotlightStorm[], view: ViewState): string {
+export function viewFacts(data: UtilityMapData, storms: SpotlightStorm[], input: ViewState): string {
+  // Only a storm in the release may be named; anything else from the request is left out.
+  const view = input.storm && !storms.some((s) => s.name === input.storm) ? { ...input, hazardSub: "patterns" as const, storm: null } : input;
   const q = QUESTIONS.find((x) => x.id === view.question)!;
   const byFips = new Map(data.counties.map((c) => [c.fips, c]));
   const byId = new Map(data.utilities.map((u) => [u.id, u]));
@@ -181,10 +186,8 @@ export function viewFacts(data: UtilityMapData, storms: SpotlightStorm[], view: 
       : []),
     ...(view.question === "fleet" ? [`Fleet share: ${num.format(view.share * 100)}% of eligible homes`] : []),
     `Card: ${described.intro.title} ${described.intro.lead}`,
-    `Top of the list (${t.columns.join(", ")}): ${t.rows
-      .slice(0, 10)
-      .map((r) => `${r.name}: ${r.cells.join(", ")}`)
-      .join("; ")}`,
+    `The list on screen shows: ${t.columns.join(", ")}.`,
+    ...t.rows.slice(0, 10).map((r) => `On the list: ${r.name}: ${r.cells.join(", ")}`),
   ];
   const u = view.utility ? byId.get(view.utility) : undefined;
   const c = view.county ? byFips.get(view.county) : undefined;

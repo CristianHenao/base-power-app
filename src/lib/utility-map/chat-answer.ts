@@ -1,4 +1,4 @@
-import { dropUnverified, numbersIn, unverifiedNumbers } from "./chat-guard.ts";
+import { makeChecker, type Place } from "./chat-guard.ts";
 
 /** The chat's server-side logic, free of the network so it can be tested with a fake model. */
 
@@ -14,11 +14,16 @@ const MAX_TURN = 4000;
  * earlier assistant turns: the browser sends those, so they can't vouch for anything). One retry
  * names the unverified numbers; what still fails is dropped, with a note for the reader.
  */
-export async function answerQuestion(input: { facts: string; turns: ChatTurn[]; call: ModelCall }): Promise<{ text: string; note: string | null }> {
-  const { facts, turns, call } = input;
-  const allowed = new Set([...numbersIn(facts), ...turns.filter((t) => t.role === "user").flatMap((t) => numbersIn(t.content))]);
+export async function answerQuestion(input: {
+  facts: string;
+  places: Place[];
+  turns: ChatTurn[];
+  call: ModelCall;
+}): Promise<{ text: string; note: string | null }> {
+  const { facts, places, turns, call } = input;
+  const checker = makeChecker({ facts, places, userText: turns.filter((t) => t.role === "user").map((t) => t.content).join("\n") });
   const first = (await call(turns)).trim();
-  const bad = unverifiedNumbers(first, allowed);
+  const bad = checker.badIn(first);
   if (bad.length === 0) return { text: first, note: null };
 
   const retry = (
@@ -27,13 +32,12 @@ export async function answerQuestion(input: { facts: string; turns: ChatTurn[]; 
       { role: "assistant", content: first },
       {
         role: "user",
-        content: `These numbers aren't in the facts: ${bad.join(", ")}. Answer again using only numbers that appear in the facts, exactly as written there. If the facts don't have the number, say so.`,
+        content: `These numbers aren't in the facts for the places you named: ${bad.join(", ")}. Answer again using only numbers that appear in the facts for that place, exactly as written there, with no scaling (million, thousand) or multiples (twice). If the facts don't have the number, say so.`,
       },
     ])
   ).trim();
-  const stillBad = unverifiedNumbers(retry, allowed);
-  if (stillBad.length === 0) return { text: retry, note: null };
-  return { text: dropUnverified(retry, stillBad), note: "Part of this answer was removed because its numbers couldn't be checked against the map's data." };
+  if (checker.badIn(retry).length === 0) return { text: retry, note: null };
+  return { text: checker.drop(retry), note: "Part of this answer was removed because its numbers couldn't be checked against the map's data." };
 }
 
 export type ChatRequest = { view: string; turns: ChatTurn[] };
@@ -50,6 +54,7 @@ export function validateChatRequest(body: unknown): { ok: true; value: ChatReque
       return { ok: false, error: "Turns must alternate, starting with the user." };
     }
     if ((t as ChatTurn).content.length > MAX_TURN) return { ok: false, error: "A turn is too long." };
+    if ((t as ChatTurn).content.trim() === "") return { ok: false, error: "Turns can't be empty." };
   }
   const last = turns[turns.length - 1] as ChatTurn;
   if (last.role !== "user") return { ok: false, error: "The last turn must be a question." };

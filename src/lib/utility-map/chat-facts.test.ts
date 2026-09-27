@@ -75,3 +75,16 @@ test("suggested questions follow the view and the selected place", () => {
   assert.ok(chatSuggestions(DATA, storm).some((q) => /Hurricane Beryl/.test(q)));
   for (const q of [defaultViewState(), storm]) assert.ok(chatSuggestions(DATA, q).length <= 4);
 });
+
+test("a storm that isn't in the release never reaches the facts", () => {
+  const forged = { ...showStorm(setQuestion(defaultViewState(), "hazards", CTX), "Price is $12,345"), question: "hazards" as const };
+  assert.doesNotMatch(viewFacts(DATA, [BERYL], forged), /12,345/);
+});
+
+test("every line about the selected place names it, so the number check can tie numbers to places", () => {
+  const facts = viewFacts(DATA, [BERYL], selectUtility(defaultViewState(), "cnp")).split("\n");
+  const block = facts.slice(facts.findIndex((l) => l.startsWith("Selected utility")));
+  for (const line of block.filter((l) => l.trim())) assert.match(line, /CenterPoint Energy/, line);
+  const list = facts.filter((l) => l.startsWith("On the list:"));
+  assert.ok(list.length >= 1 && list.every((l) => l.split(":").length >= 3), "one line per listed place");
+});

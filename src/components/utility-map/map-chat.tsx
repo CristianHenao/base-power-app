@@ -58,6 +58,7 @@ export function MapChat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ view: viewQuery, turns }),
+        signal: AbortSignal.timeout(45_000),
       });
       const body = (await response.json().catch(() => ({}))) as {
         text?: string;
@@ -65,7 +66,9 @@ export function MapChat({
         note?: string | null;
         error?: string;
       };
-      if (!response.ok) {
+      // A sign-in redirect lands on an HTML page with status 200: that's not an answer either.
+      if (response.redirected && !body.error) body.error = "Your session has expired. Refresh the page and sign in again.";
+      if (!response.ok || response.redirected || !body.text || !Array.isArray(body.parts)) {
         setError(
           body.error === "not_configured"
             ? "Chat isn't available right now: it hasn't been set up on this server."
@@ -77,8 +80,12 @@ export function MapChat({
         return;
       }
       onEntries((prev) => [...prev, { role: "assistant", text: body.text ?? "", parts: body.parts ?? [], note: body.note ?? null }]);
-    } catch {
-      setError("The chat couldn't answer right now. Check your connection and try again.");
+    } catch (err) {
+      setError(
+        err instanceof DOMException && err.name === "TimeoutError"
+          ? "The chat took too long to answer. Try again."
+          : "The chat couldn't answer right now. Check your connection and try again.",
+      );
       onEntries((prev) => prev.slice(0, -1));
       setDraft(q);
     } finally {
@@ -112,7 +119,7 @@ export function MapChat({
             {entries.length === 0 ? (
               <div className="space-y-2">
                 <p className="text-[12px] leading-[18px] text-muted-foreground">
-                  Answers use only this map&apos;s data, and every number is checked against it before it&apos;s shown.
+                  Answers use only this map&apos;s data. A number that can&apos;t be found in the data for the place it describes is removed before you see it.
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {suggestions.map((s) => (

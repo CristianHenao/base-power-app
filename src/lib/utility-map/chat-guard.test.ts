@@ -1,32 +1,56 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dropUnverified, numbersIn, parseAnswer, unverifiedNumbers } from "./chat-guard.ts";
+import { makeChecker, numbersIn, parseAnswer, type Place } from "./chat-guard.ts";
 
-const allowed = new Set(numbersIn("Harris peak out 1,660,703 (91%). Index 98 of 150. Outages 2.7 h."));
+const PLACES: Place[] = [
+  { kind: "county", id: "48201", name: "Harris County" },
+  { kind: "county", id: "48453", name: "Travis County" },
+  { kind: "utility", id: "centerpoint", name: "CenterPoint Energy" },
+];
+const FACTS = [
+  "Bands: Low 1-20, Severe 81-100.",
+  "centerpoint | CenterPoint Energy | 98 | Severe | 4",
+  "48201 | Harris County | centerpoint | 100 | Severe | 1",
+  "48453 | Travis County | austin | 12 | Low | 200",
+  "Hurricane Beryl: Harris County 1,660,703 out (90.9%).",
+].join("\n");
+const check = (question = "") => makeChecker({ facts: FACTS, places: PLACES, userText: question });
 
 test("numbers are read the same way however they're written", () => {
   assert.deepEqual(numbersIn("1,660,703 customers, 91% and 2.70 h, rank #4"), ["1660703", "91", "2.7", "4"]);
   assert.deepEqual(numbersIn("no numbers here"), []);
 });
 
-test("only numbers missing from the facts are flagged", () => {
-  assert.deepEqual(unverifiedNumbers("Harris had 1660703 out (91%), index 98.", allowed), []);
-  assert.deepEqual(unverifiedNumbers("About 2 million were out, 45% of homes.", allowed), ["2", "45"]);
+test("a number must belong to the place the sentence is about", () => {
+  assert.deepEqual(check().badIn("CenterPoint Energy scores 98, #4."), []);
+  assert.deepEqual(check().badIn("Harris County scores 100 and lost 1,660,703 in Beryl."), []);
+  // 12 is in the facts, but it's Travis's score, not Harris's.
+  assert.deepEqual(check().badIn("Harris County scores 12."), ["12"]);
+  assert.deepEqual(check().badIn("[[county:48201|Harris County]] scores 12."), ["12"]);
 });
 
-test("place links don't count as numbers: their ids are FIPS codes", () => {
-  assert.deepEqual(unverifiedNumbers("[[county:48201|Harris County]] scored 98.", allowed), []);
+test("general lines (methods, bands) count for any sentence; sentences naming no place use all the facts", () => {
+  assert.deepEqual(check().badIn("Harris County is Severe, which is 81-100."), []);
+  assert.deepEqual(check().badIn("The top utility scores 98."), []);
+  assert.deepEqual(check().badIn("The top utility scores 97."), ["97"]);
+});
+
+test("scale words and multipliers can't sneak a new number past the check", () => {
+  assert.deepEqual(check().badIn("Harris County lost 1.6 million customers."), ["1.6 million"]);
+  assert.deepEqual(check().badIn("Harris County had twice as many outages."), ["twice"]);
+});
+
+test("numbers the user wrote are allowed", () => {
+  assert.deepEqual(check("What if 5% of homes had a Core?").badIn("At 5% of homes, Harris County would see more backup."), []);
 });
 
 test("sentences with unverified numbers are dropped, the rest kept", () => {
-  const out = dropUnverified("Harris scored 98. It lost 45% of power. Hurricanes drive it.", ["45"]);
-  assert.equal(out, "Harris scored 98. Hurricanes drive it.");
-  assert.equal(dropUnverified("Line one has 7.\nLine two is fine.", ["7"]), "Line two is fine.");
+  assert.equal(check().drop("Harris County scores 100. Harris County scores 12. Hurricanes drive it."), "Harris County scores 100. Hurricanes drive it.");
+  assert.equal(check().drop("The top utility scores 97.\nTravis County scores 12."), "Travis County scores 12.");
 });
 
-test("answers split into text and place links; unknown ids stay plain text", () => {
-  const ids = { county: new Set(["48201"]), utility: new Set(["oncor"]) };
-  assert.deepEqual(parseAnswer("See [[county:48201|Harris County]] and [[utility:nope|Nope Co]].", ids), [
+test("place links show the place's real name and unknown ids stay plain text", () => {
+  assert.deepEqual(parseAnswer("See [[county:48201|Travis County]] and [[utility:nope|Nope Co]].", PLACES), [
     { type: "text", text: "See " },
     { type: "place", kind: "county", id: "48201", label: "Harris County" },
     { type: "text", text: " and Nope Co." },
