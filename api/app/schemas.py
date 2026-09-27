@@ -80,6 +80,7 @@ class Event(BaseModel):
     label: str
     storm: str | None
     start: str
+    end: str
     peak_out: int
     peak_out_pct: float | None
     duration_h: Band

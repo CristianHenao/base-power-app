@@ -7,7 +7,7 @@ import type { Event, Report, Source } from "@/lib/report/types";
 import { cn } from "@/lib/utils";
 import { BackupChart } from "./backup-chart";
 import { EssentialsLead, HouseholdGapCard } from "./household-gap-card";
-import { band, centralDate, centralTime, hours, percent } from "./format";
+import { band, centralRange, centralTime, hours, percent } from "./format";
 
 const OFFER_TEXT: Record<Report["base_offer"]["product"], string> = {
   energy_plus_backup: "Base sells power and installs Cores here.",
@@ -53,7 +53,7 @@ function StormRow({ event, report }: { event: Event; report: Report }) {
         <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-2">
           <span className="font-medium">{event.label}</span>
           <span className="text-sm text-muted-foreground">
-            {centralDate(event.start)}
+            {centralRange(event.start, event.end)}
             {event.peak_out_pct != null ? ` · ${Math.round(event.peak_out_pct)}% of homes out at peak` : ` · ${event.peak_out.toLocaleString()} homes out at peak`}
           </span>
         </summary>

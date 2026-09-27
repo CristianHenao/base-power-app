@@ -63,12 +63,14 @@ def event_record(row: pd.Series, order: str = settings.LONG_OUTAGE_ORDER, floore
     meaningful (the biggest event reads 100% by construction), so it is null.
     """
     start = pd.Timestamp(row["start"]).tz_convert(CENTRAL)
+    end = pd.Timestamp(row["end"]).tz_convert(CENTRAL)
     replayed = "backup_h_1" in row.index
     return {
         "id": row["id"],
         "label": event_label(row.get("storm"), start),
         "storm": row.get("storm") if isinstance(row.get("storm"), str) else None,
         "start": start.isoformat(),
+        "end": end.isoformat(),
         "peak_out": int(row["peak_out"]),
         "peak_out_pct": None if floored else _num(row["peak_out_pct"], 1),
         "duration_h": {

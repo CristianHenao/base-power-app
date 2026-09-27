@@ -40,6 +40,7 @@
       "label": "Hurricane Beryl",
       "storm": "Hurricane Beryl",
       "start": "2024-07-08T09:15:00-05:00",
+      "end": "2024-07-19T00:45:00-05:00",
       "peak_out": 1660703,
       "peak_out_pct": 90.9,
       "duration_h": {
@@ -73,6 +74,7 @@
       "label": "Houston derecho",
       "storm": "Houston derecho",
       "start": "2024-05-16T18:00:00-05:00",
+      "end": "2024-05-23T19:15:00-05:00",
       "peak_out": 502077,
       "peak_out_pct": 27.5,
       "duration_h": {
@@ -106,6 +108,7 @@
       "label": "Winter Storm Uri",
       "storm": "Winter Storm Uri",
       "start": "2021-02-14T23:15:00-06:00",
+      "end": "2021-02-18T21:15:00-06:00",
       "peak_out": 455986,
       "peak_out_pct": 24.9,
       "duration_h": {
@@ -139,6 +142,7 @@
       "label": "Hurricane Nicholas",
       "storm": "Hurricane Nicholas",
       "start": "2021-09-13T21:30:00-05:00",
+      "end": "2021-09-18T00:30:00-05:00",
       "peak_out": 118851,
       "peak_out_pct": 6.5,
       "duration_h": {
@@ -172,6 +176,7 @@
       "label": "Memorial Day storms (Dallas derecho)",
       "storm": "Memorial Day storms (Dallas derecho)",
       "start": "2024-05-28T15:00:00-05:00",
+      "end": "2024-05-30T18:30:00-05:00",
       "peak_out": 251830,
       "peak_out_pct": 13.8,
       "duration_h": {

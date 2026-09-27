@@ -40,6 +40,7 @@
       "label": "Winter Storm Uri",
       "storm": "Winter Storm Uri",
       "start": "2021-02-14T12:30:00-06:00",
+      "end": "2021-02-21T08:45:00-06:00",
       "peak_out": 273849,
       "peak_out_pct": 42.7,
       "duration_h": {
@@ -73,6 +74,7 @@
       "label": "Winter Storm Mara (ice storm)",
       "storm": "Winter Storm Mara (ice storm)",
       "start": "2023-02-01T02:15:00-06:00",
+      "end": "2023-02-08T18:00:00-06:00",
       "peak_out": 185025,
       "peak_out_pct": 28.8,
       "duration_h": {
@@ -106,6 +108,7 @@
       "label": "May 2025 outage",
       "storm": null,
       "start": "2025-05-28T18:45:00-05:00",
+      "end": "2025-06-01T12:00:00-05:00",
       "peak_out": 73455,
       "peak_out_pct": 11.4,
       "duration_h": {
@@ -139,6 +142,7 @@
       "label": "Winter Storm Uri",
       "storm": "Winter Storm Uri",
       "start": "2021-02-11T10:45:00-06:00",
+      "end": "2021-02-13T17:45:00-06:00",
       "peak_out": 32104,
       "peak_out_pct": 5.0,
       "duration_h": {
@@ -172,6 +176,7 @@
       "label": "May 2021 outage",
       "storm": null,
       "start": "2021-05-28T19:00:00-05:00",
+      "end": "2021-05-31T11:15:00-05:00",
       "peak_out": 44840,
       "peak_out_pct": 7.0,
       "duration_h": {

@@ -265,6 +265,10 @@
           "title": "Start",
           "type": "string"
         },
+        "end": {
+          "title": "End",
+          "type": "string"
+        },
         "peak_out": {
           "title": "Peak Out",
           "type": "integer"
@@ -351,6 +355,7 @@
         "label",
         "storm",
         "start",
+        "end",
         "peak_out",
         "peak_out_pct",
         "duration_h",

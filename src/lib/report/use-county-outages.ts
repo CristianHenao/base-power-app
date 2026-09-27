@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import type { HomeOutageEvent } from "@/lib/risk/synthetic-outages";
 import type { WeatherHazardKind } from "@/lib/risk/synthetic-weather";
+import { centralRange } from "@/components/report/format";
 import { createReport } from "./client";
 import type { Event, Report } from "./types";
 
@@ -36,9 +37,9 @@ export function reportToTimeline(report: Report): HomeOutageEvent[] {
         hazardId: event.id,
         causeKind: causeOf(event),
         title: event.label,
-        detail: `${county} County: ${share} out at peak; 90% back within about ${Math.round(hours)} hours. Homes in the county, not this address.`,
+        detail: `${centralRange(event.start, event.end)}. ${county} County: ${share} out at peak; 90% back within about ${Math.round(hours)} hours. Homes in the county, not this address.`,
         startedAt: started,
-        endedAt: new Date(started.getTime() + hours * 3_600_000),
+        endedAt: new Date(event.end),
         durationHours: Number(hours.toFixed(1)),
         status: "restored",
         impactedHome: false,
