@@ -303,3 +303,46 @@ test("the fleet card spells out the assumptions behind the numbers", () => {
   assert.match(intro.lead, /20% kept for backup/);
   assert.match(intro.read, /2 hours/);
 });
+
+test("every table row carries raw numbers, one per column, for sorting", () => {
+  const views = [
+    start(), hazards("flood"), hazards("flood", "hurricane"), hazards("flood", "hurricane", "winter"),
+    showStorm(hazards("winter"), "Hurricane Beryl"), setQuestion(start(), "grid", CTX), setQuestion(start(), "fleet", CTX),
+  ];
+  for (const s of views) {
+    const d = describe(s);
+    for (const t of [d.table, d.countyTable].filter((x) => x != null)) {
+      for (const row of t.rows) assert.equal(row.values.length, t.columns.length, t.caption);
+    }
+  }
+  const storm = describe(showStorm(hazards("winter"), "Hurricane Beryl"));
+  assert.deepEqual(storm.table.rows[0].values, [64, 900, 9000]);
+});
+
+test("hazard views also list every county: Texas rank first, then each hazard", () => {
+  const one = describe(hazards("flood")).countyTable!;
+  assert.equal(one.rowKind, "county");
+  assert.equal(one.rows.length, DATA.counties.length);
+  assert.deepEqual(one.columns, ["Texas rank", "Flood"]);
+  assert.deepEqual(one.rows.map((r) => r.id), ["48201", "48453", "48001"]);
+  assert.equal(one.rows[0].cells[0], "90%");
+  assert.equal(one.rows[0].values[0], 90);
+
+  const two = describe(hazards("flood", "hurricane")).countyTable!;
+  assert.deepEqual(two.columns, ["Average Texas rank", "Flood", "Hurricanes"]);
+
+  const three = describe(hazards("flood", "hurricane", "winter")).countyTable!;
+  assert.deepEqual(three.columns, ["High in", "Flood", "Hurricanes", "Winter freeze"]);
+  assert.equal(three.rows[0].cells[0], "3 of 3");
+  assert.equal(three.rows[0].values[0], 3);
+});
+
+test("which views have a county tab: hazards and grid yes; storm is county-only; fleet and risk have none", () => {
+  assert.equal(describe(showStorm(hazards("winter"), "Hurricane Beryl")).countyTable, undefined);
+  assert.equal(describe(setQuestion(start(), "fleet", CTX)).countyTable, undefined);
+  assert.equal(describe(start()).countyTable, undefined);
+  const grid = describe(setQuestion(start(), "grid", CTX)).countyTable!;
+  assert.deepEqual(grid.columns, ["Peak demand", "Local generation"]);
+  assert.deepEqual(grid.rows.map((r) => r.id), ["48201", "48453", "48001"]);
+  assert.equal(describe(hazards()).countyTable, undefined);
+});

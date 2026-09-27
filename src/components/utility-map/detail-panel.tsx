@@ -57,7 +57,7 @@ type DetailPanelProps = {
   onSelectUtility: (id: string | null) => void;
   onSelectCounty: (fips: string | null) => void;
   onOpenCounty: (fips: string) => void;
-  onOpenRiskTable: () => void;
+  onOpenFullTable: () => void;
   onClosePicker: () => void;
   className?: string;
 };
@@ -107,26 +107,16 @@ function Intro({ intro }: { intro: ViewIntro }) {
 }
 
 /** Grid Risk Index, statewide: every utility ranked in a compact table, with the full breakdown one click away. */
-function RiskList({ data, described, countiesByFips, onSelectUtility, onOpenRiskTable }: DetailPanelProps) {
+function RiskList({ data, described, countiesByFips, onSelectUtility, onOpenFullTable }: DetailPanelProps) {
   const [open, setOpen] = useState(false);
   const rows = sortRiskRows(riskRows(data, "utility", countiesByFips), "rank", "asc");
   const shown = open ? rows : rows.slice(0, 15);
   return (
     <div className="space-y-4">
       <Intro intro={described.intro} />
-      <button
-        type="button"
-        onClick={onOpenRiskTable}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-[var(--bp-grey-100)] px-4 py-3 text-left hover:bg-[var(--bp-grey-5)]"
-      >
-        <span>
-          <span className="block text-[14px] leading-[21px] font-semibold">Open the full table</span>
-          <span className="block text-[12px] leading-[18px] text-muted-foreground">
-            All {rows.length} utilities and {data.counties.length} counties, every factor, sortable and searchable
-          </span>
-        </span>
-        <Maximize2 className="size-4 shrink-0" aria-hidden />
-      </button>
+      <FullTableButton onClick={onOpenFullTable}>
+        All {rows.length} utilities and {data.counties.length} counties, every factor, sortable and searchable
+      </FullTableButton>
       <table className="w-full text-[13px] leading-[18px]">
         <thead>
           <tr className="border-b text-left text-[12px] text-muted-foreground">
@@ -203,8 +193,33 @@ function ShowAll({ open, count, onToggle }: { open: boolean; count: number; onTo
   );
 }
 
-/** Past storm, grid and fleet: the same rows as the table, in the same order. */
-function ResultList({ described, countiesByFips, onSelectUtility, onOpenCounty }: DetailPanelProps) {
+/** Opens the full-screen table for the current view. */
+function FullTableButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-[var(--bp-grey-100)] px-4 py-3 text-left hover:bg-[var(--bp-grey-5)]"
+    >
+      <span>
+        <span className="block text-[14px] leading-[21px] font-semibold">Open the full table</span>
+        <span className="block text-[12px] leading-[18px] text-muted-foreground">{children}</span>
+      </span>
+      <Maximize2 className="size-4 shrink-0" aria-hidden />
+    </button>
+  );
+}
+
+/** "All 150 utilities and 254 counties" / "All 38 counties hit" for the current view's tables. */
+function fullTableLabel(described: DetailPanelProps["described"]): string {
+  const parts = [described.table, described.countyTable]
+    .filter((t) => t != null && t.rows.length > 0)
+    .map((t) => `${t!.rows.length} ${t!.rowKind === "utility" ? "utilities" : described.context.kind === "storm" ? "counties with outages" : "counties"}`);
+  return `All ${parts.join(" and ")}, every column, sortable and searchable`;
+}
+
+/** Hazards, past storm, grid and fleet: the same rows as the table, in the same order. */
+function ResultList({ described, countiesByFips, onSelectUtility, onOpenCounty, onOpenFullTable }: DetailPanelProps) {
   const [open, setOpen] = useState(false);
   const { table } = described;
   const shown = open ? table.rows : table.rows.slice(0, LIST_PREVIEW);
@@ -212,6 +227,9 @@ function ResultList({ described, countiesByFips, onSelectUtility, onOpenCounty }
   return (
     <div className="space-y-4">
       <Intro intro={described.intro} />
+      {table.rows.length > 0 ? (
+        <FullTableButton onClick={onOpenFullTable}>{fullTableLabel(described)}</FullTableButton>
+      ) : null}
       {table.rows.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-4 py-3 text-[14px] leading-[21px] text-muted-foreground">
           {described.legend.kind === "empty" ? described.legend.message : "Nothing to list."}

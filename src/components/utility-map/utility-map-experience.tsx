@@ -9,6 +9,7 @@ import { DetailPanel } from "@/components/utility-map/detail-panel";
 import { MapKey } from "@/components/utility-map/map-key";
 import { MethodsSheet } from "@/components/utility-map/methods-sheet";
 import { RiskTableSheet } from "@/components/utility-map/risk-table-sheet";
+import { ViewTableSheet } from "@/components/utility-map/view-table-sheet";
 import {
   LAYER_COUNTY_3D,
   LAYER_COUNTY_FILL,
@@ -112,6 +113,7 @@ export function UtilityMapExperience() {
   const [view, setView] = useState<ViewState>(() => defaultViewState());
   const [showWarnings, setShowWarnings] = useState(false);
   const [riskTableOpen, setRiskTableOpen] = useState(false);
+  const [viewTableOpen, setViewTableOpen] = useState(false);
   const [view3d, setView3dOn] = useState(false);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip | null>(null);
@@ -673,7 +675,7 @@ export function UtilityMapExperience() {
               onSelectUtility={selectUtility}
               onSelectCounty={selectFips}
               onOpenCounty={openCounty}
-              onOpenRiskTable={() => setRiskTableOpen(true)}
+              onOpenFullTable={() => (view.question === "risk" ? setRiskTableOpen(true) : setViewTableOpen(true))}
             />
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
@@ -690,6 +692,20 @@ export function UtilityMapExperience() {
             setRiskTableOpen(false);
             if (kind === "county") openCounty(row.id);
             else selectUtility(row.id);
+          }}
+        />
+      ) : null}
+      {described ? (
+        <ViewTableSheet
+          // A fresh sheet (tab, search, sort) for each view.
+          key={`${view.question}-${view.hazardSub}-${view.hazards.length}`}
+          open={viewTableOpen}
+          onOpenChange={setViewTableOpen}
+          described={described}
+          onPick={(id, kind) => {
+            setViewTableOpen(false);
+            if (kind === "county") openCounty(id);
+            else selectUtility(id);
           }}
         />
       ) : null}

@@ -48,7 +48,8 @@ export type TableSpec = {
   columns: string[];
   /** The column that matches the map's color, shown first in short lists. */
   primary: number;
-  rows: { id: string; name: string; cells: string[] }[];
+  /** Each row's cells as text, and the same columns as raw numbers for sorting (null: no data). */
+  rows: { id: string; name: string; cells: string[]; values: (number | null)[] }[];
 };
 
 /** "a, b and c" */
@@ -69,6 +70,8 @@ export type ViewDescription = {
   /** The tooltip's words for a county, the same ones the map color stands for. */
   labelFor: (county: CountyRecord) => string;
   table: TableSpec;
+  /** The same view county by county, where the view has one (hazard patterns, grid). */
+  countyTable?: TableSpec;
 };
 
 export type DescribeInput = {
@@ -196,8 +199,45 @@ function utilityRows(
             return formatLayerValue(meta, utilityLayerSummary(u, countiesByFips, id).value, utilityLayerQuality(u, countiesByFips, id));
           }),
         ],
+        values: [
+          percentOf(scoreOf(u)),
+          ...layers.map((id) => utilityLayerSummary(u, countiesByFips, id).value),
+        ],
       };
     });
+}
+
+const percentOf = (share: number | null) => (share == null ? null : Math.round(share * 100));
+
+/** Every county for the picked hazards: its Texas rank (one), average rank (two) or high count (three+), then each hazard's value. */
+function hazardCountyTable(data: UtilityMapData, picks: HazardId[]): TableSpec {
+  const first = picks.length === 1 ? "Texas rank" : picks.length === 2 ? "Average Texas rank" : "High in";
+  const rows = data.counties.map((c) => {
+    const known = picks.map((id) => c.ranks[id]).filter((r): r is number => r != null);
+    const lead =
+      picks.length >= 3 ? overlapCount(c, picks) : known.length ? Math.round((known.reduce((a, b) => a + b, 0) / known.length) * 100) : null;
+    return {
+      id: c.fips,
+      name: `${c.name} County`,
+      cells: [
+        lead == null ? "—" : picks.length >= 3 ? `${lead} of ${picks.length}` : `${lead}%`,
+        ...picks.map((id) => formatLayerValue(data.layers.find((l) => l.id === id)!, c.values[id] ?? null, c.quality[id])),
+      ],
+      values: [lead, ...picks.map((id) => c.values[id] ?? null)],
+    };
+  });
+  return {
+    caption: `All ${data.counties.length} counties`,
+    rowKind: "county",
+    columns: [first, ...picks.map((id) => layerLabel(data, id))],
+    primary: 0,
+    rows: sortByFirst(rows),
+  };
+}
+
+/** Largest first value first, unknowns last, then by name. */
+function sortByFirst<T extends { name: string; values: (number | null)[] }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => (b.values[0] ?? -Infinity) - (a.values[0] ?? -Infinity) || a.name.localeCompare(b.name));
 }
 
 const layerLabel = (data: UtilityMapData, id: LayerId) => data.layers.find((l) => l.id === id)?.label ?? id;
@@ -300,6 +340,7 @@ function describeCore(
               whole.format(c.peak_out),
               whole.format(c.customer_hours),
             ],
+            values: [c.peak_out_pct, c.peak_out, c.customer_hours],
           })),
       },
     };
@@ -347,6 +388,7 @@ function describeCore(
         context: { kind: "hazard", label: style.label },
         stateFor: withSelection(state, utilitiesById, (c) => hazardLevel(c.ranks[picks[0]])),
         table,
+        countyTable: hazardCountyTable(data, picks),
       };
     }
     if (picks.length === 2) {
@@ -364,6 +406,7 @@ function describeCore(
         context: { kind: "bivariate", first: names[0], second: names[1] },
         stateFor: withSelection(state, utilitiesById, (c) => bivariateClass(c.ranks[picks[0]], c.ranks[picks[1]])),
         table,
+        countyTable: hazardCountyTable(data, picks),
       };
     }
     const table = scoreTable(names.join(", "), picks);
@@ -388,6 +431,7 @@ function describeCore(
       context: { kind: "overlap", of: picks.length },
       stateFor: withSelection(state, utilitiesById, (c) => Math.min(overlapCount(c, picks), 4) + 1),
       table,
+      countyTable: hazardCountyTable(data, picks),
     };
   }
 
@@ -406,6 +450,7 @@ function describeCore(
             utilityLayerQuality(u, countiesByFips, id),
           ),
         ),
+        values: GRID_LAYERS.map((id) => utilityLayerSummary(u, countiesByFips, id).value),
       }));
     const table: TableSpec = {
       caption: `All ${data.utilities.length} utilities · summer peak demand (2024) and local generation`,
@@ -413,6 +458,22 @@ function describeCore(
       columns: GRID_LAYERS.map((id) => layerLabel(data, id)),
       primary: 0,
       rows,
+    };
+    const countyTable: TableSpec = {
+      caption: `All ${data.counties.length} counties`,
+      rowKind: "county",
+      columns: GRID_LAYERS.map((id) => layerLabel(data, id)),
+      primary: 0,
+      rows: sortByFirst(
+        data.counties.map((c) => ({
+          id: c.fips,
+          name: `${c.name} County`,
+          cells: GRID_LAYERS.map((id) =>
+            formatLayerValue(data.layers.find((l) => l.id === id)!, c.values[id] ?? null, c.quality[id]),
+          ),
+          values: GRID_LAYERS.map((id) => c.values[id] ?? null),
+        })),
+      ),
     };
     if (!state.demand) {
       return {
@@ -432,6 +493,7 @@ function describeCore(
         context: { kind: "plain", label: "Demand shading is off" },
         stateFor: withSelection(state, utilitiesById, () => 1),
         table,
+        countyTable,
       };
     }
     return {
@@ -450,6 +512,7 @@ function describeCore(
       context: { kind: "grid" },
       stateFor: withSelection(state, utilitiesById, (c) => hazardLevel(c.ranks.peak_demand)),
       table,
+      countyTable,
     };
   }
 
@@ -507,6 +570,7 @@ function describeCore(
                 oneDecimal.format(f.dispatchMw2h),
                 f.peakShare == null ? "Peak not known" : pct.format(f.peakShare),
               ],
+              values: [f.cores, f.dispatchMw2h, f.peakShare == null ? null : f.peakShare * 100],
             };
           }),
       },
@@ -559,6 +623,13 @@ function describeCore(
             num(u.risk?.hazard),
             num(u.risk?.stress),
             u.risk ? `${u.risk.sources} of ${u.risk.sources_total}` : "—",
+          ],
+          values: [
+            u.risk?.index ?? null,
+            u.risk?.index ?? null,
+            u.risk?.hazard ?? null,
+            u.risk?.stress ?? null,
+            u.risk?.sources ?? null,
           ],
         })),
     },
