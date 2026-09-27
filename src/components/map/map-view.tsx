@@ -70,6 +70,11 @@ export type MapViewProps = {
    */
   outageBlackout?: boolean;
   /**
+   * Capacity view: yellow highlight on the home building only.
+   * Other buildings keep their normal color.
+   */
+  highlightHomeOnly?: boolean;
+  /**
    * Optional Three.js overlay. Disabled by default — sharing Mapbox’s WebGL
    * context can blank the basemap if the layer isn’t carefully managed.
    */
@@ -130,6 +135,7 @@ export function MapView({
   weatherHazards = null,
   outagePerimeter = null,
   outageBlackout = false,
+  highlightHomeOnly = false,
   enableThreeLayer = false,
   onMapReady,
 }: MapViewProps) {
@@ -274,10 +280,14 @@ export function MapView({
       zoom,
       pitch,
       bearing,
+      // Capacity sheet covers the lower half, so keep the home in the open band above it.
+      padding: highlightHomeOnly
+        ? { top: 72, bottom: 260, left: 16, right: 16 }
+        : { top: 0, bottom: 0, left: 0, right: 0 },
       duration: 900,
       essential: true,
     });
-  }, [status, center, zoom, pitch, bearing, cameraBounds]);
+  }, [status, center, zoom, pitch, bearing, cameraBounds, highlightHomeOnly]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -351,12 +361,14 @@ export function MapView({
       marker?.lngLat ??
       (Array.isArray(center) ? (center as [number, number]) : null);
 
-    const powerShading = Boolean(outagePerimeter?.visible);
+    const highlightHome = highlightHomeOnly && Boolean(home) && Boolean(marker?.lit);
+    const powerShading = Boolean(outagePerimeter?.visible) && !highlightHome;
     const baseOptions = {
       perimeter: powerShading ? outagePerimeter!.area : null,
       home,
       homePowered: Boolean(marker?.lit),
-      active: powerShading,
+      active: powerShading || highlightHome,
+      shadeOutage: powerShading,
     };
 
     syncBuildingPowerStates(map, { ...baseOptions, mode: "full" });
@@ -365,14 +377,15 @@ export function MapView({
     }
 
     const onIdle = () => {
-      if (!powerShading) return;
+      if (!powerShading && !highlightHome) return;
       syncBuildingPowerStates(map, { ...baseOptions, mode: "refresh" });
+      if (highlightHome) applyBasemapConfig(map, basemap);
     };
     map.on("idle", onIdle);
     return () => {
       map.off("idle", onIdle);
     };
-  }, [status, outagePerimeter, marker, center, basemap]);
+  }, [status, outagePerimeter, marker, center, basemap, highlightHomeOnly]);
 
   useEffect(() => {
     const map = mapRef.current;

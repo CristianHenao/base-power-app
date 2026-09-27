@@ -90,6 +90,15 @@ function applyPowerColors(map: Map) {
   }
 }
 
+function applyHomeHighlightColor(map: Map) {
+  try {
+    map.setConfigProperty("basemap", "colorBuildingHighlight", COLOR_BATTERY);
+    map.setConfigProperty("basemap", "show3dLandmarks", false);
+  } catch (error) {
+    console.warn("Unable to set home highlight color", error);
+  }
+}
+
 function clearBuildingStates(map: Map) {
   try {
     map.resetFeatureStates(BUILDINGS_TARGET);
@@ -98,10 +107,58 @@ function clearBuildingStates(map: Map) {
   }
 }
 
+function queryBuildings(map: Map): MapboxGeoJSONFeature[] {
+  try {
+    return map.queryRenderedFeatures({
+      target: BUILDINGS_TARGET,
+    }) as MapboxGeoJSONFeature[];
+  } catch (error) {
+    console.warn("Unable to query buildings featureset", error);
+    return [];
+  }
+}
+
+function nearestBuilding(
+  buildings: MapboxGeoJSONFeature[],
+  home: LngLat,
+): MapboxGeoJSONFeature | null {
+  let nearest: MapboxGeoJSONFeature | null = null;
+  let nearestDist = Number.POSITIVE_INFINITY;
+  for (const building of buildings) {
+    const point = featureCentroid(building);
+    if (!point) continue;
+    const dist = distanceSq(point, home);
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      nearest = building;
+    }
+  }
+  return nearest;
+}
+
+/**
+ * Yellow highlight on the home building only. Other buildings keep their color.
+ */
+function paintHomeHighlight(map: Map, home: LngLat) {
+  applyHomeHighlightColor(map);
+  const buildings = queryBuildings(map);
+  const nearest = nearestBuilding(buildings, home);
+  for (const building of buildings) {
+    try {
+      map.setFeatureState(building, {
+        select: false,
+        highlight: building === nearest,
+      });
+    } catch {
+      // Skip features that can't take state
+    }
+  }
+}
+
 /**
  * Shade Standard 3D buildings by power status for the active outage:
- * - inside perimeter → select (dark / no power)
- * - outside → default colorBuildings (teal / powered)
+ * - inside perimeter → select (dark / no power), unless shadeOutage is false
+ * - outside → default colorBuildings
  * - home with Base Power → highlight (amber)
  */
 export function syncBuildingPowerStates(
@@ -111,13 +168,37 @@ export function syncBuildingPowerStates(
     home: LngLat | null;
     homePowered: boolean;
     active: boolean;
+    /** When false, only the home is highlighted yellow. */
+    shadeOutage?: boolean;
     /** full = reset then paint; refresh = paint newly visible buildings only */
     mode?: "full" | "refresh";
   },
 ) {
-  const { perimeter, home, homePowered, active, mode = "full" } = options;
+  const {
+    perimeter,
+    home,
+    homePowered,
+    active,
+    shadeOutage = true,
+    mode = "full",
+  } = options;
 
-  if (!active || !perimeter || perimeter.features.length === 0) {
+  if (!active) {
+    clearBuildingStates(map);
+    return;
+  }
+
+  if (!shadeOutage) {
+    if (!home || !homePowered) {
+      clearBuildingStates(map);
+      return;
+    }
+    if (mode === "full") clearBuildingStates(map);
+    paintHomeHighlight(map, home);
+    return;
+  }
+
+  if (!perimeter || perimeter.features.length === 0) {
     clearBuildingStates(map);
     return;
   }
@@ -133,18 +214,8 @@ export function syncBuildingPowerStates(
 
   if (polygons.length === 0) return;
 
-  let buildings: MapboxGeoJSONFeature[] = [];
-  try {
-    buildings = map.queryRenderedFeatures({
-      target: BUILDINGS_TARGET,
-    }) as MapboxGeoJSONFeature[];
-  } catch (error) {
-    console.warn("Unable to query buildings featureset", error);
-    return;
-  }
-
-  let nearestHome: MapboxGeoJSONFeature | null = null;
-  let nearestDist = Number.POSITIVE_INFINITY;
+  const buildings = queryBuildings(map);
+  const nearestHome = home ? nearestBuilding(buildings, home) : null;
 
   for (const building of buildings) {
     const point = featureCentroid(building);
@@ -159,14 +230,6 @@ export function syncBuildingPowerStates(
         map.setFeatureState(building, { select: true, highlight: false });
       } catch {
         // Skip features that can't take state
-      }
-    }
-
-    if (home) {
-      const dist = distanceSq(point, home);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearestHome = building;
       }
     }
   }

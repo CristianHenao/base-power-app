@@ -266,8 +266,11 @@ export function RiskAnalysisDashboard() {
   const outageBlackout = Boolean(
     showWeatherAnalysis && activeOutage?.impactedHome,
   );
-  const revealBattery = outageBlackout && showBasePower;
-  /** Capacity focus: pull back to neighborhood (not house-close) */
+  const revealBattery = Boolean(
+    (showWeatherAnalysis && batteryCapacityOpen) ||
+      (outageBlackout && showBasePower),
+  );
+  /** Capacity focus: close-in on the home, highlighted yellow */
   const useCapacityCamera = showWeatherAnalysis && batteryCapacityOpen;
 
   const marker = useMemo<MapMarker | null>(() => {
@@ -373,6 +376,7 @@ export function RiskAnalysisDashboard() {
               weatherHazards={weatherOverlay}
               outagePerimeter={outagePerimeterOverlay}
               outageBlackout={outageBlackout}
+              highlightHomeOnly={useCapacityCamera}
               enableThreeLayer={false}
             />
           ) : hasAddress && !hasCoords && !errorMessage ? (
@@ -388,7 +392,7 @@ export function RiskAnalysisDashboard() {
           {!showMyHome && inAnalysis ? (
             <div className="flex items-center gap-2">
               <AnalysisCloseButton onClose={closeAnalysis} />
-              {activeOutage?.impactedHome ? (
+              {showWeatherAnalysis ? (
                 <BasePowerToggle
                   checked={showBasePower}
                   onCheckedChange={handleBasePowerChange}
@@ -426,6 +430,7 @@ export function RiskAnalysisDashboard() {
             onChange={handleOutageIndexChange}
             showBasePower={showBasePower}
             capacityFocused={batteryCapacityOpen}
+            devices={homeDevices}
             onViewBatteryCapacity={handleViewBatteryCapacity}
             onExitBatteryCapacity={handleExitBatteryCapacity}
           />

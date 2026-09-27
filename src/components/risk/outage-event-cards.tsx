@@ -7,28 +7,15 @@ import {
   type UIEvent,
 } from "react";
 import { FrostPanel } from "@/components/risk/frost-panel";
+import { drawWatts, type HomeDevice } from "@/lib/home/devices";
+import { outageLoadDevices } from "@/lib/home/outage-simulation";
+import { KWH_PER_CORE } from "@/lib/report/core-runtime";
 import {
   formatDurationHours,
   type HomeOutageEvent,
 } from "@/lib/risk/synthetic-outages";
 import { WEATHER_HAZARD_META } from "@/lib/risk/synthetic-weather";
 import { cn } from "@/lib/utils";
-
-/** Base Core facts — estimates only (see product rules). */
-const CORE_KWH = 39.2;
-
-/**
- * Placeholder home loads — eventually sourced from My Home.
- * Watts are continuous draw estimates; share-of-Core uses outage duration.
- */
-const PLACEHOLDER_APPLIANCES = [
-  { id: "fridge", name: "Refrigerator", watts: 150 },
-  { id: "wifi", name: "Wi‑Fi router", watts: 12 },
-  { id: "lights", name: "LED lighting", watts: 60 },
-  { id: "tv", name: "Television", watts: 100 },
-  { id: "laptop", name: "Laptop charger", watts: 65 },
-  { id: "fans", name: "Ceiling fans (2)", watts: 140 },
-] as const;
 
 type OutageEventCardsProps = {
   events: HomeOutageEvent[];
@@ -38,6 +25,8 @@ type OutageEventCardsProps = {
   showBasePower?: boolean;
   /** Full-width appliance breakdown for the active card */
   capacityFocused?: boolean;
+  /** Scanned My Home devices. Loads only; panels and generators are not draws. */
+  devices?: HomeDevice[];
   /** Zoom to home and show Base Power capacity for this outage */
   onViewBatteryCapacity?: (index: number) => void;
   /** Leave focused capacity view and restore the card carousel */
@@ -52,7 +41,7 @@ function clampIndex(index: number, length: number) {
 
 function applianceShareOfCore(watts: number, durationHours: number) {
   const kwhUsed = (watts / 1000) * durationHours;
-  const pct = (kwhUsed / CORE_KWH) * 100;
+  const pct = (kwhUsed / KWH_PER_CORE) * 100;
   return { kwhUsed, pct };
 }
 
@@ -62,6 +51,7 @@ export function OutageEventCards({
   onChange,
   showBasePower = false,
   capacityFocused = false,
+  devices = [],
   onViewBatteryCapacity,
   onExitBatteryCapacity,
   className,
@@ -71,6 +61,7 @@ export function OutageEventCards({
   const safeIndex = clampIndex(activeIndex, events.length);
   const suppressScrollEmit = useRef(false);
   const focused = capacityFocused;
+  const loads = outageLoadDevices(devices);
 
   useEffect(() => {
     if (focused) return;
@@ -150,6 +141,9 @@ export function OutageEventCards({
           const meta = WEATHER_HAZARD_META[event.causeKind];
           const showingCapacity = active && focused;
           const batteryOn = showBasePower;
+          const hasDuration =
+            Number.isFinite(event.durationHours) && event.durationHours > 0;
+          const showOutageStats = event.impactedHome || hasDuration;
 
           return (
             <div
@@ -189,56 +183,75 @@ export function OutageEventCards({
                     {meta.label}
                   </span>
 
-                  {event.impactedHome ? (
+                  {showOutageStats ? (
                     showingCapacity ? (
                       <div className="space-y-2">
                         <div className="min-w-0">
                           <p className="text-sm font-medium leading-snug">
+                            {event.title}
+                          </p>
+                          <p className="mt-0.5 text-sm leading-snug text-foreground">
                             Home loads on backup
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            Placeholder appliances · 1 Core · {CORE_KWH} kWh
+                            Scanned in My Home · 1 Core · {KWH_PER_CORE} kWh
                             (estimate)
                           </p>
                         </div>
 
-                        <ul className="max-h-[min(50vh,22rem)] space-y-1.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {PLACEHOLDER_APPLIANCES.map((appliance) => {
-                            const { kwhUsed, pct } = applianceShareOfCore(
-                              appliance.watts,
-                              event.durationHours,
-                            );
-                            return (
-                              <li
-                                key={appliance.id}
-                                className="flex items-center justify-between gap-2 rounded-lg bg-black/[0.04] px-2.5 py-1.5"
-                              >
-                                <div className="min-w-0">
-                                  <p className="truncate text-xs font-medium text-foreground">
-                                    {appliance.name}
-                                  </p>
-                                  <p className="text-[10px] tabular-nums text-muted-foreground">
-                                    {appliance.watts} W
-                                  </p>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                  <p className="text-xs font-semibold tabular-nums text-amber-800">
-                                    {pct < 0.1
-                                      ? "<0.1"
-                                      : pct.toFixed(pct < 10 ? 1 : 0)}
-                                    %
-                                  </p>
-                                  <p className="text-[10px] tabular-nums text-muted-foreground">
-                                    {kwhUsed < 0.01
-                                      ? "<0.01"
-                                      : kwhUsed.toFixed(2)}{" "}
-                                    kWh
-                                  </p>
-                                </div>
-                              </li>
-                            );
-                          })}
-                        </ul>
+                        {loads.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Scan devices in My Home to see what they use on a
+                            Core.
+                          </p>
+                        ) : (
+                          <ul className="max-h-[min(50vh,22rem)] space-y-1.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {loads.map((device) => {
+                              const draw = drawWatts(device);
+                              const { kwhUsed, pct } = applianceShareOfCore(
+                                draw.watts,
+                                event.durationHours,
+                              );
+                              return (
+                                <li
+                                  key={device.id}
+                                  className="flex items-center justify-between gap-2 rounded-lg bg-black/[0.04] px-2.5 py-1.5"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-medium text-foreground">
+                                      {device.name}
+                                    </p>
+                                    <p className="text-[10px] tabular-nums text-muted-foreground">
+                                      {draw.watts > 0
+                                        ? `${draw.watts} W${draw.exact ? "" : " est."}`
+                                        : "Watts unknown"}
+                                    </p>
+                                  </div>
+                                  {draw.watts > 0 ? (
+                                    <div className="shrink-0 text-right">
+                                      <p className="text-xs font-semibold tabular-nums text-amber-800">
+                                        {pct < 0.1
+                                          ? "<0.1"
+                                          : pct.toFixed(pct < 10 ? 1 : 0)}
+                                        %
+                                      </p>
+                                      <p className="text-[10px] tabular-nums text-muted-foreground">
+                                        {kwhUsed < 0.01
+                                          ? "<0.01"
+                                          : kwhUsed.toFixed(2)}{" "}
+                                        kWh
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <p className="shrink-0 text-xs text-muted-foreground">
+                                      —
+                                    </p>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     ) : (
                       <>
@@ -247,11 +260,23 @@ export function OutageEventCards({
                             {event.title}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            County homes lost power for{" "}
-                            <strong className="font-semibold text-foreground">
-                              {formatDurationHours(event.durationHours)}
-                            </strong>
-                            .
+                            {event.impactedHome ? (
+                              <>
+                                County homes lost power for{" "}
+                                <strong className="font-semibold text-foreground">
+                                  {formatDurationHours(event.durationHours)}
+                                </strong>
+                                .
+                              </>
+                            ) : (
+                              <>
+                                Homes in your county were out for{" "}
+                                <strong className="font-semibold text-foreground">
+                                  {formatDurationHours(event.durationHours)}
+                                </strong>
+                                .
+                              </>
+                            )}
                           </p>
                         </div>
 
@@ -261,7 +286,7 @@ export function OutageEventCards({
                               {formatDurationHours(event.durationHours)}
                             </p>
                             <p className="text-[10px] text-red-700/70">
-                              Grid outage
+                              Total outage
                             </p>
                           </div>
                           <div
@@ -283,24 +308,12 @@ export function OutageEventCards({
                               {batteryOn ? "100% uptime" : "—"}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              With battery
+                              Base Power up time
                             </p>
                           </div>
                         </div>
                       </>
                     )
-                  ) : Number.isFinite(event.durationHours) &&
-                    event.durationHours > 0 ? (
-                    <div>
-                      <p className="text-sm font-semibold">{event.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Homes in your county were out for about{" "}
-                        <strong className="font-semibold text-foreground">
-                          {formatDurationHours(event.durationHours)}
-                        </strong>
-                        .
-                      </p>
-                    </div>
                   ) : (
                     <div>
                       <p className="text-sm font-semibold">{event.title}</p>
