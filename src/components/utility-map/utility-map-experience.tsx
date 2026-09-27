@@ -10,6 +10,8 @@ import { MapKey } from "@/components/utility-map/map-key";
 import { MethodsSheet } from "@/components/utility-map/methods-sheet";
 import { RiskTableSheet } from "@/components/utility-map/risk-table-sheet";
 import { ViewTableSheet } from "@/components/utility-map/view-table-sheet";
+import { MapChat, type ChatEntry } from "@/components/utility-map/map-chat";
+import { chatSuggestions } from "@/lib/utility-map/chat-facts";
 import {
   LAYER_COUNTY_3D,
   LAYER_COUNTY_FILL,
@@ -114,6 +116,9 @@ export function UtilityMapExperience() {
   const [showWarnings, setShowWarnings] = useState(false);
   const [riskTableOpen, setRiskTableOpen] = useState(false);
   const [viewTableOpen, setViewTableOpen] = useState(false);
+  // The chat's conversation lives here so it survives picking another place.
+  const [chatEntries, setChatEntries] = useState<ChatEntry[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
   const [view3d, setView3dOn] = useState(false);
   const [pickerFips, setPickerFips] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip | null>(null);
@@ -676,6 +681,17 @@ export function UtilityMapExperience() {
               onSelectCounty={selectFips}
               onOpenCounty={openCounty}
               onOpenFullTable={() => (view.question === "risk" ? setRiskTableOpen(true) : setViewTableOpen(true))}
+              footer={
+                <MapChat
+                  entries={chatEntries}
+                  onEntries={setChatEntries}
+                  open={chatOpen}
+                  onOpenChange={setChatOpen}
+                  viewQuery={viewToUrl(view).toString()}
+                  suggestions={chatSuggestions(data, view)}
+                  onPlace={(kind, id) => (kind === "county" ? openCounty(id) : selectUtility(id))}
+                />
+              }
             />
           ) : (
             <Skeleton className="h-96 w-full rounded-[20px] bg-white/80" />
