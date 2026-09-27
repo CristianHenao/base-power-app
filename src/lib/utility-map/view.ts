@@ -40,6 +40,8 @@ export type ViewContext = {
   countyFips: Set<string>;
   /** Counties each utility serves; a linked county must belong to the linked utility. */
   utilityCounties?: Map<string, string[]>;
+  /** Storms in the release, when known (the server always knows; the page loads them later). */
+  stormNames?: Set<string>;
 };
 
 /** Superseded by the event-based hazards; never offered. */
@@ -145,7 +147,9 @@ export function viewFromUrl(search: URLSearchParams, ctx: ViewContext): ViewStat
     state = { ...state, hazards: [...seen] };
   }
   const storm = search.get("storm");
-  if (search.get("sub") === "storm" && storm) state = showStorm(state, storm);
+  if (search.get("sub") === "storm" && storm && (!ctx.stormNames || ctx.stormNames.has(storm))) {
+    state = showStorm(state, storm);
+  }
 
   if (search.get("demand") === "0") state = setGridLayer(state, "demand", false);
   if (search.get("plants") === "0") state = setGridLayer(state, "plants", false);

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, type KeyboardEvent } from "react";
+import { Box } from "lucide-react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { HazardPicker } from "@/components/utility-map/hazard-chip";
 import { StormList } from "@/components/utility-map/storm-spotlight";
@@ -32,12 +33,14 @@ type ControlsPanelProps = ControlsActions & {
   showWarnings: boolean;
   warningsStatus: string;
   className?: string;
+  /** Pinned to the bottom of the panel, e.g. Methods and sources. */
+  footer?: ReactNode;
 };
 
 export function ControlsPanel(props: ControlsPanelProps) {
   const { view, className } = props;
   return (
-    <section aria-label="Map controls" className={cn("bp-panel space-y-5 p-5", className)}>
+    <section aria-label="Map controls" className={cn("bp-panel flex flex-col space-y-5 p-5", className)}>
       <div className="space-y-3">
         <h1 className="text-[20px] leading-[27px]">What do you want to understand?</h1>
         <QuestionPicker question={view.question} onChange={props.onQuestion} />
@@ -65,6 +68,7 @@ export function ControlsPanel(props: ControlsPanelProps) {
           </span>
         </span>
       </label>
+      {props.footer ? <div className="mt-auto border-t pt-4">{props.footer}</div> : null}
     </section>
   );
 }
@@ -119,6 +123,51 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function RiskControls({ data, view3d, onView3d }: ControlsPanelProps) {
   return (
     <>
+      <div className="space-y-2">
+        <button
+          type="button"
+          aria-pressed={view3d}
+          onClick={() => onView3d(!view3d)}
+          className={cn(
+            "flex w-full items-center gap-4 rounded-[20px] border px-5 py-4 text-left transition-colors",
+            view3d
+              ? "border-[var(--bp-grey-100)] bg-[var(--bp-green-20)]"
+              : "border-[var(--bp-grey-20)] bg-white hover:border-[var(--bp-grey-60)]",
+          )}
+        >
+          <span
+            className={cn(
+              "flex size-14 shrink-0 items-center justify-center rounded-2xl",
+              view3d ? "bg-white" : "bg-[var(--bp-grey-5)]",
+            )}
+          >
+            <Box className="size-8" strokeWidth={1.75} aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[20px] leading-[26px] font-semibold">{view3d ? "Viewing risk in 3D" : "See risk in 3D"}</span>
+            <span className="block text-[13px] leading-[18px] text-muted-foreground">
+              {view3d ? "Select to flatten the map" : "Counties rise by their risk band"}
+            </span>
+          </span>
+          <span
+            aria-hidden
+            className={cn(
+              "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+              view3d ? "bg-[var(--bp-green-90)]" : "bg-[var(--bp-grey-20)]",
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-1 size-5 rounded-full bg-white shadow-sm transition-all",
+                view3d ? "left-6" : "left-1",
+              )}
+            />
+          </span>
+        </button>
+        <p className="text-[12px] leading-[18px] text-muted-foreground">
+          3D raises each county by its risk band. A presentation aid, not extra evidence.
+        </p>
+      </div>
       <div className="space-y-2 text-[13px] leading-[19px]">
         <p>
           One standardized score, 1–100, for every Texas county and utility. Higher means more at risk, against the
@@ -138,14 +187,6 @@ function RiskControls({ data, view3d, onView3d }: ControlsPanelProps) {
           Built from {data.sources.length} public sources. Historical relative risk, not a forecast. Select a utility
           or county for its score card.
         </p>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] leading-[18px] text-muted-foreground">
-          3D raises each county by its risk band. A presentation aid, not extra evidence.
-        </p>
-        <button type="button" aria-pressed={view3d} onClick={() => onView3d(!view3d)} className="bp-pill !px-2.5 !py-0.5 !text-[12px]">
-          3D
-        </button>
       </div>
     </>
   );

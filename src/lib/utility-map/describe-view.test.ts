@@ -270,3 +270,79 @@ test("a county whose share out is unknown gets its own color, legend entry and p
   assert.match(d.table.rows[2].cells[0], /Unknown/);
   assert.equal(paintLabel(d.context, 6), "Hurricane Beryl 2024: customers out, share unknown");
 });
+
+test("every statewide card says what it is, what it shows and how to read it", () => {
+  const cases: [ViewState, RegExp][] = [
+    [start(), /Which Texas utilities are most at risk\?/],
+    [hazards("flood"), /Where is flood exposure highest\?/],
+    [hazards("flood", "hurricane"), /Where do flood and hurricanes overlap\?/],
+    [hazards("flood", "hurricane", "winter"), /Which places face the most hazards\?/],
+    [showStorm(hazards("winter"), "Hurricane Beryl"), /Where did Hurricane Beryl 2024 knock out power\?/],
+    [setQuestion(start(), "grid", CTX), /How big is each utility's grid\?/],
+    [setShare(setQuestion(start(), "fleet", CTX), 0.01), /What could a 1% Base fleet add\?/],
+  ];
+  for (const [state, title] of cases) {
+    const { intro } = describe(state);
+    assert.match(intro.title, title);
+    assert.ok(intro.eyebrow.length > 0 && intro.lead.length > 40 && intro.read.length > 20, intro.title);
+    assert.doesNotMatch(`${intro.title} ${intro.lead} ${intro.read}`, /customer-weighted|High in how many/);
+  }
+});
+
+test("the several-hazards card names every hazard and says it is past exposure, not odds", () => {
+  const { intro } = describe(hazards("flood", "hurricane", "winter"));
+  assert.match(intro.lead, /3 hazards/);
+  for (const name of ["flood", "hurricanes", "winter freeze"]) assert.match(intro.lead.toLowerCase(), new RegExp(name));
+  assert.match(intro.lead, /not the odds/);
+});
+
+test("the fleet card spells out the assumptions behind the numbers", () => {
+  const { intro } = describe(setShare(setQuestion(start(), "fleet", CTX), 0.01));
+  assert.match(intro.lead, /1% of each utility's owner-occupied single-family homes/);
+  assert.match(intro.lead, /39\.2 kWh/);
+  assert.match(intro.lead, /20% kept for backup/);
+  assert.match(intro.read, /2 hours/);
+});
+
+test("every table row carries raw numbers, one per column, for sorting", () => {
+  const views = [
+    start(), hazards("flood"), hazards("flood", "hurricane"), hazards("flood", "hurricane", "winter"),
+    showStorm(hazards("winter"), "Hurricane Beryl"), setQuestion(start(), "grid", CTX), setQuestion(start(), "fleet", CTX),
+  ];
+  for (const s of views) {
+    const d = describe(s);
+    for (const t of [d.table, d.countyTable].filter((x) => x != null)) {
+      for (const row of t.rows) assert.equal(row.values.length, t.columns.length, t.caption);
+    }
+  }
+  const storm = describe(showStorm(hazards("winter"), "Hurricane Beryl"));
+  assert.deepEqual(storm.table.rows[0].values, [64, 900, 9000]);
+});
+
+test("hazard views also list every county: Texas rank first, then each hazard", () => {
+  const one = describe(hazards("flood")).countyTable!;
+  assert.equal(one.rowKind, "county");
+  assert.equal(one.rows.length, DATA.counties.length);
+  assert.deepEqual(one.columns, ["Texas rank", "Flood"]);
+  assert.deepEqual(one.rows.map((r) => r.id), ["48201", "48453", "48001"]);
+  assert.equal(one.rows[0].cells[0], "90%");
+  assert.equal(one.rows[0].values[0], 90);
+
+  const two = describe(hazards("flood", "hurricane")).countyTable!;
+  assert.deepEqual(two.columns, ["Average Texas rank", "Flood", "Hurricanes"]);
+
+  const three = describe(hazards("flood", "hurricane", "winter")).countyTable!;
+  assert.deepEqual(three.columns, ["High in", "Flood", "Hurricanes", "Winter freeze"]);
+  assert.equal(three.rows[0].cells[0], "3 of 3");
+  assert.equal(three.rows[0].values[0], 3);
+});
+
+test("which views have a county tab: hazards and grid yes; storm is county-only; fleet and risk have none", () => {
+  assert.equal(describe(showStorm(hazards("winter"), "Hurricane Beryl")).countyTable, undefined);
+  assert.equal(describe(setQuestion(start(), "fleet", CTX)).countyTable, undefined);
+  assert.equal(describe(start()).countyTable, undefined);
+  const grid = describe(setQuestion(start(), "grid", CTX)).countyTable!;
+  assert.deepEqual(grid.columns, ["Peak demand", "Local generation"]);
+  assert.deepEqual(grid.rows.map((r) => r.id), ["48201", "48453", "48001"]);
+  assert.equal(describe(hazards()).countyTable, undefined);
+});
